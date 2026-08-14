@@ -789,267 +789,257 @@
         // ============================================================
         // MAPA
         // ============================================================
-        class MapManager {
-            constructor() {
-                this.map = null;
-                this.isReady = false;
-                this.reports = [];
+       // ============================================================
+// MAPA
+// ============================================================
+class MapManager {
+    constructor() {
+        this.map = null;
+        this.isReady = false;
+        this.reports = [];
+        this._clusterClickHandler = null;
+        this._reportClickHandler = null;
+    }
+
+    init(containerId = 'map') {
+        if (this.map) return;
+
+        this.map = new maplibregl.Map({
+            container: containerId,
+            style: CONFIG.mapStyle,
+            center: CONFIG.mapCenter,
+            zoom: CONFIG.mapZoom,
+            maxZoom: 18,
+            minZoom: 4
+        });
+
+        this.map.addControl(
+            new maplibregl.NavigationControl({ showCompass: false }),
+            'top-right'
+        );
+
+        // ✅ AJUSTE 2: Al cargar el mapa, si ya hay reportes, los dibuja
+        this.map.on('load', () => {
+            this.isReady = true;
+            console.log('✅ Mapa listo');
+
+            if (this.reports && this.reports.length > 0) {
+                this.updateClusters(this.reports);
             }
-            init(containerId = 'map') {
-                if (this.map) return;
-                this.map = new maplibregl.Map({
-                    container: containerId,
-                    style: CONFIG.mapStyle,
-                    center: CONFIG.mapCenter,
-                    zoom: CONFIG.mapZoom,
-                    maxZoom: 18,
-                    minZoom: 4
-                });
-                this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-                this.map.on('load', () => {
-                    this.isReady = true;
-                    console.log('✅ Mapa listo');
-                });
-                return this.map;
-            }
+        });
 
-
-        updateClusters(reports) {
-    if (!this.map || !this.isReady) return;
-
-    this.reports = Array.isArray(reports) ? reports : [];
+        return this.map;
+    }
 
     // ============================================================
-    // 1. LIMPIAR CAPAS Y SOURCE ANTERIORES
+    // updateClusters() – versión definitiva con todos los ajustes
     // ============================================================
+    updateClusters(reports) {
+        if (!this.map || !this.isReady) return;
 
-    const layersToRemove = ['cluster-count', 'clusters', 'unclustered-point'];
-    for (const layerId of layersToRemove) {
-        if (this.map.getLayer(layerId)) {
-            this.map.removeLayer(layerId);
+        this.reports = Array.isArray(reports) ? reports : [];
+
+        // 1. Limpiar capas y fuente anteriores
+        const layersToRemove = ['cluster-count', 'clusters', 'unclustered-point'];
+        for (const layerId of layersToRemove) {
+            if (this.map.getLayer(layerId)) {
+                this.map.removeLayer(layerId);
+            }
         }
-    }
+        if (this.map.getSource('reports-cluster')) {
+            this.map.removeSource('reports-cluster');
+        }
 
-    if (this.map.getSource('reports-cluster')) {
-        this.map.removeSource('reports-cluster');
-    }
+        // 2. Crear GeoJSON
+        const features = this.reports
+            .filter(report => {
+                const lat = Number(report.latitude);
+                const lon = Number(report.longitude);
+                return (
+                    Number.isFinite(lat) &&
+                    Number.isFinite(lon) &&
+                    lat >= -90 && lat <= 90 &&
+                    lon >= -180 && lon <= 180
+                );
+            })
+            .map(report => ({
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [Number(report.longitude), Number(report.latitude)]
+                },
+                properties: {
+                    id: report.id || report.temp_id || '',
+                    type: report.type || 'report',
+                    description: report.description || report.type || 'Reporte'
+                }
+            }));
 
-    // ============================================================
-    // 2. CREAR GEOJSON
-    // ============================================================
+        if (features.length === 0) return;
 
-    const features = this.reports
-        .filter(report => {
-            const lat = Number(report.latitude);
-            const lon = Number(report.longitude);
-            return (
-                Number.isFinite(lat) &&
-                Number.isFinite(lon) &&
-                lat >= -90 && lat <= 90 &&
-                lon >= -180 && lon <= 180
-            );
-        })
-        .map(report => ({
-            type: 'Feature',
-            geometry: {
-                type: 'Point',
-                coordinates: [Number(report.longitude), Number(report.latitude)]
+        // 3. Fuente GeoJSON con clusters
+        this.map.addSource('reports-cluster', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: features },
+            cluster: true,
+            clusterMaxZoom: 14,
+            clusterRadius: 50
+        });
+
+        // 4. Capa de clusters
+        this.map.addLayer({
+            id: 'clusters',
+            type: 'circle',
+            source: 'reports-cluster',
+            filter: ['has', 'point_count'],
+            paint: {
+                'circle-color': [
+                    'step',
+                    ['get', 'point_count'],
+                    '#51bbd6',
+                    10,
+                    '#f1f075',
+                    30,
+                    '#f28cb1'
+                ],
+                'circle-radius': [
+                    'step',
+                    ['get', 'point_count'],
+                    20,
+                    10,
+                    30,
+                    30,
+                    40
+                ],
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#ffffff'
+            }
+        });
+
+        // 5. Contador en clusters
+        this.map.addLayer({
+            id: 'cluster-count',
+            type: 'symbol',
+            source: 'reports-cluster',
+            filter: ['has', 'point_count'],
+            layout: {
+                'text-field': ['get', 'point_count_abbreviated'],
+                'text-size': 12
             },
-            properties: {
-                id: report.id || report.temp_id || '',
-                type: report.type || 'report',
-                description: report.description || report.type || 'Reporte'
+            paint: {
+                'text-color': '#ffffff'
             }
-        }));
+        });
 
-    if (features.length === 0) return;
+        // 6. Puntos individuales (NO agrupados) – ESTA CAPA ESTABA FALTANDO
+        this.map.addLayer({
+            id: 'unclustered-point',
+            type: 'circle',
+            source: 'reports-cluster',
+            filter: ['!', ['has', 'point_count']],
+            paint: {
+                'circle-color': [
+                    'match',
+                    ['get', 'type'],
+                    'safe', '#2ecc71',
+                    'help', '#e74c3c',
+                    'damage', '#f39c12',
+                    'road', '#3498db',
+                    'resource', '#1a3c6e',
+                    '#7f8c8d'
+                ],
+                'circle-radius': 9,
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#ffffff'
+            }
+        });
 
-    // ============================================================
-    // 3. SOURCE
-    // ============================================================
-
-    this.map.addSource('reports-cluster', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: features },
-        cluster: true,
-        clusterMaxZoom: 14,
-        clusterRadius: 50
-    });
-
-    // ============================================================
-    // 4. CLUSTERS (agrupados)
-    // ============================================================
-
-    this.map.addLayer({
-        id: 'clusters',
-        type: 'circle',
-        source: 'reports-cluster',
-        filter: ['has', 'point_count'],
-        paint: {
-            'circle-color': [
-                'step',
-                ['get', 'point_count'],
-                '#51bbd6',
-                10,
-                '#f1f075',
-                30,
-                '#f28cb1'
-            ],
-            'circle-radius': [
-                'step',
-                ['get', 'point_count'],
-                20,
-                10,
-                30,
-                30,
-                40
-            ],
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff'
-        }
-    });
-
-    // ============================================================
-    // 5. CONTADOR EN CLUSTERS
-    // ============================================================
-
-    this.map.addLayer({
-        id: 'cluster-count',
-        type: 'symbol',
-        source: 'reports-cluster',
-        filter: ['has', 'point_count'],
-        layout: {
-            'text-field': ['get', 'point_count_abbreviated'],
-            'text-size': 12
-        },
-        paint: {
-            'text-color': '#ffffff'
-        }
-    });
-
-    // ============================================================
-    // 6. PUNTOS INDIVIDUALES (NO AGRUPADOS) – ESTA ES LA CLAVE
-    // ============================================================
-
-    this.map.addLayer({
-        id: 'unclustered-point',
-        type: 'circle',
-        source: 'reports-cluster',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-            'circle-color': [
-                'match',
-                ['get', 'type'],
-                'safe', '#2ecc71',
-                'help', '#e74c3c',
-                'damage', '#f39c12',
-                'road', '#3498db',
-                'resource', '#1a3c6e',
-                '#7f8c8d'
-            ],
-            'circle-radius': 9,
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff'
-        }
-    });
-
-    // ============================================================
-    // 7. LISTENER DE CLICK EN CLUSTERS (SOLO UNA VEZ)
-    // ============================================================
-
-    if (!this._clusterClickHandler) {
-        this._clusterClickHandler = (e) => {
-            const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-            if (!features.length) return;
-            const clusterId = features[0].properties.cluster_id;
-            const source = this.map.getSource('reports-cluster');
-            if (!source) return;
-            source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-                if (err) return;
-                this.map.easeTo({
-                    center: features[0].geometry.coordinates,
-                    zoom: zoom
+        // 7. Listener de clic en clusters (solo se registra una vez)
+        if (!this._clusterClickHandler) {
+            this._clusterClickHandler = (e) => {
+                const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+                if (!features.length) return;
+                const clusterId = features[0].properties.cluster_id;
+                const source = this.map.getSource('reports-cluster');
+                if (!source) return;
+                source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+                    if (err) return;
+                    this.map.easeTo({
+                        center: features[0].geometry.coordinates,
+                        zoom: zoom
+                    });
                 });
-            });
-        };
-        this.map.on('click', 'clusters', this._clusterClickHandler);
+            };
+            this.map.on('click', 'clusters', this._clusterClickHandler);
+        }
+
+        // 8. Listener de clic en puntos individuales – ✅ AJUSTE 1: solo capa unclustered-point
+        if (!this._reportClickHandler) {
+            this._reportClickHandler = (e) => {
+                const features = this.map.queryRenderedFeatures(e.point, {
+                    layers: ['unclustered-point']
+                });
+
+                if (!features.length) return;
+
+                const reportFeature = features[0];
+                const reportId = reportFeature.properties.id;
+                if (!reportId) return;
+
+                const report = this.reports.find(r =>
+                    r.id === reportId || r.temp_id === reportId
+                );
+
+                if (!report) return;
+
+                const lat = Number(report.latitude);
+                const lon = Number(report.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+                new maplibregl.Popup({ offset: 25 })
+                    .setLngLat([lon, lat])
+                    .setHTML(`
+                        <div style="font-size:0.8rem;padding:4px;max-width:220px;">
+                            <strong>${report.description || report.type || 'Reporte'}</strong>
+                            <br>
+                            <span style="font-size:0.65rem;color:#666;">
+                                ${report.created_at ? new Date(report.created_at).toLocaleTimeString() : ''}
+                            </span>
+                            <br>
+                            <span style="font-size:0.65rem;">
+                                ✅ ${report.verification_count || 0} confirmaciones
+                            </span>
+                            <br>
+                            <button onclick="corroborateReport('${reportId}')"
+                                style="margin-top:4px;padding:4px 8px;background:#2ecc71;border:none;border-radius:4px;color:white;cursor:pointer;font-size:0.7rem;">
+                                👍 Corroborar
+                            </button>
+                        </div>
+                    `)
+                    .addTo(this.map);
+            };
+            this.map.on('click', this._reportClickHandler);
+        }
     }
 
-    // ============================================================
-    // 8. LISTENER DE CLICK EN PUNTOS INDIVIDUALES (SOLO UNA VEZ)
-    // ============================================================
+    async goToLocation(lat, lon, zoom = 15) {
+        if (!this.map) return;
+        this.map.flyTo({ center: [lon, lat], zoom: zoom, duration: 1500 });
+    }
 
-    if (!this._reportClickHandler) {
-        this._reportClickHandler = (e) => {
-            const features = this.map.queryRenderedFeatures(e.point);
-            if (!features.length) return;
-
-            const reportFeature = features.find(f =>
-                f.layer.id === 'unclustered-point' ||
-                (f.properties && f.properties.id)
-            );
-
-            if (!reportFeature || !reportFeature.properties) return;
-
-            const reportId = reportFeature.properties.id;
-            if (!reportId) return;
-
-            const report = this.reports.find(r =>
-                r.id === reportId || r.temp_id === reportId
-            );
-
-            if (!report) return;
-
-            const lat = Number(report.latitude);
-            const lon = Number(report.longitude);
-            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-
-            new maplibregl.Popup({ offset: 25 })
-                .setLngLat([lon, lat])
-                .setHTML(`
-                    <div style="font-size:0.8rem;padding:4px;max-width:220px;">
-                        <strong>${report.description || report.type || 'Reporte'}</strong>
-                        <br>
-                        <span style="font-size:0.65rem;color:#666;">
-                            ${report.created_at ? new Date(report.created_at).toLocaleTimeString() : ''}
-                        </span>
-                        <br>
-                        <span style="font-size:0.65rem;">
-                            ✅ ${report.verification_count || 0} confirmaciones
-                        </span>
-                        <br>
-                        <button onclick="corroborateReport('${reportId}')"
-                            style="margin-top:4px;padding:4px 8px;background:#2ecc71;border:none;border-radius:4px;color:white;cursor:pointer;font-size:0.7rem;">
-                            👍 Corroborar
-                        </button>
-                    </div>
-                `)
-                .addTo(this.map);
-        };
-        this.map.on('click', this._reportClickHandler);
+    async centerOnUser() {
+        try {
+            const pos = await geolocation.getCurrentPosition();
+            if (pos) {
+                this.goToLocation(pos.latitude, pos.longitude);
+                return pos;
+            }
+        } catch (error) {
+            showToast('📍 ' + error.message, 'warning');
+        }
+        return null;
     }
 }
-
-
-
-            async goToLocation(lat, lon, zoom = 15) {
-                if (!this.map) return;
-                this.map.flyTo({ center: [lon, lat], zoom: zoom, duration: 1500 });
-            }
-            async centerOnUser() {
-                try {
-                    const pos = await geolocation.getCurrentPosition();
-                    if (pos) {
-                        this.goToLocation(pos.latitude, pos.longitude);
-                        return pos;
-                    }
-                } catch (error) {
-                    showToast('📍 ' + error.message, 'warning');
-                }
-                return null;
-            }
-        }
-
         const mapManager = new MapManager();
 
         // ============================================================
