@@ -719,7 +719,7 @@
     return new Promise((resolve, reject) => {
         const tx = this.db.transaction(['pending', 'sync_queue', 'reports'], 'readwrite');
         tx.objectStore('pending').delete(tempId);
-        tx.objectStore('reports').delete(tempId); // <--- NUEVO
+        tx.objectStore('reports').delete(tempId); // <--- ELIMINA TAMBIÉN DEL STORE REPORTS
         const index = tx.objectStore('sync_queue').index('temp_id');
         const request = index.getAll(tempId);
         request.onsuccess = () => {
@@ -1307,51 +1307,59 @@ class ReportManager {
                 }
             }
 
-            async loadReports() {
-                if (!this.authReady || !this.userId) {
-                    console.log('⏳ Esperando autenticación para cargar reportes...');
-                    const localReports = await offline.getAllReports();
-                    this.reports = localReports;
-                    mapManager.updateClusters(localReports);
-                    this.updateStats();
-                    return this.reports;
-                }
-
-                let serverReports = [];
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('reports')
-                        .select('*')
-                        .eq('status', 'active')
-                        .order('created_at', { ascending: false })
-                        .limit(200);
-
-                    if (!error && data) {
-                        serverReports = data;
-                    }
-                } catch (error) {
-                    console.warn('Error cargando desde Supabase:', error);
-                }
-
-               // Combinar: eliminar duplicados por id o temp_id
-const allReports = [...serverReports];
-const serverIds = new Set(serverReports.map(r => r.id));
-const serverTempIds = new Set(serverReports.map(r => r.temp_id).filter(Boolean));
-
-for (const local of localReports) {
-    // Si el local ya existe en el servidor (por id o temp_id), no lo agregamos
-    if (serverIds.has(local.id) || serverTempIds.has(local.temp_id)) {
-        continue;
+           async loadReports() {
+    if (!this.authReady || !this.userId) {
+        console.log('⏳ Esperando autenticación para cargar reportes...');
+        const localReports = await offline.getAllReports();
+        this.reports = localReports;
+        mapManager.updateClusters(localReports);
+        this.updateStats();
+        return this.reports;
     }
-    allReports.push(local);
-}
 
-                this.reports = allReports;
-                mapManager.updateClusters(allReports);
-                await offline.updatePendingCount();
-                this.updateStats();
-                return this.reports;
-            }
+    let serverReports = [];
+    try {
+        const { data, error } = await supabaseClient
+            .from('reports')
+            .select('*')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(200);
+
+        if (!error && data) {
+            serverReports = data;
+        }
+    } catch (error) {
+        console.warn('Error cargando desde Supabase:', error);
+    }
+
+    const localReports = await offline.getAllReports();
+
+    // ============================================================
+    // COMBINAR Y DEDUPLICAR
+    // ============================================================
+    // 1. IDs de los reportes del servidor (ya sean id o temp_id)
+    const serverIds = new Set(serverReports.map(r => r.id));
+    const serverTempIds = new Set(serverReports.map(r => r.temp_id).filter(Boolean));
+
+    // 2. Construir array final con los del servidor primero
+    const allReports = [...serverReports];
+
+    // 3. Agregar locales solo si no existen ya en el servidor
+    for (const local of localReports) {
+        // Si el local tiene un id que ya está en el servidor, o su temp_id ya existe en el servidor -> omitir
+        if (serverIds.has(local.id) || serverTempIds.has(local.temp_id)) {
+            continue;
+        }
+        allReports.push(local);
+    }
+
+    this.reports = allReports;
+    mapManager.updateClusters(allReports);
+    await offline.updatePendingCount();
+    this.updateStats();
+    return this.reports;
+}
 
             async corroborateReport(reportId) {
                 if (!this.authReady || !this.userId) {
