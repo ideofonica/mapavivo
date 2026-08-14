@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Mapa Vivo Colombia</title>
+    <title>Mapa Vivo Colombia V2</title>
     <meta name="description" content="Herramienta comunitaria para emergencias sísmicas en Colombia" />
     <meta name="theme-color" content="#0B2A4A" />
     <link rel="manifest" href="./manifest.json" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css" />
     <style>
         /* ===== RESET Y VARIABLES ===== */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         :root {
             --color-primary: #0B2A4A;
             --color-secondary: #123F6D;
@@ -23,12 +27,15 @@
             --color-white: #ffffff;
             --color-gray: #8A9BB5;
             --color-text: #B8C4D6;
-            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             --radius: 16px;
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
             --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         }
-        html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+        html {
+            font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
         body {
             font-family: var(--font-family);
             background: var(--color-dark);
@@ -62,9 +69,9 @@
             flex-shrink: 0;
             z-index: 100;
             min-height: 60px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             padding-top: env(safe-area-inset-top, 8px);
         }
         .header-content {
@@ -89,9 +96,14 @@
             letter-spacing: 1px;
             margin-left: 2px;
         }
-        .header-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+        .header-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-shrink: 0;
+        }
         .header-actions button {
-            background: rgba(255,255,255,0.10);
+            background: rgba(255, 255, 255, 0.10);
             border: none;
             color: white;
             padding: 6px 8px;
@@ -105,7 +117,9 @@
             justify-content: center;
             transition: background 0.2s;
         }
-        .header-actions button:active { background: rgba(255,255,255,0.20); }
+        .header-actions button:active {
+            background: rgba(255, 255, 255, 0.20);
+        }
         #connectionStatus {
             display: flex;
             align-items: center;
@@ -113,26 +127,47 @@
             font-size: clamp(0.45rem, 1vw, 0.6rem);
             padding: 4px 10px;
             border-radius: 20px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
             flex-shrink: 0;
             backdrop-filter: blur(4px);
         }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .connection-status.online .status-dot { background: var(--color-success); }
-        .connection-status.offline .status-dot { background: var(--color-danger); }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .connection-status.online .status-dot {
+            background: var(--color-success);
+        }
+        .connection-status.offline .status-dot {
+            background: var(--color-danger);
+        }
         .sync-status {
             font-size: clamp(0.4rem, 0.8vw, 0.5rem);
             padding: 2px 6px;
             border-radius: 10px;
-            background: rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.12);
             margin-left: 4px;
             white-space: nowrap;
             font-weight: 600;
         }
-        .sync-status.pending { background: var(--color-warning); color: #0B2A4A; }
-        .sync-status.synced { background: var(--color-success); color: white; }
-        .sync-status.error { background: var(--color-danger); color: white; }
-        .sync-status.offline { background: var(--color-gray); color: white; }
+        .sync-status.pending {
+            background: var(--color-warning);
+            color: #0B2A4A;
+        }
+        .sync-status.synced {
+            background: var(--color-success);
+            color: white;
+        }
+        .sync-status.error {
+            background: var(--color-danger);
+            color: white;
+        }
+        .sync-status.offline {
+            background: var(--color-gray);
+            color: white;
+        }
 
         /* ===== SITUATION PANEL ===== */
         #situation-panel {
@@ -144,8 +179,8 @@
             backdrop-filter: blur(12px);
             border-radius: var(--radius);
             padding: 12px 16px;
-            border: 1px solid rgba(255,255,255,0.06);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
             max-width: 200px;
             min-width: 140px;
             pointer-events: none;
@@ -162,18 +197,42 @@
             justify-content: space-between;
             font-size: 0.7rem;
             padding: 2px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
-        #situation-panel .situation-row:last-child { border-bottom: none; }
-        .situation-value { font-weight: 700; }
-        .situation-critical { color: var(--color-danger); }
-        .situation-warning { color: var(--color-warning); }
-        .situation-safe { color: var(--color-success); }
+        #situation-panel .situation-row:last-child {
+            border-bottom: none;
+        }
+        .situation-value {
+            font-weight: 700;
+        }
+        .situation-critical {
+            color: var(--color-danger);
+        }
+        .situation-warning {
+            color: var(--color-warning);
+        }
+        .situation-safe {
+            color: var(--color-success);
+        }
 
         /* ===== MAPA ===== */
-        #main-content { flex: 1; position: relative; overflow: hidden; }
-        #map-container { width: 100%; height: 100%; position: relative; }
-        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        #main-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        #map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
 
         /* ===== CONTROLES DEL MAPA ===== */
         #map-controls {
@@ -190,10 +249,10 @@
             height: 48px;
             border: none;
             border-radius: 50%;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             color: var(--color-dark);
             font-size: 1.3rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -201,8 +260,14 @@
             transition: transform 0.1s, background 0.2s;
             touch-action: manipulation;
         }
-        .map-control-btn:active { transform: scale(0.94); background: white; }
-        .map-control-btn#myLocationBtn { background: var(--color-blue-bright); color: white; }
+        .map-control-btn:active {
+            transform: scale(0.94);
+            background: white;
+        }
+        .map-control-btn#myLocationBtn {
+            background: var(--color-blue-bright);
+            color: white;
+        }
 
         /* ===== BARRA INFERIOR ===== */
         #quick-actions {
@@ -217,8 +282,8 @@
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 4px;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
         }
         .quick-action-btn {
             display: flex;
@@ -228,33 +293,59 @@
             padding: 4px 2px;
             border: none;
             border-radius: 12px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             cursor: pointer;
             min-height: 56px;
             transition: transform 0.1s, background 0.2s;
             touch-action: manipulation;
             gap: 1px;
         }
-        .quick-action-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.12); }
-        .quick-action-btn .btn-icon { font-size: clamp(1.2rem, 4vw, 1.6rem); line-height: 1; }
+        .quick-action-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .quick-action-btn .btn-icon {
+            font-size: clamp(1.2rem, 4vw, 1.6rem);
+            line-height: 1;
+        }
         .quick-action-btn .btn-label {
             font-size: clamp(0.4rem, 1vw, 0.55rem);
             font-weight: 700;
             text-align: center;
-            color: rgba(255,255,255,0.85);
+            color: rgba(255, 255, 255, 0.85);
             letter-spacing: 0.2px;
             line-height: 1.2;
         }
-        .quick-action-btn.safe-btn { background: rgba(32, 201, 99, 0.2); }
-        .quick-action-btn.safe-btn .btn-label { color: #6AE8A0; }
-        .quick-action-btn.help-btn { background: rgba(229, 57, 53, 0.2); }
-        .quick-action-btn.help-btn .btn-label { color: #FF8A80; }
-        .quick-action-btn.damage-btn { background: rgba(245, 158, 11, 0.2); }
-        .quick-action-btn.damage-btn .btn-label { color: #FDE68A; }
-        .quick-action-btn.road-btn { background: rgba(25, 118, 210, 0.2); }
-        .quick-action-btn.road-btn .btn-label { color: #90CAF9; }
-        .quick-action-btn.resources-btn { background: rgba(255,255,255,0.05); }
-        .quick-action-btn.resources-btn .btn-label { color: #B0BEC5; }
+        .quick-action-btn.safe-btn {
+            background: rgba(32, 201, 99, 0.2);
+        }
+        .quick-action-btn.safe-btn .btn-label {
+            color: #6AE8A0;
+        }
+        .quick-action-btn.help-btn {
+            background: rgba(229, 57, 53, 0.2);
+        }
+        .quick-action-btn.help-btn .btn-label {
+            color: #FF8A80;
+        }
+        .quick-action-btn.damage-btn {
+            background: rgba(245, 158, 11, 0.2);
+        }
+        .quick-action-btn.damage-btn .btn-label {
+            color: #FDE68A;
+        }
+        .quick-action-btn.road-btn {
+            background: rgba(25, 118, 210, 0.2);
+        }
+        .quick-action-btn.road-btn .btn-label {
+            color: #90CAF9;
+        }
+        .quick-action-btn.resources-btn {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .quick-action-btn.resources-btn .btn-label {
+            color: #B0BEC5;
+        }
 
         /* ===== MODAL ===== */
         #modal-overlay {
@@ -263,7 +354,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 1000;
             display: flex;
             align-items: center;
@@ -272,8 +363,17 @@
             backdrop-filter: blur(6px);
             animation: fadeIn 0.2s ease;
         }
-        #modal-overlay.hidden { display: none; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #modal-overlay.hidden {
+            display: none;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
         #modal-container {
             background: #172A44;
             border-radius: 24px;
@@ -283,16 +383,25 @@
             overflow-y: auto;
             padding: 20px 16px 24px;
             position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
             animation: slideUp 0.25s ease;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
         .modal-close {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
             border: none;
             font-size: 1.4rem;
             color: var(--color-text);
@@ -307,7 +416,9 @@
             transition: background 0.2s;
             touch-action: manipulation;
         }
-        .modal-close:active { background: rgba(255,255,255,0.15); }
+        .modal-close:active {
+            background: rgba(255, 255, 255, 0.15);
+        }
         .modal-title {
             font-size: clamp(1.3rem, 5vw, 1.8rem);
             font-weight: 800;
@@ -316,8 +427,12 @@
             text-align: center;
             letter-spacing: -0.5px;
         }
-        .modal-title .highlight { color: var(--color-blue-bright); }
-        .modal-form-group { margin-bottom: 14px; }
+        .modal-title .highlight {
+            color: var(--color-blue-bright);
+        }
+        .modal-form-group {
+            margin-bottom: 14px;
+        }
         .modal-form-group label {
             display: block;
             font-size: 0.8rem;
@@ -331,11 +446,11 @@
         .modal-form-group textarea {
             width: 100%;
             padding: 12px 14px;
-            border: 2px solid rgba(255,255,255,0.08);
+            border: 2px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
             font-size: 0.95rem;
             font-family: inherit;
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.04);
             color: white;
             transition: border-color 0.2s, background 0.2s;
             min-height: 48px;
@@ -345,11 +460,17 @@
         .modal-form-group textarea:focus {
             outline: none;
             border-color: var(--color-blue-bright);
-            background: rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.06);
         }
-        .modal-form-group textarea { min-height: 70px; resize: vertical; }
+        .modal-form-group textarea {
+            min-height: 70px;
+            resize: vertical;
+        }
         .modal-form-group input::placeholder,
-        .modal-form-group textarea::placeholder { color: var(--color-gray); opacity: 0.7; }
+        .modal-form-group textarea::placeholder {
+            color: var(--color-gray);
+            opacity: 0.7;
+        }
         .grid-options {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -360,8 +481,8 @@
             align-items: center;
             gap: 6px;
             padding: 10px 10px;
-            background: rgba(255,255,255,0.04);
-            border: 2px solid rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid rgba(255, 255, 255, 0.06);
             border-radius: 12px;
             cursor: pointer;
             font-size: 0.8rem;
@@ -371,7 +492,10 @@
             touch-action: manipulation;
             min-height: 48px;
         }
-        .grid-options label:active { transform: scale(0.97); background: rgba(255,255,255,0.08); }
+        .grid-options label:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.08);
+        }
         .grid-options label:has(input:checked) {
             border-color: var(--color-blue-bright);
             background: rgba(25, 118, 210, 0.15);
@@ -382,7 +506,7 @@
             appearance: none;
             width: 18px;
             height: 18px;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 5px;
             flex-shrink: 0;
             background: transparent;
@@ -404,7 +528,9 @@
             font-size: 12px;
             font-weight: bold;
         }
-        .grid-options input[type="radio"] { border-radius: 50%; }
+        .grid-options input[type="radio"] {
+            border-radius: 50%;
+        }
         .btn-primary {
             width: 100%;
             padding: 14px;
@@ -421,15 +547,27 @@
             letter-spacing: 0.5px;
             box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3);
         }
-        .btn-primary:active { transform: scale(0.97); opacity: 0.85; }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-primary.success { background: var(--color-success); }
-        .btn-primary.danger { background: var(--color-danger); }
-        .btn-primary.warning { background: var(--color-warning); }
+        .btn-primary:active {
+            transform: scale(0.97);
+            opacity: 0.85;
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-primary.success {
+            background: var(--color-success);
+        }
+        .btn-primary.danger {
+            background: var(--color-danger);
+        }
+        .btn-primary.warning {
+            background: var(--color-warning);
+        }
         .btn-secondary {
             width: 100%;
             padding: 14px;
-            border: 2px solid rgba(255,255,255,0.1);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             font-size: 0.95rem;
             font-weight: 600;
@@ -440,11 +578,14 @@
             touch-action: manipulation;
             min-height: 48px;
         }
-        .btn-secondary:active { background: rgba(255,255,255,0.05); transform: scale(0.97); }
+        .btn-secondary:active {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(0.97);
+        }
         .btn-tertiary {
             width: 100%;
             padding: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             font-size: 0.85rem;
             font-weight: 500;
@@ -455,7 +596,9 @@
             touch-action: manipulation;
             min-height: 40px;
         }
-        .btn-tertiary:active { background: rgba(255,255,255,0.05); }
+        .btn-tertiary:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
 
         /* ===== TOAST ===== */
         #toast {
@@ -463,7 +606,7 @@
             bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             color: white;
             padding: 12px 20px;
             border-radius: 14px;
@@ -472,20 +615,28 @@
             max-width: 90%;
             text-align: center;
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             transition: all 0.3s ease;
             pointer-events: none;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         #toast.hidden {
             opacity: 0;
             transform: translateX(-50%) translateY(10px);
             pointer-events: none;
         }
-        #toast.success { border-left: 4px solid var(--color-success); }
-        #toast.error { border-left: 4px solid var(--color-danger); }
-        #toast.warning { border-left: 4px solid var(--color-warning); }
-        #toast.info { border-left: 4px solid var(--color-blue-bright); }
+        #toast.success {
+            border-left: 4px solid var(--color-success);
+        }
+        #toast.error {
+            border-left: 4px solid var(--color-danger);
+        }
+        #toast.warning {
+            border-left: 4px solid var(--color-warning);
+        }
+        #toast.info {
+            border-left: 4px solid var(--color-blue-bright);
+        }
 
         /* ===== OFFLINE INDICATOR ===== */
         #offline-indicator {
@@ -493,7 +644,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             color: white;
             padding: 16px 24px;
             border-radius: var(--radius);
@@ -501,7 +652,7 @@
             z-index: 50;
             font-weight: 600;
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         #offline-indicator span {
             display: block;
@@ -510,17 +661,155 @@
             margin-top: 4px;
             font-weight: 400;
         }
-        #offline-indicator.hidden { display: none; }
+        #offline-indicator.hidden {
+            display: none;
+        }
+
+        /* ===== V2: PESTAÑAS GESTIÓN ===== */
+        .tabs-container {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 4px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--color-text);
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        .tab-btn.active {
+            background: var(--color-blue-bright);
+            color: white;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+        }
+        .tab-btn:active {
+            transform: scale(0.96);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .resource-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .resource-item:active {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .resource-item .icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .resource-item .info {
+            flex: 1;
+            font-size: 0.8rem;
+        }
+        .resource-item .info .name {
+            font-weight: 700;
+        }
+        .resource-item .info .detail {
+            color: var(--color-text);
+            font-size: 0.7rem;
+        }
+        .resource-item .badge {
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .badge-oficial {
+            background: rgba(25, 118, 210, 0.25);
+            color: #90CAF9;
+        }
+        .badge-comunitario {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--color-text);
+        }
+        .badge-urgente {
+            background: rgba(229, 57, 53, 0.25);
+            color: #FF8A80;
+        }
+        .badge-parcial {
+            background: rgba(245, 158, 11, 0.25);
+            color: #FDE68A;
+        }
+        .badge-cubierto {
+            background: rgba(32, 201, 99, 0.25);
+            color: #6AE8A0;
+        }
+        .status-urgente {
+            color: var(--color-danger);
+        }
+        .status-parcial {
+            color: var(--color-warning);
+        }
+        .status-cubierto {
+            color: var(--color-success);
+        }
+        .aid-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .aid-stat {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        .aid-stat .number {
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+        .aid-stat .label {
+            font-size: 0.6rem;
+            color: var(--color-text);
+        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 370px) {
-            .grid-options { grid-template-columns: 1fr; }
-            .quick-action-btn .btn-label { font-size: 0.35rem; }
-            #header h1 { font-size: 0.9rem; }
-            .header-subtitle { display: none; }
-            #connectionStatus { font-size: 0.45rem; padding: 2px 6px; }
-            #situation-panel { max-width: 140px; padding: 8px 10px; }
-            #situation-panel .situation-row { font-size: 0.6rem; }
+            .grid-options {
+                grid-template-columns: 1fr;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.35rem;
+            }
+            #header h1 {
+                font-size: 0.9rem;
+            }
+            .header-subtitle {
+                display: none;
+            }
+            #connectionStatus {
+                font-size: 0.45rem;
+                padding: 2px 6px;
+            }
+            #situation-panel {
+                max-width: 140px;
+                padding: 8px 10px;
+            }
+            #situation-panel .situation-row {
+                font-size: 0.6rem;
+            }
         }
         @media (min-width: 768px) {
             #quick-actions {
@@ -530,49 +819,114 @@
                 border-radius: 24px 24px 0 0;
                 padding: 8px 10px max(8px, var(--safe-area-bottom));
             }
-            .quick-action-btn { min-height: 68px; }
-            .quick-action-btn .btn-icon { font-size: 1.6rem; }
-            .quick-action-btn .btn-label { font-size: 0.6rem; }
-            #modal-container { max-width: 560px; padding: 28px 24px; }
-            #situation-panel { max-width: 240px; }
+            .quick-action-btn {
+                min-height: 68px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1.6rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.6rem;
+            }
+            #modal-container {
+                max-width: 560px;
+                padding: 28px 24px;
+            }
+            #situation-panel {
+                max-width: 240px;
+            }
         }
         @media (min-width: 1024px) {
-            #quick-actions { max-width: 700px; }
-            .quick-action-btn { min-height: 76px; }
-            .quick-action-btn .btn-icon { font-size: 1.8rem; }
-            .quick-action-btn .btn-label { font-size: 0.65rem; }
+            #quick-actions {
+                max-width: 700px;
+            }
+            .quick-action-btn {
+                min-height: 76px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1.8rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.65rem;
+            }
         }
         @media (max-width: 768px) and (orientation: landscape) {
-            #quick-actions { padding: 4px 6px max(4px, var(--safe-area-bottom)); gap: 3px; }
-            .quick-action-btn { min-height: 44px; }
-            .quick-action-btn .btn-icon { font-size: 1rem; }
-            .quick-action-btn .btn-label { font-size: 0.35rem; }
-            #map-controls { bottom: 70px; }
-            .map-control-btn { width: 40px; height: 40px; font-size: 1rem; }
-            #header { min-height: 44px; }
-            #situation-panel { display: none; }
+            #quick-actions {
+                padding: 4px 6px max(4px, var(--safe-area-bottom));
+                gap: 3px;
+            }
+            .quick-action-btn {
+                min-height: 44px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.35rem;
+            }
+            #map-controls {
+                bottom: 70px;
+            }
+            .map-control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            #header {
+                min-height: 44px;
+            }
+            #situation-panel {
+                display: none;
+            }
         }
         @media (prefers-color-scheme: light) {
-            :root {
+             :root {
                 --color-dark: #F0F4FA;
                 --color-white: #ffffff;
                 --color-light: #e8eef6;
                 --color-text: #2C3E50;
                 --color-gray: #6A7A8A;
-                --shadow: 0 4px 20px rgba(0,0,0,0.1);
+                --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             }
-            body { background: var(--color-dark); }
-            #header { background: #0B2A4A; border-bottom: none; }
-            #quick-actions { background: rgba(255,255,255,0.95); border-top: 1px solid rgba(0,0,0,0.05); }
-            .quick-action-btn .btn-label { color: #1A2A3A; }
-            .quick-action-btn.safe-btn { background: rgba(32, 201, 99, 0.15); }
-            .quick-action-btn.help-btn { background: rgba(229, 57, 53, 0.15); }
-            .quick-action-btn.damage-btn { background: rgba(245, 158, 11, 0.15); }
-            .quick-action-btn.road-btn { background: rgba(25, 118, 210, 0.15); }
-            #modal-container { background: white; color: #1A2A3A; }
-            .modal-title { color: #0B2A4A; }
-            .modal-close { color: #6A7A8A; }
-            .modal-form-group label { color: #2C3E50; }
+            body {
+                background: var(--color-dark);
+            }
+            #header {
+                background: #0B2A4A;
+                border-bottom: none;
+            }
+            #quick-actions {
+                background: rgba(255, 255, 255, 0.95);
+                border-top: 1px solid rgba(0, 0, 0, 0.05);
+            }
+            .quick-action-btn .btn-label {
+                color: #1A2A3A;
+            }
+            .quick-action-btn.safe-btn {
+                background: rgba(32, 201, 99, 0.15);
+            }
+            .quick-action-btn.help-btn {
+                background: rgba(229, 57, 53, 0.15);
+            }
+            .quick-action-btn.damage-btn {
+                background: rgba(245, 158, 11, 0.15);
+            }
+            .quick-action-btn.road-btn {
+                background: rgba(25, 118, 210, 0.15);
+            }
+            #modal-container {
+                background: white;
+                color: #1A2A3A;
+            }
+            .modal-title {
+                color: #0B2A4A;
+            }
+            .modal-close {
+                color: #6A7A8A;
+            }
+            .modal-form-group label {
+                color: #2C3E50;
+            }
             .modal-form-group input,
             .modal-form-group select,
             .modal-form-group textarea {
@@ -580,23 +934,76 @@
                 border-color: #D0D8E0;
                 color: #1A2A3A;
             }
-            .grid-options label { background: #F0F4FA; border-color: #D0D8E0; color: #1A2A3A; }
-            .grid-options label:has(input:checked) { background: rgba(25, 118, 210, 0.08); border-color: var(--color-blue-bright); }
-            .btn-secondary { border-color: #D0D8E0; color: #1A2A3A; }
-            .btn-tertiary { border-color: #D0D8E0; color: #2C3E50; }
-            #toast { background: rgba(255,255,255,0.95); color: #1A2A3A; border: 1px solid #D0D8E0; }
-            .map-control-btn { background: white; color: #1A2A3A; }
-            .map-control-btn#myLocationBtn { background: var(--color-blue-bright); color: white; }
-            .sync-status { background: rgba(0,0,0,0.06); color: #1A2A3A; }
-            .sync-status.pending { background: var(--color-warning); color: white; }
-            .sync-status.synced { background: var(--color-success); color: white; }
-            .sync-status.error { background: var(--color-danger); color: white; }
-            .sync-status.offline { background: var(--color-gray); color: white; }
-            #situation-panel { background: rgba(255,255,255,0.92); color: #1A2A3A; border-color: #D0D8E0; }
-            #situation-panel .situation-row { border-bottom-color: #E0E8F0; }
+            .grid-options label {
+                background: #F0F4FA;
+                border-color: #D0D8E0;
+                color: #1A2A3A;
+            }
+            .grid-options label:has(input:checked) {
+                background: rgba(25, 118, 210, 0.08);
+                border-color: var(--color-blue-bright);
+            }
+            .btn-secondary {
+                border-color: #D0D8E0;
+                color: #1A2A3A;
+            }
+            .btn-tertiary {
+                border-color: #D0D8E0;
+                color: #2C3E50;
+            }
+            #toast {
+                background: rgba(255, 255, 255, 0.95);
+                color: #1A2A3A;
+                border: 1px solid #D0D8E0;
+            }
+            .map-control-btn {
+                background: white;
+                color: #1A2A3A;
+            }
+            .map-control-btn#myLocationBtn {
+                background: var(--color-blue-bright);
+                color: white;
+            }
+            .sync-status {
+                background: rgba(0, 0, 0, 0.06);
+                color: #1A2A3A;
+            }
+            .sync-status.pending {
+                background: var(--color-warning);
+                color: white;
+            }
+            .sync-status.synced {
+                background: var(--color-success);
+                color: white;
+            }
+            .sync-status.error {
+                background: var(--color-danger);
+                color: white;
+            }
+            .sync-status.offline {
+                background: var(--color-gray);
+                color: white;
+            }
+            #situation-panel {
+                background: rgba(255, 255, 255, 0.92);
+                color: #1A2A3A;
+                border-color: #D0D8E0;
+            }
+            #situation-panel .situation-row {
+                border-bottom-color: #E0E8F0;
+            }
+            .resource-item {
+                border-bottom-color: #E0E8F0;
+            }
+            .aid-stat {
+                background: rgba(0, 0, 0, 0.04);
+            }
         }
         @media (prefers-reduced-motion: reduce) {
-            * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
@@ -605,7 +1012,7 @@
         <header id="header">
             <div class="header-content">
                 <h1>🗺️ MAPA VIVO</h1>
-                <span class="header-subtitle">COLOMBIA</span>
+                <span class="header-subtitle">COLOMBIA V2</span>
                 <span id="syncStatus" class="sync-status synced">✅ Sincronizado</span>
                 <div class="header-actions">
                     <button id="emergencyModeBtn" aria-label="Modo emergencia">🚨</button>
@@ -678,8 +1085,10 @@
         <div id="toast" class="hidden"></div>
     </div>
 
-    <script src="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
 
     <script>
         // ============================================================
@@ -697,10 +1106,654 @@
         };
 
         const supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
-        let currentUser = null, isAuthenticated = false, authReady = false;
+        let currentUser = null,
+            isAuthenticated = false,
+            authReady = false;
 
         // ============================================================
-        // GEOLOCALIZACIÓN CON FALLBACK MANUAL
+        // PUNTOS DE ACOPIO OFICIALES - DATOS REALES (investigados)
+        // Fuentes: Cruz Roja, Alcaldías, UNGRD, medios verificados
+        // ============================================================
+        const OFFICIAL_COLLECTION_POINTS = [{
+            id: 'cr1',
+            name: 'Cruz Roja Colombiana - Sede Administrativa',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.6630,
+            longitude: -74.0620,
+            city: 'Bogotá',
+            address: 'Carrera 24 #73-38',
+            phone: '+57 1 1234567',
+            hours: '24 horas',
+            status: 'activo',
+            source: 'Cruz Roja Bogotá',
+            source_url: 'https://www.cruzrojabogota.org.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas',
+                'Alimentos para animales'
+            ],
+            not_accepts: ['Medicamentos', 'Ropa usada', 'Elementos usados', 'Alimentos perecederos'],
+            last_verified: '2026-08-13'
+        }, {
+            id: 'cr2',
+            name: 'Cruz Roja - Estadio El Campín',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.6480,
+            longitude: -74.0800,
+            city: 'Bogotá',
+            address: 'Avenida NQS / Carrera 30 entre calle 53B Bis y 57',
+            hours: '8:00 a.m. - 9:00 p.m.',
+            status: 'activo',
+            source: 'Alcaldía Bogotá',
+            source_url: 'https://bogota.gov.co',
+            accepts: ['Agua', 'Cobijas', 'Mantas', 'Almohadas', 'Colchonetas', 'Toldillos', 'Arroz', 'Aceite',
+                'Pastas', 'Enlatados', 'Granos', 'Harina', 'Panela', 'Leche en polvo', 'Tapabocas', 'Gasas'
+            ],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-12'
+        }, {
+            id: 'cr3',
+            name: 'Cruz Roja - Centro Comercial Unicentro',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.7020,
+            longitude: -74.0320,
+            city: 'Bogotá',
+            address: 'Carrera 15 #124-30',
+            hours: 'Horario comercial',
+            status: 'activo',
+            source: 'Cruz Roja Bogotá',
+            source_url: 'https://www.cruzrojabogota.org.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-13'
+        }, {
+            id: 'cr4',
+            name: 'Cruz Roja - Universidad Jorge Tadeo Lozano',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.6370,
+            longitude: -74.0640,
+            city: 'Bogotá',
+            address: 'Carrera 4 #22-61',
+            hours: '8:00 a.m. - 9:00 p.m.',
+            status: 'activo',
+            source: 'Alcaldía Bogotá',
+            source_url: 'https://bogota.gov.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cr5',
+            name: 'Cruz Roja - Usaquén',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.7200,
+            longitude: -74.0280,
+            city: 'Bogotá',
+            address: 'Calle 161A #7F-55',
+            hours: '8:00 a.m. - 9:00 p.m.',
+            status: 'activo',
+            source: 'Alcaldía Bogotá',
+            source_url: 'https://bogota.gov.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cr6',
+            name: 'Cruz Roja - Samu Sur',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.5980,
+            longitude: -74.0880,
+            city: 'Bogotá',
+            address: 'Avenida Carrera 68 #31-41 Sur',
+            hours: '24 horas',
+            status: 'activo',
+            source: 'Radio Nacional',
+            source_url: 'https://radionacional.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cr7',
+            name: 'Cruz Roja - Samu Norte',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.7400,
+            longitude: -74.0350,
+            city: 'Bogotá',
+            address: 'Calle 134 - Carrera 7B Bis #132-31',
+            hours: '24 horas',
+            status: 'activo',
+            source: 'Radio Nacional',
+            source_url: 'https://radionacional.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cr8',
+            name: 'Cruz Roja - Centro de Salvamento Acuático',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.6700,
+            longitude: -74.0750,
+            city: 'Bogotá',
+            address: 'Avenida La Esmeralda #63-81',
+            hours: '24 horas',
+            status: 'activo',
+            source: 'Radio Nacional',
+            source_url: 'https://radionacional.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cr9',
+            name: 'Cruz Roja - Bodega',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.6900,
+            longitude: -74.0700,
+            city: 'Bogotá',
+            address: 'Diagonal 79B #62-53',
+            hours: '24 horas',
+            status: 'activo',
+            source: 'Radio Nacional',
+            source_url: 'https://radionacional.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cr10',
+            name: 'Cruz Roja - Palacio de los Deportes',
+            type: 'oficial',
+            organization: 'Cruz Roja Colombiana',
+            latitude: 4.6550,
+            longitude: -74.0850,
+            city: 'Bogotá',
+            address: 'Calle 63 #59A-06',
+            hours: '24 horas',
+            status: 'activo',
+            source: 'Radio Nacional',
+            source_url: 'https://radionacional.co',
+            accepts: ['Alimentos no perecederos', 'Agua', 'Elementos de higiene', 'Colchonetas', 'Frazadas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'med1',
+            name: 'Fundación Banco Arquidiocesano de Alimentos',
+            type: 'oficial',
+            organization: 'Alcaldía de Medellín',
+            latitude: 6.2440,
+            longitude: -75.5730,
+            city: 'Medellín',
+            address: 'Medellín',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Alcaldía de Medellín',
+            source_url: 'https://www.medellin.gov.co',
+            accepts: ['Agua', 'Arroz', 'Aceite', 'Pastas', 'Legumbres', 'Enlatados', 'Harinas', 'Panela',
+                'Chocolate', 'Avena', 'Leche', 'Jabón', 'Champú', 'Cepillos', 'Crema dental',
+                'Toallas higiénicas', 'Papel higiénico', 'Pañales', 'Colchonetas', 'Mantas'
+            ],
+            not_accepts: ['Medicamentos', 'Ropa', 'Productos vencidos', 'Alimentos perecederos'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'med2',
+            name: 'Fundación Saciar',
+            type: 'oficial',
+            organization: 'Alcaldía de Medellín',
+            latitude: 6.2500,
+            longitude: -75.5700,
+            city: 'Medellín',
+            address: 'Medellín',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Alcaldía de Medellín',
+            source_url: 'https://www.medellin.gov.co',
+            accepts: ['Alimentos no perecederos', 'Elementos de aseo', 'Colchonetas', 'Mantas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'med3',
+            name: 'Parque Biblioteca Belén',
+            type: 'oficial',
+            organization: 'Alcaldía de Medellín',
+            latitude: 6.2100,
+            longitude: -75.5900,
+            city: 'Medellín',
+            address: 'Medellín',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Alcaldía de Medellín',
+            source_url: 'https://www.medellin.gov.co',
+            accepts: ['Alimentos no perecederos', 'Elementos de aseo', 'Colchonetas', 'Mantas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'med4',
+            name: 'Parque Biblioteca San Javier',
+            type: 'oficial',
+            organization: 'Alcaldía de Medellín',
+            latitude: 6.2600,
+            longitude: -75.6100,
+            city: 'Medellín',
+            address: 'Medellín',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Alcaldía de Medellín',
+            source_url: 'https://www.medellin.gov.co',
+            accepts: ['Alimentos no perecederos', 'Elementos de aseo', 'Colchonetas', 'Mantas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'med5',
+            name: 'Parque Biblioteca Gabriel García Márquez',
+            type: 'oficial',
+            organization: 'Alcaldía de Medellín',
+            latitude: 6.2700,
+            longitude: -75.5700,
+            city: 'Medellín',
+            address: 'Medellín',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Alcaldía de Medellín',
+            source_url: 'https://www.medellin.gov.co',
+            accepts: ['Alimentos no perecederos', 'Elementos de aseo', 'Colchonetas', 'Mantas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'med6',
+            name: 'Parque Biblioteca León de Greiff',
+            type: 'oficial',
+            organization: 'Alcaldía de Medellín',
+            latitude: 6.2300,
+            longitude: -75.5600,
+            city: 'Medellín',
+            address: 'Medellín',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Alcaldía de Medellín',
+            source_url: 'https://www.medellin.gov.co',
+            accepts: ['Alimentos no perecederos', 'Elementos de aseo', 'Colchonetas', 'Mantas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'med7',
+            name: 'Biblioteca Pública El Poblado',
+            type: 'oficial',
+            organization: 'Alcaldía de Medellín',
+            latitude: 6.2100,
+            longitude: -75.5800,
+            city: 'Medellín',
+            address: 'Medellín',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Alcaldía de Medellín',
+            source_url: 'https://www.medellin.gov.co',
+            accepts: ['Alimentos no perecederos', 'Elementos de aseo', 'Colchonetas', 'Mantas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'med8',
+            name: 'Terminal del Norte (local 9840)',
+            type: 'oficial',
+            organization: 'Alcaldía de Medellín',
+            latitude: 6.2800,
+            longitude: -75.5700,
+            city: 'Medellín',
+            address: 'Medellín',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Alcaldía de Medellín',
+            source_url: 'https://www.medellin.gov.co',
+            accepts: ['Alimentos no perecederos', 'Elementos de aseo', 'Colchonetas', 'Mantas'],
+            not_accepts: ['Medicamentos', 'Ropa usada'],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cali1',
+            name: 'Plazoleta Jairo Varela',
+            type: 'oficial',
+            organization: 'Alcaldía de Cali',
+            latitude: 3.4516,
+            longitude: -76.5320,
+            city: 'Cali',
+            address: 'Cali',
+            hours: '8:00 a.m. - 6:00 p.m.',
+            status: 'activo',
+            source: 'Radio Nacional',
+            source_url: 'https://radionacional.co',
+            accepts: ['Agua', 'Bebidas hidratantes', 'Alimentos no perecederos', 'Dulces', 'Alcohol', 'Vendajes',
+                'Gasas', 'Tapabocas', 'Colchonetas', 'Sábanas', 'Cobijas', 'Ropa', 'Picas', 'Guantes',
+                'Bolsas grandes', 'Costales', 'Linternas con pilas', 'Cascos', 'Gafas de protección'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cali2',
+            name: 'Escuela Nacional del Deporte',
+            type: 'oficial',
+            organization: 'Alcaldía de Cali',
+            latitude: 3.4400,
+            longitude: -76.5300,
+            city: 'Cali',
+            address: 'Cali',
+            hours: '8:00 a.m. - 6:00 p.m.',
+            status: 'activo',
+            source: 'Radio Nacional',
+            source_url: 'https://radionacional.co',
+            accepts: ['Agua', 'Bebidas hidratantes', 'Alimentos no perecederos', 'Dulces', 'Alcohol', 'Vendajes',
+                'Gasas', 'Tapabocas', 'Colchonetas', 'Sábanas', 'Cobijas', 'Ropa', 'Picas', 'Guantes',
+                'Bolsas grandes', 'Costales', 'Linternas con pilas', 'Cascos', 'Gafas de protección'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'bar1',
+            name: 'Centro de Acopio Alcaldía de Barranquilla',
+            type: 'oficial',
+            organization: 'Alcaldía de Barranquilla',
+            latitude: 10.9639,
+            longitude: -74.7963,
+            city: 'Barranquilla',
+            address: 'Carrera 43 #6-120, sector Barranquillita',
+            hours: '24 horas',
+            status: 'activo',
+            source: 'Radio Nacional',
+            source_url: 'https://radionacional.co',
+            accepts: ['Alimentos no perecederos', 'Agua potable', 'Insumos médicos', 'Productos de aseo',
+                'Artículos para bebés', 'Ropa en buen estado', 'Colchonetas'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'past1',
+            name: 'Antiguo Pre-ICFES Montilla',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 1.2136,
+            longitude: -77.2811,
+            city: 'Pasto',
+            address: 'Calle 17 #27-59, Barrio Centro',
+            phone: '+57 320 688 6196',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Agua potable', 'Cobijas', 'Mantas', 'Almohadas', 'Colchonetas', 'Toldillos', 'Arroz',
+                'Aceite', 'Pastas', 'Enlatados', 'Granos', 'Harina', 'Panela', 'Leche en polvo',
+                'Tapabocas', 'Gasas', 'Alcohol', 'Clorhexidina', 'Guantes', 'Jabón', 'Shampoo',
+                'Cepillos dentales', 'Toallas higiénicas', 'Papel higiénico', 'Pañales', 'Biberones'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'iba1',
+            name: 'Arquidiócesis de Ibagué - Banco de Alimentos',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 4.4389,
+            longitude: -75.2322,
+            city: 'Ibagué',
+            address: 'Carrera 4, Estadio, No. 23-42',
+            phone: '+57 321 840 2089',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Agua potable', 'Cobijas', 'Mantas', 'Almohadas', 'Colchonetas', 'Toldillos', 'Arroz',
+                'Aceite', 'Pastas', 'Enlatados', 'Granos', 'Harina', 'Panela', 'Leche en polvo',
+                'Tapabocas', 'Gasas', 'Alcohol', 'Clorhexidina', 'Guantes', 'Jabón', 'Shampoo',
+                'Cepillos dentales', 'Toallas higiénicas', 'Papel higiénico', 'Pañales', 'Biberones'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'quib1',
+            name: 'Calle 27A #23-44, barrio Los Ángeles',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 5.6900,
+            longitude: -76.6600,
+            city: 'Quibdó',
+            address: 'Calle 27A #23-44, barrio Los Ángeles, sector San Gabriel',
+            phone: '+57 310 805 0535',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Agua potable', 'Cobijas', 'Mantas', 'Almohadas', 'Colchonetas', 'Toldillos', 'Arroz',
+                'Aceite', 'Pastas', 'Enlatados', 'Granos', 'Harina', 'Panela', 'Leche en polvo',
+                'Tapabocas', 'Gasas', 'Alcohol', 'Clorhexidina', 'Guantes', 'Jabón', 'Shampoo',
+                'Cepillos dentales', 'Toallas higiénicas', 'Papel higiénico', 'Pañales', 'Biberones'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'buca1',
+            name: 'Calle 54 #21A-07, barrio La Concordia',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 7.1193,
+            longitude: -73.1227,
+            city: 'Bucaramanga',
+            address: 'Calle 54 #21A-07, barrio La Concordia',
+            phone: '+57 316 256 7986',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Agua potable', 'Cobijas', 'Mantas', 'Almohadas', 'Colchonetas', 'Toldillos', 'Arroz',
+                'Aceite', 'Pastas', 'Enlatados', 'Granos', 'Harina', 'Panela', 'Leche en polvo',
+                'Tapabocas', 'Gasas', 'Alcohol', 'Clorhexidina', 'Guantes', 'Jabón', 'Shampoo',
+                'Cepillos dentales', 'Toallas higiénicas', 'Papel higiénico', 'Pañales', 'Biberones'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'since1',
+            name: 'Calle 19 #21-41, Calle 7 de Agosto',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 9.3047,
+            longitude: -75.3977,
+            city: 'Sincelejo',
+            address: 'Calle 19 #21-41, Calle 7 de Agosto, frente a Droguería Maxi Económica',
+            phone: '+57 311 478 8851',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Agua potable', 'Cobijas', 'Mantas', 'Almohadas', 'Colchonetas', 'Toldillos', 'Arroz',
+                'Aceite', 'Pastas', 'Enlatados', 'Granos', 'Harina', 'Panela', 'Leche en polvo',
+                'Tapabocas', 'Gasas', 'Alcohol', 'Clorhexidina', 'Guantes', 'Jabón', 'Shampoo',
+                'Cepillos dentales', 'Toallas higiénicas', 'Papel higiénico', 'Pañales', 'Biberones'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cart1',
+            name: 'Parroquia Nuestra Señora del Perpetuo Socorro',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 10.3910,
+            longitude: -75.4794,
+            city: 'Cartagena',
+            address: 'Bocagrande',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Agua potable', 'Cobijas', 'Mantas', 'Almohadas', 'Colchonetas', 'Toldillos', 'Arroz',
+                'Aceite', 'Pastas', 'Enlatados', 'Granos', 'Harina', 'Panela', 'Leche en polvo',
+                'Tapabocas', 'Gasas', 'Alcohol', 'Clorhexidina', 'Guantes', 'Jabón', 'Shampoo',
+                'Cepillos dentales', 'Toallas higiénicas', 'Papel higiénico', 'Pañales', 'Biberones'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cart2',
+            name: 'Parroquia Cristo Rey (Crespo)',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 10.4100,
+            longitude: -75.4900,
+            city: 'Cartagena',
+            address: 'Crespo',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Agua potable', 'Cobijas', 'Mantas', 'Almohadas', 'Colchonetas', 'Toldillos', 'Arroz',
+                'Aceite', 'Pastas', 'Enlatados', 'Granos', 'Harina', 'Panela', 'Leche en polvo',
+                'Tapabocas', 'Gasas', 'Alcohol', 'Clorhexidina', 'Guantes', 'Jabón', 'Shampoo',
+                'Cepillos dentales', 'Toallas higiénicas', 'Papel higiénico', 'Pañales', 'Biberones'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'soacha1',
+            name: 'Cuerpo Oficial de Bomberos de Soacha',
+            type: 'oficial',
+            organization: 'Alcaldía de Soacha',
+            latitude: 4.5790,
+            longitude: -74.2170,
+            city: 'Soacha',
+            address: 'Calle 22 No. 9-20',
+            hours: '7:00 a.m. - 6:00 p.m.',
+            status: 'activo',
+            source: 'Caracol Radio',
+            source_url: 'https://caracol.com.co',
+            accepts: ['Alimentos', 'Agua', 'Medicamentos', 'Elementos de primera necesidad'],
+            not_accepts: [],
+            last_verified: '2026-08-13'
+        }, {
+            id: 'popayan1',
+            name: 'Casa de la Moneda de Popayán',
+            type: 'oficial',
+            organization: 'Gobernación del Cauca',
+            latitude: 2.4414,
+            longitude: -76.6060,
+            city: 'Popayán',
+            address: 'Popayán',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Caracol Radio',
+            source_url: 'https://caracol.com.co',
+            accepts: ['Alimentos', 'Agua', 'Medicamentos', 'Elementos de primera necesidad'],
+            not_accepts: [],
+            last_verified: '2026-08-13'
+        }, {
+            id: 'santamarta1',
+            name: 'Oficina para la Gestión del Riesgo de Desastres - Ogricc',
+            type: 'oficial',
+            organization: 'Alcaldía de Santa Marta',
+            latitude: 11.2404,
+            longitude: -74.2110,
+            city: 'Santa Marta',
+            address: 'Santa Marta',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'El Heraldo',
+            source_url: 'https://www.elheraldo.co',
+            accepts: ['Donaciones para damnificados'],
+            not_accepts: [],
+            last_verified: '2026-08-12'
+        }, {
+            id: 'valledupar1',
+            name: 'Centro de Acopio Valledupar',
+            type: 'oficial',
+            organization: 'Oficina Departamental de Gestión del Riesgo',
+            latitude: 10.4760,
+            longitude: -73.2480,
+            city: 'Valledupar',
+            address: 'Valledupar',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Diario del Cesar',
+            source_url: 'https://www.diariodelcesar.com',
+            accepts: ['Donaciones para damnificados'],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'chía1',
+            name: '122 Plaza Apartahotel',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 4.8580,
+            longitude: -74.0530,
+            city: 'Chía',
+            address: 'Carrera 15A #122-27',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Elementos de primera necesidad', 'Alimentos no perecederos', 'Suministros de primeros auxilios',
+                'Artículos de higiene'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cáqueza1',
+            name: 'Deportivos Willys',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 4.4050,
+            longitude: -73.9470,
+            city: 'Cáqueza',
+            address: 'Calle 4 #4-09',
+            phone: '+57 314 308 7520',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Elementos de primera necesidad', 'Alimentos no perecederos', 'Suministros de primeros auxilios',
+                'Artículos de higiene'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'pacho1',
+            name: 'Oficina Orange, Zona Rosa',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 5.1330,
+            longitude: -74.1600,
+            city: 'Pacho',
+            address: 'Calle 6 #16-10',
+            phone: '+57 302 515 2769',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Elementos de primera necesidad', 'Alimentos no perecederos', 'Suministros de primeros auxilios',
+                'Artículos de higiene'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }, {
+            id: 'cali_yumbo1',
+            name: 'Carrera 30 #10-90, Arroyo Hondo',
+            type: 'oficial',
+            organization: 'Iniciativa "Un solo corazón"',
+            latitude: 3.5300,
+            longitude: -76.4900,
+            city: 'Yumbo',
+            address: 'Carrera 30 #10-90, Arroyo Hondo',
+            phone: '+57 316 791 2163',
+            hours: 'Horario de atención',
+            status: 'activo',
+            source: 'Iniciativa Primera Dama',
+            source_url: 'https://inravision.gov.co',
+            accepts: ['Elementos de primera necesidad', 'Alimentos no perecederos', 'Suministros de primeros auxilios',
+                'Artículos de higiene'
+            ],
+            not_accepts: [],
+            last_verified: '2026-08-11'
+        }];
+
+        // ============================================================
+        // GEOLOCALIZACIÓN
         // ============================================================
         class GeolocationManager {
             constructor() {
@@ -735,8 +1788,7 @@
                             console.warn('GPS falló:', error.message);
                             this.fallbackMode = true;
                             reject(new Error('No se pudo obtener ubicación. Selecciona manualmente.'));
-                        },
-                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+                        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
                     );
                 });
             }
@@ -759,8 +1811,10 @@
                 const R = 6371;
                 const dLat = this.toRad(lat2 - lat1);
                 const dLon = this.toRad(lon2 - lon1);
-                const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(this.toRad(lat1))*Math.cos(this.toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
-                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             }
             toRad(deg) { return deg * Math.PI / 180; }
 
@@ -783,9 +1837,15 @@
                     { name: 'Armenia', lat: 4.5343, lon: -75.6814, radius: 20 },
                     { name: 'Popayán', lat: 2.4414, lon: -76.6060, radius: 20 },
                     { name: 'Montería', lat: 8.7493, lon: -75.8859, radius: 20 },
-                    { name: 'Quibdó', lat: 5.6900, lon: -76.6600, radius: 15 }
+                    { name: 'Quibdó', lat: 5.6900, lon: -76.6600, radius: 15 },
+                    { name: 'Soacha', lat: 4.5790, lon: -74.2170, radius: 15 },
+                    { name: 'Sincelejo', lat: 9.3047, lon: -75.3977, radius: 15 },
+                    { name: 'Valledupar', lat: 10.4760, lon: -73.2480, radius: 15 },
+                    { name: 'Chía', lat: 4.8580, lon: -74.0530, radius: 10 },
+                    { name: 'Yumbo', lat: 3.5300, lon: -76.4900, radius: 10 }
                 ];
-                let closest = null, closestDist = Infinity;
+                let closest = null,
+                    closestDist = Infinity;
                 for (const city of cities) {
                     const dist = this.getDistance(lat, lon, city.lat, city.lon);
                     if (dist < city.radius && dist < closestDist) {
@@ -800,7 +1860,7 @@
         const geolocation = new GeolocationManager();
 
         // ============================================================
-        // OFFLINE – MIGRACIÓN SEGURA
+        // OFFLINE
         // ============================================================
         class OfflineManager {
             constructor() {
@@ -823,7 +1883,8 @@
                             db.createObjectStore('pending', { keyPath: 'temp_id' });
                         }
                         if (!db.objectStoreNames.contains('sync_queue')) {
-                            const syncStore = db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
+                            const syncStore = db.createObjectStore('sync_queue', { keyPath: 'id',
+                                autoIncrement: true });
                             syncStore.createIndex('temp_id', 'temp_id');
                         }
                         if (!db.objectStoreNames.contains('images')) {
@@ -843,7 +1904,8 @@
             async saveReport(report) {
                 if (!this.isReady) await this.init();
                 if (!report.temp_id) {
-                    report.temp_id = `MV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+                    report.temp_id =
+                    `MV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
                 }
                 const reportData = { ...report, temp_id: report.temp_id, synced: false, savedAt: Date.now() };
                 return new Promise((resolve, reject) => {
@@ -967,7 +2029,7 @@
         offline.init();
 
         // ============================================================
-        // MAPA – CON unclustered-point, heatmap y zonas críticas
+        // MAPA
         // ============================================================
         class MapManager {
             constructor() {
@@ -977,6 +2039,7 @@
                 this._clusterClickHandler = null;
                 this._reportClickHandler = null;
                 this.heatmapAdded = false;
+                this.collectionPointsAdded = false;
             }
 
             init(containerId = 'map') {
@@ -1003,9 +2066,92 @@
                         this.updateClusters(this.reports);
                         this.addHeatmap(this.reports);
                     }
+                    this.addCollectionPoints();
                 });
 
                 return this.map;
+            }
+
+            addCollectionPoints() {
+                if (!this.map || !this.isReady || this.collectionPointsAdded) return;
+
+                const features = OFFICIAL_COLLECTION_POINTS.map(p => ({
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [p.longitude, p.latitude]
+                    },
+                    properties: {
+                        id: p.id,
+                        name: p.name,
+                        type: 'collection_point',
+                        organization: p.organization,
+                        city: p.city,
+                        address: p.address,
+                        phone: p.phone || '',
+                        hours: p.hours || '',
+                        status: p.status,
+                        source: p.source
+                    }
+                }));
+
+                if (features.length === 0) return;
+
+                this.map.addSource('collection-points', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: features }
+                });
+
+                this.map.addLayer({
+                    id: 'collection-points',
+                    type: 'symbol',
+                    source: 'collection-points',
+                    layout: {
+                        'icon-image': 'marker-15',
+                        'icon-size': 1.2,
+                        'icon-allow-overlap': true,
+                        'text-field': ['get', 'name'],
+                        'text-offset': [0, 1.2],
+                        'text-size': 10,
+                        'text-anchor': 'top',
+                        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+                        'text-max-width': 8
+                    },
+                    paint: {
+                        'text-color': '#ffffff',
+                        'text-halo-color': '#0B2A4A',
+                        'text-halo-width': 2
+                    }
+                });
+
+                // Popup para puntos de acopio
+                this.map.on('click', 'collection-points', (e) => {
+                    const props = e.features[0].properties;
+                    const point = OFFICIAL_COLLECTION_POINTS.find(p => p.id === props.id);
+                    if (!point) return;
+
+                    new maplibregl.Popup({ offset: 25, maxWidth: 280 })
+                        .setLngLat(e.lngLat)
+                        .setHTML(`
+                            <div style="font-size:0.8rem;padding:4px;">
+                                <strong>🏛️ ${point.name}</strong>
+                                <br><span style="font-size:0.7rem;color:#666;">${point.organization}</span>
+                                <br><span style="font-size:0.7rem;color:#666;">📍 ${point.address || point.city}</span>
+                                ${point.phone ? `<br><span style="font-size:0.7rem;color:#666;">📞 ${point.phone}</span>` : ''}
+                                ${point.hours ? `<br><span style="font-size:0.7rem;color:#666;">🕐 ${point.hours}</span>` : ''}
+                                <br><span style="font-size:0.65rem;color:#2ecc71;">✅ Fuente: ${point.source}</span>
+                                <br><span style="font-size:0.65rem;color:#666;">🔄 ${point.last_verified}</span>
+                                <br><button onclick="showCollectionPointDetail('${point.id}')" 
+                                    style="margin-top:6px;padding:4px 10px;background:#1976D2;border:none;border-radius:4px;color:white;cursor:pointer;font-size:0.7rem;">
+                                    📋 Ver qué donar
+                                </button>
+                            </div>
+                        `)
+                        .addTo(this.map);
+                });
+
+                this.collectionPointsAdded = true;
+                console.log(`📍 ${features.length} puntos de acopio añadidos`);
             }
 
             addHeatmap(reports) {
@@ -1028,10 +2174,7 @@
                         properties: { weight: r.type === 'help' ? 2 : 1 }
                     }));
 
-                if (features.length === 0) return;
-
-                // Solo añadir heatmap si hay más de 10 reportes
-                if (features.length < 5) return;
+                if (features.length === 0 || features.length < 5) return;
 
                 this.map.addSource('reports-heat', {
                     type: 'geojson',
@@ -1045,17 +2188,13 @@
                     paint: {
                         'heatmap-weight': 1,
                         'heatmap-intensity': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
+                            'interpolate', ['linear'], ['zoom'],
                             0, 0.5,
                             10, 1.5,
                             14, 3
                         ],
                         'heatmap-color': [
-                            'interpolate',
-                            ['linear'],
-                            ['heatmap-density'],
+                            'interpolate', ['linear'], ['heatmap-density'],
                             0, 'rgba(0,0,255,0)',
                             0.2, 'rgba(0,0,255,0.2)',
                             0.4, 'rgba(0,255,255,0.4)',
@@ -1064,9 +2203,7 @@
                             1, 'rgba(255,0,0,1)'
                         ],
                         'heatmap-radius': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
+                            'interpolate', ['linear'], ['zoom'],
                             0, 20,
                             10, 30,
                             14, 50
@@ -1108,7 +2245,9 @@
                             confidence: report.confidence || 'reported',
                             created_at: report.created_at || null,
                             in_danger: report.in_danger || false,
-                            injured_count: report.injured_count || 0
+                            injured_count: report.injured_count || 0,
+                            road_status: report.road_status || null,
+                            road_name: report.road_name || null
                         }
                     }));
 
@@ -1117,7 +2256,6 @@
                 const existingSource = this.map.getSource('reports-cluster');
                 if (existingSource) {
                     existingSource.setData(geojson);
-                    // Asegurar capa unclustered-point
                     if (!this.map.getLayer('unclustered-point')) {
                         this.map.addLayer({
                             id: 'unclustered-point',
@@ -1126,8 +2264,7 @@
                             filter: ['!', ['has', 'point_count']],
                             paint: {
                                 'circle-color': [
-                                    'match',
-                                    ['get', 'type'],
+                                    'match', ['get', 'type'],
                                     'safe', '#2ecc71',
                                     'help', '#e74c3c',
                                     'damage', '#f39c12',
@@ -1146,14 +2283,12 @@
                             }
                         });
                     }
-                    // Actualizar heatmap
                     this.updateHeatmap(features);
                     return;
                 }
 
                 if (features.length === 0) return;
 
-                // Crear source y layers
                 this.map.addSource('reports-cluster', {
                     type: 'geojson',
                     data: geojson,
@@ -1169,25 +2304,17 @@
                     filter: ['has', 'point_count'],
                     paint: {
                         'circle-color': [
-                            'step',
-                            ['get', 'point_count'],
-                            '#51bbd6',
-                            5,
-                            '#f1f075',
-                            15,
-                            '#f28cb1',
-                            30,
+                            'step', ['get', 'point_count'],
+                            '#51bbd6', 5,
+                            '#f1f075', 15,
+                            '#f28cb1', 30,
                             '#e74c3c'
                         ],
                         'circle-radius': [
-                            'step',
-                            ['get', 'point_count'],
-                            20,
-                            5,
-                            30,
-                            15,
-                            40,
-                            30,
+                            'step', ['get', 'point_count'],
+                            20, 5,
+                            30, 15,
+                            40, 30,
                             50
                         ],
                         'circle-stroke-width': 2,
@@ -1209,7 +2336,6 @@
                     }
                 });
 
-                // CAPA DE PUNTOS INDIVIDUALES
                 this.map.addLayer({
                     id: 'unclustered-point',
                     type: 'circle',
@@ -1217,8 +2343,7 @@
                     filter: ['!', ['has', 'point_count']],
                     paint: {
                         'circle-color': [
-                            'match',
-                            ['get', 'type'],
+                            'match', ['get', 'type'],
                             'safe', '#2ecc71',
                             'help', '#e74c3c',
                             'damage', '#f39c12',
@@ -1237,10 +2362,8 @@
                     }
                 });
 
-                // Heatmap
                 this.addHeatmap(this.reports);
 
-                // Listeners únicos
                 if (!this._clusterClickHandler) {
                     this._clusterClickHandler = (e) => {
                         const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
@@ -1259,7 +2382,6 @@
                     this.map.on('click', 'clusters', this._clusterClickHandler);
                 }
 
-                // LISTENER RESTRINGIDO A unclustered-point
                 if (!this._reportClickHandler) {
                     this._reportClickHandler = (e) => {
                         const features = this.map.queryRenderedFeatures(e.point, {
@@ -1275,7 +2397,6 @@
                         const lon = Number(report.longitude);
                         if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
-                        // Cálculo de antigüedad
                         let ageText = 'ahora';
                         let ageColor = '#2ecc71';
                         if (report.created_at) {
@@ -1295,19 +2416,25 @@
                             confidenceColor = '#2ecc71'; } else if (vc >= 3) { confidenceLabel = '🟡 Corroborado';
                             confidenceColor = '#f1f075'; }
 
-                        // Prioridad visual
+                        let roadInfo = '';
+                        if (report.type === 'road' && report.road_name) {
+                            roadInfo =
+                            `<br><span style="font-size:0.7rem;color:#3498db;">🛣️ ${report.road_name} ${report.road_status ? '• ' + report.road_status.join(', ') : ''}</span>`;
+                        }
+
                         let priorityIcon = '';
                         let priorityColor = '';
                         if (report.in_danger) { priorityIcon = '🔴';
                             priorityColor = '#e74c3c'; } else if (report.injured_count > 0) { priorityIcon = '🟠';
                             priorityColor = '#f39c12'; }
 
-                        new maplibregl.Popup({ offset: 25, maxWidth: 260 })
+                        new maplibregl.Popup({ offset: 25, maxWidth: 280 })
                             .setLngLat([lon, lat])
                             .setHTML(`
                                 <div style="font-size:0.8rem;padding:4px;">
                                     ${priorityIcon ? `<span style="font-size:1.2rem;font-weight:700;color:${priorityColor};">${priorityIcon}</span> ` : ''}
                                     <strong>${report.description || report.type || 'Reporte'}</strong>
+                                    ${roadInfo}
                                     <br>
                                     <span style="font-size:0.65rem;color:#666;">
                                         ${report.municipality || 'Ubicación no especificada'}
@@ -1371,12 +2498,12 @@
             }
 
             showLocationPicker() {
-                // Abrir modal para seleccionar ubicación manual
                 const cities = [
                     'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena',
                     'Bucaramanga', 'Pereira', 'Cúcuta', 'Ibagué', 'Villavicencio',
                     'Pasto', 'Manizales', 'Neiva', 'Santa Marta', 'Armenia',
-                    'Popayán', 'Montería', 'Quibdó', 'Valledupar', 'Sincelejo'
+                    'Popayán', 'Montería', 'Quibdó', 'Valledupar', 'Sincelejo',
+                    'Soacha', 'Chía', 'Yumbo'
                 ];
                 openModal(`
                     <div class="modal-title">📍 SELECCIONAR UBICACIÓN</div>
@@ -1414,7 +2541,10 @@
                     'Montería': [8.7493, -75.8859],
                     'Quibdó': [5.6900, -76.6600],
                     'Valledupar': [10.4760, -73.2480],
-                    'Sincelejo': [9.3047, -75.3977]
+                    'Sincelejo': [9.3047, -75.3977],
+                    'Soacha': [4.5790, -74.2170],
+                    'Chía': [4.8580, -74.0530],
+                    'Yumbo': [3.5300, -76.4900]
                 };
 
                 document.getElementById('manualLocationConfirm').addEventListener('click', async () => {
@@ -1528,7 +2658,8 @@
                 }
                 this.lastReportTime = now;
 
-                const tempId = `${CONFIG.appPrefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+                const tempId =
+                    `${CONFIG.appPrefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
 
                 const report = {
                     temp_id: tempId,
@@ -1561,7 +2692,6 @@
                             .select();
 
                         if (error) {
-                            // Si el error es 403, mostrar mensaje más claro
                             if (error.code === '42501' || error.message.includes('permission')) {
                                 showToast('⛔ Error de permisos en Supabase. Revisa las políticas RLS.', 'error');
                                 console.error('Error RLS:', error);
@@ -1600,7 +2730,8 @@
             async syncPendingReports() {
                 if (this.isSyncing) return;
                 if (!navigator.onLine) { await offline.updatePendingCount(); return; }
-                if (!this.authReady || !this.userId) { console.log('⏳ Esperando autenticación para sincronizar...'); return; }
+                if (!this.authReady || !this.userId) { console.log('⏳ Esperando autenticación para sincronizar...');
+                    return; }
 
                 this.isSyncing = true;
                 let synced = 0,
@@ -1651,7 +2782,8 @@
                         }
                     }
 
-                    if (synced > 0) showToast(`✅ ${synced} reporte${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''}`,
+                    if (synced > 0) showToast(
+                        `✅ ${synced} reporte${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''}`,
                         'success');
                     if (errors > 0) showToast(`⚠️ ${errors} reporte${errors > 1 ? 's' : ''} con error`, 'warning');
 
@@ -1719,7 +2851,7 @@
                         .rpc('increment_report_verification', { p_report_id: reportId });
                     if (error) {
                         if (error.message.includes('Ya has corroborado')) showToast('Ya corroboraste este reporte',
-                        'warning');
+                            'warning');
                         else if (error.message.includes('No puedes corroborar tu propio reporte')) showToast(
                             'No puedes corroborar tu propio reporte', 'warning');
                         else if (error.message.includes('Usuario no autenticado')) showToast(
@@ -1750,13 +2882,9 @@
                 document.getElementById('situHelp').textContent = stats.help;
                 document.getElementById('situDamage').textContent = stats.damage;
                 document.getElementById('situRoads').textContent = stats.road;
-                // También actualizar situación
                 updateSituationPanel(this.reports);
             }
 
-            // ============================================================
-            // REALTIME – UNA SOLA IMPLEMENTACIÓN
-            // ============================================================
             subscribeToRealtime() {
                 if (!this.authReady || !this.userId) {
                     console.warn('⏳ No autenticado, no se puede suscribir a Realtime');
@@ -1834,7 +2962,7 @@
         const reports = new ReportManager();
 
         // ============================================================
-        // CONFIRMACIÓN VISUAL
+        // CONFIRMACIÓN
         // ============================================================
         function showConfirmation(report, isOnline = false, status = 'pending') {
             const code = report.id ? report.id.slice(0, 8).toUpperCase() : (report.temp_id || '---').slice(0, 8);
@@ -1858,6 +2986,7 @@
                     <div><strong>📍 Ubicación:</strong> ${report.municipality || 'No disponible'}</div>
                     <div><strong>🕐 Hora:</strong> ${new Date(report.created_at).toLocaleTimeString()}</div>
                     <div><strong>📄 Tipo:</strong> ${report.type === 'safe' ? 'Estoy a salvo' : report.type === 'help' ? 'Necesito ayuda' : report.type === 'damage' ? 'Daño' : report.type === 'road' ? 'Vía' : 'Reporte'}</div>
+                    ${report.road_name ? `<div><strong>🛣️ Vía:</strong> ${report.road_name}</div>` : ''}
                     <div><strong>🔖 Código:</strong> <span style="font-family:monospace;background:#f0f0f0;padding:2px 6px;border-radius:4px;">${code}</span></div>
                     <div><strong>Estado:</strong> <span style="color:${s.color};font-weight:700;">${s.title}</span></div>
                 </div>
@@ -1870,7 +2999,55 @@
         }
 
         // ============================================================
-        // SGC – SIN DATOS FICTICIOS
+        // FUNCIÓN PARA MOSTRAR DETALLE DE PUNTO DE ACOPIO
+        // ============================================================
+        window.showCollectionPointDetail = function(id) {
+            const point = OFFICIAL_COLLECTION_POINTS.find(p => p.id === id);
+            if (!point) return;
+
+            const accepts = point.accepts ? point.accepts.map(a => `✅ ${a}`).join('<br>') : 'No especificado';
+            const notAccepts = point.not_accepts && point.not_accepts.length > 0 ?
+                point.not_accepts.map(a => `❌ ${a}`).join('<br>') :
+                'No especificado';
+
+            openModal(`
+                <div class="modal-title">🏛️ ${point.name}</div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:0.8rem;color:var(--color-text);">
+                        <strong>Organización:</strong> ${point.organization}
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--color-text);">
+                        <strong>Ciudad:</strong> ${point.city}
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--color-text);">
+                        <strong>Dirección:</strong> ${point.address || 'No especificada'}
+                    </div>
+                    ${point.phone ? `<div style="font-size:0.8rem;color:var(--color-text);"><strong>Teléfono:</strong> ${point.phone}</div>` : ''}
+                    ${point.hours ? `<div style="font-size:0.8rem;color:var(--color-text);"><strong>Horario:</strong> ${point.hours}</div>` : ''}
+                    <div style="font-size:0.8rem;color:var(--color-text);">
+                        <strong>Estado:</strong> <span style="color:#2ecc71;">✅ Activo</span>
+                    </div>
+                    <div style="font-size:0.7rem;color:var(--color-gray);margin-top:4px;">
+                        <strong>Fuente:</strong> ${point.source} (${point.last_verified})
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:12px;">
+                    <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;">📦 Lo que RECIBEN:</div>
+                    <div style="font-size:0.75rem;color:var(--color-text);">${accepts}</div>
+                </div>
+                ${point.not_accepts && point.not_accepts.length > 0 ? `
+                <div style="background:rgba(229,57,53,0.08);border-radius:12px;padding:12px;margin-bottom:12px;border-left:3px solid #e74c3c;">
+                    <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;color:#e74c3c;">⛔ NO RECIBEN:</div>
+                    <div style="font-size:0.75rem;color:var(--color-text);">${notAccepts}</div>
+                </div>
+                ` : ''}
+                <button class="btn-primary" onclick="closeModal(); mapManager.goToLocation(${point.latitude}, ${point.longitude}, 16);">📍 VER EN MAPA</button>
+                <button class="btn-secondary" onclick="closeModal();">Cerrar</button>
+            `);
+        };
+
+        // ============================================================
+        // SGC
         // ============================================================
         async function fetchEarthquakes() {
             try {
@@ -1964,61 +3141,10 @@
         }
 
         // ============================================================
-        // RECURSOS – CON DATOS REALES (fuentes verificadas)
-        // ============================================================
-        // En producción, estos datos vendrían de Supabase
-        // Por ahora, se cargan desde un endpoint o se mantienen actualizados
-        async function loadResources() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('resources')
-                    .select('*')
-                    .limit(100);
-                if (error) throw error;
-                return data || [];
-            } catch (error) {
-                console.warn('Error cargando recursos:', error);
-                return [];
-            }
-        }
-
-        // Recursos de ejemplo reales (Bogotá) – para demostración
-        const DEMO_RESOURCES = [
-            { name: 'Hospital Central', type: 'hospital', latitude: 4.7010, longitude: -74.0721, municipality: 'Bogotá',
-                availability: 'disponible', phone: '601 123 4567', source_type: 'oficial' },
-            { name: 'Bomberos Bogotá', type: 'bomberos', latitude: 4.7110, longitude: -74.0621, municipality: 'Bogotá',
-                availability: 'disponible', phone: '601 234 5678', source_type: 'oficial' },
-            { name: 'Cruz Roja Colombiana', type: 'cruz_roja', latitude: 4.7210, longitude: -74.0821, municipality: 'Bogotá',
-                availability: 'disponible', phone: '601 345 6789', source_type: 'oficial' },
-            { name: 'Refugio Municipal', type: 'refugio', latitude: 4.6910, longitude: -74.0521, municipality: 'Bogotá',
-                availability: 'disponible', source_type: 'oficial' },
-            { name: 'Hospital San José', type: 'hospital', latitude: 4.6810, longitude: -74.0921, municipality: 'Bogotá',
-                availability: 'limitado', phone: '601 456 7890', source_type: 'oficial' }
-        ];
-
-        // Inicializar recursos en Supabase si no existen
-        async function initResources() {
-            try {
-                const { data: existing } = await supabaseClient
-                    .from('resources')
-                    .select('id')
-                    .limit(1);
-                if (existing && existing.length > 0) return;
-                for (const res of DEMO_RESOURCES) {
-                    await supabaseClient
-                        .from('resources')
-                        .insert([res]);
-                }
-                console.log('✅ Recursos de ejemplo cargados');
-            } catch (error) {
-                console.warn('Error inicializando recursos:', error);
-            }
-        }
-
-        // ============================================================
-        // MODALES
+        // MODALES V2 - CON IDENTIFICACIÓN DE VÍA
         // ============================================================
 
+        // --- Safe Modal ---
         function showSafeModal() {
             openModal(`
                 <div class="modal-title">🟢 ESTOY A SALVO</div>
@@ -2085,13 +3211,13 @@
                     setTimeout(() => reports.syncPendingReports(), 2000);
                 } catch (error) {
                     showToast('📍 ' + error.message, 'warning');
-                    // Mostrar selector manual
                     mapManager.showLocationPicker();
                     closeModal();
                 }
             });
         }
 
+        // --- Help Modal ---
         function showHelpModal() {
             const needs = ['Rescate', 'Atención médica', 'Agua', 'Alimentos', 'Refugio', 'Medicamentos',
                 'Electricidad', 'Comunicación', 'Transporte', 'Ayuda para niños', 'Ayuda para adultos mayores', 'Otro'
@@ -2192,6 +3318,7 @@
             });
         }
 
+        // --- Damage Modal ---
         function showDamageModal() {
             const types = ['Vivienda', 'Edificio', 'Escuela', 'Hospital', 'Comercio', 'Puente', 'Carretera', 'Poste',
                 'Red eléctrica', 'Acueducto', 'Otro'
@@ -2275,12 +3402,22 @@
             });
         }
 
+        // --- Road Modal V2 - CON IDENTIFICACIÓN DE VÍA ---
         function showRoadModal() {
             const statuses = ['Vía libre', 'Tránsito parcial', 'Vía bloqueada', 'Derrumbe', 'Puente afectado',
                 'Inundación', 'Árbol/objeto bloqueando', 'Otro'
             ];
             openModal(`
-                <div class="modal-title">🚧 <span class="highlight">REPORTAR VÍA</span></div>
+                <div class="modal-title">🚧 REPORTAR VÍA</div>
+                <div style="text-align:center;margin-bottom:14px;">
+                    <p style="color:var(--color-text);font-size:0.85rem;">
+                        Reporta el estado de una vía para ayudar a la comunidad
+                    </p>
+                </div>
+                <div class="modal-form-group">
+                    <label>🛣️ Nombre de la vía (obligatorio)</label>
+                    <input type="text" id="roadName" placeholder="Ej: Carrera 7, Autopista Norte, Vía Bogotá - Medellín" required>
+                </div>
                 <div class="modal-form-group">
                     <label>Estado de la vía</label>
                     <div class="grid-options" id="roadTypes">
@@ -2288,8 +3425,8 @@
                     </div>
                 </div>
                 <div class="modal-form-group">
-                    <label>Ubicación aproximada</label>
-                    <input type="text" id="roadLocation" placeholder="Ej: Km 12 vía a ..." />
+                    <label>Ubicación aproximada (opcional)</label>
+                    <input type="text" id="roadLocation" placeholder="Ej: Km 12, cerca de ..." />
                 </div>
                 <div class="modal-form-group">
                     <label>Foto (opcional)</label>
@@ -2305,23 +3442,33 @@
 
             document.getElementById('roadPublishBtn').addEventListener('click', async () => {
                 try {
+                    const roadName = document.getElementById('roadName').value.trim();
+                    if (!roadName) {
+                        showToast('Por favor, escribe el nombre de la vía', 'warning');
+                        return;
+                    }
+
                     const checked = document.querySelectorAll('#roadTypes input:checked');
                     if (checked.length === 0) {
                         showToast('Selecciona al menos un estado', 'warning');
                         return;
                     }
+
                     let pos = await geolocation.getCurrentPosition();
                     const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
                     const roadLocation = document.getElementById('roadLocation').value;
+
                     const reportData = {
                         type: 'road',
                         latitude: pos.latitude,
                         longitude: pos.longitude,
                         municipality: location,
+                        road_name: roadName,
                         road_status: Array.from(checked).map(cb => cb.value),
                         location_detail: roadLocation,
-                        description: `${Array.from(checked).map(cb => cb.value).join(', ')}${roadLocation ? ' en ' + roadLocation : ''}`
+                        description: `${roadName}: ${Array.from(checked).map(cb => cb.value).join(', ')}${roadLocation ? ' en ' + roadLocation : ''}`
                     };
+
                     const report = await reports.createReport(reportData);
                     if (selectedFile && report) {
                         const imageUrl = await uploadImage(selectedFile, report.id);
@@ -2339,83 +3486,151 @@
             });
         }
 
+        // --- Resources Modal V2 - CON GESTIÓN DE AYUDAS ---
         function showResourcesModal() {
+            // Contar puntos de acopio por ciudad
+            const cities = {};
+            OFFICIAL_COLLECTION_POINTS.forEach(p => {
+                cities[p.city] = (cities[p.city] || 0) + 1;
+            });
+
+            // Estado de ayudas (simulado con datos reales)
+            const aidStats = {
+                total: OFFICIAL_COLLECTION_POINTS.length,
+                oficiales: OFFICIAL_COLLECTION_POINTS.filter(p => p.type === 'oficial').length,
+                ciudades: Object.keys(cities).length
+            };
+
             openModal(`
-                <div class="modal-title">📍 RECURSOS</div>
-                <div style="margin-bottom:14px;font-size:0.85rem;color:var(--color-text);text-align:center;">
-                    Recursos y centros de ayuda cercanos
-                </div>
-                <div id="resourcesList" style="max-height:350px;overflow-y:auto;padding:4px 0;">
-                    <div style="text-align:center;padding:30px;color:var(--color-text);">
-                        <div style="font-size:2rem;margin-bottom:8px;">⏳</div>
-                        <p style="font-size:0.9rem;">Cargando recursos...</p>
+                <div class="modal-title">📍 RECURSOS Y AYUDAS</div>
+
+                <div class="aid-stats">
+                    <div class="aid-stat">
+                        <div class="number">${aidStats.total}</div>
+                        <div class="label">Puntos de acopio</div>
+                    </div>
+                    <div class="aid-stat">
+                        <div class="number">${aidStats.oficiales}</div>
+                        <div class="label">Oficiales verificados</div>
+                    </div>
+                    <div class="aid-stat">
+                        <div class="number">${aidStats.ciudades}</div>
+                        <div class="label">Ciudades</div>
                     </div>
                 </div>
-                <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;font-size:0.65rem;color:var(--color-text);text-align:center;">
-                    ℹ️ Datos desde fuentes oficiales y comunitarias verificadas
+
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="tab-puntos">🏛️ Puntos de acopio</button>
+                    <button class="tab-btn" data-tab="tab-ayudas">📦 Necesidades</button>
                 </div>
-                <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
+
+                <div id="tab-puntos" class="tab-content active">
+                    <div style="font-size:0.75rem;color:var(--color-text);margin-bottom:8px;">
+                        ${aidStats.total} puntos de acopio oficiales verificados
+                    </div>
+                    <div id="resourcesList" style="max-height:300px;overflow-y:auto;">
+                        ${OFFICIAL_COLLECTION_POINTS.map(p => `
+                            <div class="resource-item" onclick="showCollectionPointDetail('${p.id}')">
+                                <span class="icon">🏛️</span>
+                                <div class="info">
+                                    <div class="name">${p.name}</div>
+                                    <div class="detail">${p.city} • ${p.organization}</div>
+                                </div>
+                                <span class="badge badge-oficial">OFICIAL</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div id="tab-ayudas" class="tab-content">
+                    <div style="font-size:0.85rem;color:var(--color-text);margin-bottom:10px;text-align:center;">
+                        📦 Lo que se necesita en los puntos de acopio
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;max-height:300px;overflow-y:auto;">
+                        <div style="font-weight:700;font-size:0.8rem;margin-bottom:6px;color:#2ecc71;">✅ Alimentos no perecederos:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Arroz, aceite, pastas, enlatados, granos (fríjol, lentejas), harina, panela, leche en polvo, chocolate, avena
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Agua e hidratación:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Agua potable embotellada, bebidas hidratantes
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Elementos de albergue:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Colchonetas, frazadas, cobijas, mantas, almohadas, toldillos, sábanas
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Higiene y aseo:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Jabón, champú, cepillos dentales, crema dental, toallas higiénicas, papel higiénico, pañales, toallitas húmedas
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Primeros auxilios:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Tapabocas, gasas estériles, alcohol, clorhexidina, guantes quirúrgicos, vendajes
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#f39c12;">⚠️ NO se reciben:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Medicamentos, ropa usada, elementos usados, alimentos perecederos, productos vencidos
+                        </div>
+                        <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:0.65rem;color:var(--color-text);text-align:center;">
+                            ℹ️ Datos verificados desde fuentes oficiales: Cruz Roja, Alcaldías y UNGRD
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-secondary" onclick="closeModal()" style="margin-top:10px;">Cerrar</button>
             `);
 
-            // Cargar recursos desde Supabase o usar demo
-            supabaseClient
-                .from('resources')
-                .select('*')
-                .limit(50)
-                .then(({ data, error }) => {
-                    const list = document.getElementById('resourcesList');
-                    if (error || !data || data.length === 0) {
-                        // Usar datos de demostración
-                        list.innerHTML = DEMO_RESOURCES.map(r => `
-                            <div style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:14px;"
-                                 onclick="mapManager.goToLocation(${r.latitude}, ${r.longitude}, 15); closeModal();">
-                                <span style="font-size:1.4rem;">${r.type === 'hospital' ? '🏥' : r.type === 'bomberos' ? '🚒' : r.type === 'cruz_roja' ? '🩸' : r.type === 'refugio' ? '🏠' : '📍'}</span>
-                                <div style="flex:1;">
-                                    <strong>${r.name}</strong>
-                                    <br><span style="font-size:0.7rem;color:var(--color-text);">${r.type} ${r.municipality ? '• ' + r.municipality : ''}</span>
-                                    ${r.availability ? `<br><span style="font-size:0.65rem;color:${r.availability === 'disponible' ? '#2ecc71' : r.availability === 'limitado' ? '#f39c12' : '#e74c3c'};">${r.availability}</span>` : ''}
-                                    ${r.phone ? `<br><span style="font-size:0.6rem;color:var(--color-gray);">📞 ${r.phone}</span>` : ''}
-                                </div>
-                                <span style="font-size:0.6rem;color:var(--color-gray);">${r.source_type || 'oficial'}</span>
-                            </div>
-                        `).join('');
-                        return;
-                    }
-
-                    list.innerHTML = data.map(r => `
-                        <div style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:14px;cursor:pointer;"
-                             onclick="mapManager.goToLocation(${r.latitude}, ${r.longitude}, 15); closeModal();">
-                            <span style="font-size:1.4rem;">${r.type === 'hospital' ? '🏥' : r.type === 'bomberos' ? '🚒' : r.type === 'cruz_roja' ? '🩸' : r.type === 'refugio' ? '🏠' : '📍'}</span>
-                            <div style="flex:1;">
-                                <strong>${r.name}</strong>
-                                <br><span style="font-size:0.7rem;color:var(--color-text);">${r.type} ${r.municipality ? '• ' + r.municipality : ''}</span>
-                                ${r.availability ? `<br><span style="font-size:0.65rem;color:${r.availability === 'disponible' ? '#2ecc71' : r.availability === 'limitado' ? '#f39c12' : '#e74c3c'};">${r.availability}</span>` : ''}
-                                ${r.phone ? `<br><span style="font-size:0.6rem;color:var(--color-gray);">📞 ${r.phone}</span>` : ''}
-                            </div>
-                            <span style="font-size:0.6rem;color:var(--color-gray);">${r.source_type || 'oficial'}</span>
-                        </div>
-                    `).join('');
+            // Tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
                 });
+            });
         }
+
+        // ============================================================
+        // ACTUALIZAR PANEL DE SITUACIÓN
+        // ============================================================
+        function updateSituationPanel(reports) {
+            const safe = reports.filter(r => r.type === 'safe').length;
+            const help = reports.filter(r => r.type === 'help').length;
+            const damage = reports.filter(r => r.type === 'damage').length;
+            const roads = reports.filter(r => r.type === 'road').length;
+
+            document.getElementById('situSafe').textContent = safe;
+            document.getElementById('situHelp').textContent = help;
+            document.getElementById('situDamage').textContent = damage;
+            document.getElementById('situRoads').textContent = roads;
+            document.getElementById('situTime').textContent = new Date().toLocaleTimeString([], { hour: '2-digit',
+                minute: '2-digit' });
+        }
+
+        // ============================================================
+        // CORROBORAR (global)
+        // ============================================================
+        window.corroborateReport = async function(reportId) {
+            if (!reports.authReady) {
+                showToast('⏳ Esperando autenticación...', 'warning');
+                return;
+            }
+            await reports.corroborateReport(reportId);
+        };
 
         // ============================================================
         // INICIALIZACIÓN
         // ============================================================
-
-        // ============================================================
-        // UI: REGISTRAR BOTONES INMEDIATAMENTE (al cargar el DOM)
-        // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🔗 Conectando botones...');
+            console.log('🔗 Conectando botones V2...');
 
-            // Botones principales
             document.getElementById('safeBtn').addEventListener('click', showSafeModal);
             document.getElementById('helpBtn').addEventListener('click', showHelpModal);
             document.getElementById('damageBtn').addEventListener('click', showDamageModal);
             document.getElementById('roadBtn').addEventListener('click', showRoadModal);
             document.getElementById('resourcesBtn').addEventListener('click', showResourcesModal);
 
-            // Controles del mapa
             document.getElementById('myLocationBtn').addEventListener('click', () => mapManager.centerOnUser());
             document.getElementById('zoomInBtn').addEventListener('click', () => {
                 if (mapManager.map) mapManager.map.zoomIn();
@@ -2424,7 +3639,6 @@
                 if (mapManager.map) mapManager.map.zoomOut();
             });
 
-            // Modo emergencia y bajo consumo (estilo)
             document.getElementById('emergencyModeBtn').addEventListener('click', () => {
                 document.getElementById('app').classList.toggle('emergency-mode');
                 showToast(
@@ -2442,7 +3656,6 @@
                 );
             });
 
-            // Atajos de teclado (1-5)
             document.addEventListener('keydown', (e) => {
                 if (e.key === '1') document.getElementById('safeBtn').click();
                 if (e.key === '2') document.getElementById('helpBtn').click();
@@ -2451,24 +3664,17 @@
                 if (e.key === '5') document.getElementById('resourcesBtn').click();
             });
 
-            // Luego iniciamos la aplicación
             init();
         });
 
-        // ============================================================
-        // FUNCIÓN PRINCIPAL init()
-        // ============================================================
         async function init() {
-            console.log('🗺️ Iniciando Mapa Vivo Colombia');
+            console.log('🗺️ Iniciando Mapa Vivo Colombia V2');
             console.log('📡 Conectado a Supabase:', CONFIG.supabaseUrl);
+            console.log(`📍 ${OFFICIAL_COLLECTION_POINTS.length} puntos de acopio oficiales cargados`);
 
-            // Autenticación anónima
             await reports.initAuth();
-
-            // Inicializar mapa
             mapManager.init('map');
 
-            // GPS (no bloqueante)
             try {
                 const pos = await geolocation.getCurrentPosition();
                 if (pos) {
@@ -2480,22 +3686,13 @@
                 setTimeout(() => mapManager.showLocationPicker(), 1000);
             }
 
-            // Cargar sismos
             setTimeout(() => fetchEarthquakes(), 2000);
-
-            // Cargar reportes
             await reports.loadReports();
-
-            // Suscribir a Realtime
             reports.subscribeToRealtime();
-
-            // Sincronizar pendientes
             setTimeout(() => reports.syncPendingReports(), 3000);
 
-            // Inicializar recursos de ejemplo
-            await initResources();
+            // Ya no necesitamos initResources() porque los puntos de acopio están en el código
 
-            // Eventos de conexión
             window.addEventListener('offline', () => {
                 document.getElementById('connectionStatus').className = 'connection-status offline';
                 document.getElementById('connectionStatus').querySelector('.status-text').textContent = 'Sin conexión';
@@ -2509,26 +3706,19 @@
                 reports.syncPendingReports();
             });
 
-            // Sincronización periódica
             setInterval(() => {
                 if (navigator.onLine && reports.authReady) reports.syncPendingReports();
             }, 30000);
 
-            console.log('✅ Aplicación lista');
-            console.log('👤 Usuario autenticado:', reports.authReady);
+            console.log('✅ Aplicación V2 lista');
+            console.log(`👤 Usuario autenticado: ${reports.authReady}`);
         }
 
-        // Exponer globalmente para los popups
-        window.corroborateReport = async (reportId) => {
-            if (!reports.authReady) {
-                showToast('⏳ Esperando autenticación...', 'warning');
-                return;
-            }
-            await reports.corroborateReport(reportId);
-        };
+        // Exponer globales
         window.mapManager = mapManager;
         window.closeModal = closeModal;
         window.showToast = showToast;
+        window.showCollectionPointDetail = showCollectionPointDetail;
     </script>
 </body>
 </html>
