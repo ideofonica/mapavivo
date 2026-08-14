@@ -812,7 +812,9 @@
                 });
                 return this.map;
             }
-          updateClusters(reports) {
+
+
+        updateClusters(reports) {
     if (!this.map || !this.isReady) return;
 
     this.reports = Array.isArray(reports) ? reports : [];
@@ -821,7 +823,6 @@
     // 1. LIMPIAR CAPAS Y SOURCE ANTERIORES
     // ============================================================
 
-    // Eliminar capas si existen
     const layersToRemove = ['cluster-count', 'clusters', 'unclustered-point'];
     for (const layerId of layersToRemove) {
         if (this.map.getLayer(layerId)) {
@@ -829,7 +830,6 @@
         }
     }
 
-    // Eliminar source
     if (this.map.getSource('reports-cluster')) {
         this.map.removeSource('reports-cluster');
     }
@@ -845,20 +845,15 @@
             return (
                 Number.isFinite(lat) &&
                 Number.isFinite(lon) &&
-                lat >= -90 &&
-                lat <= 90 &&
-                lon >= -180 &&
-                lon <= 180
+                lat >= -90 && lat <= 90 &&
+                lon >= -180 && lon <= 180
             );
         })
         .map(report => ({
             type: 'Feature',
             geometry: {
                 type: 'Point',
-                coordinates: [
-                    Number(report.longitude),
-                    Number(report.latitude)
-                ]
+                coordinates: [Number(report.longitude), Number(report.latitude)]
             },
             properties: {
                 id: report.id || report.temp_id || '',
@@ -870,22 +865,19 @@
     if (features.length === 0) return;
 
     // ============================================================
-    // 3. SOURCE GEOJSON
+    // 3. SOURCE
     // ============================================================
 
     this.map.addSource('reports-cluster', {
         type: 'geojson',
-        data: {
-            type: 'FeatureCollection',
-            features: features
-        },
+        data: { type: 'FeatureCollection', features: features },
         cluster: true,
         clusterMaxZoom: 14,
         clusterRadius: 50
     });
 
     // ============================================================
-    // 4. CAPA DE CLUSTERS (agrupados)
+    // 4. CLUSTERS (agrupados)
     // ============================================================
 
     this.map.addLayer({
@@ -918,7 +910,7 @@
     });
 
     // ============================================================
-    // 5. CAPA DE CONTADOR EN CLUSTERS
+    // 5. CONTADOR EN CLUSTERS
     // ============================================================
 
     this.map.addLayer({
@@ -936,7 +928,7 @@
     });
 
     // ============================================================
-    // 6. NUEVA CAPA: PUNTOS INDIVIDUALES (NO AGRUPADOS)
+    // 6. PUNTOS INDIVIDUALES (NO AGRUPADOS) – ESTA ES LA CLAVE
     // ============================================================
 
     this.map.addLayer({
@@ -953,7 +945,7 @@
                 'damage', '#f39c12',
                 'road', '#3498db',
                 'resource', '#1a3c6e',
-                '#7f8c8d' // color por defecto
+                '#7f8c8d'
             ],
             'circle-radius': 9,
             'circle-stroke-width': 2,
@@ -962,7 +954,7 @@
     });
 
     // ============================================================
-    // 7. LISTENER DE CLUSTERS (con protección para evitar duplicados)
+    // 7. LISTENER DE CLICK EN CLUSTERS (SOLO UNA VEZ)
     // ============================================================
 
     if (!this._clusterClickHandler) {
@@ -984,7 +976,7 @@
     }
 
     // ============================================================
-    // 8. LISTENER DE CLICK SOBRE PUNTOS INDIVIDUALES
+    // 8. LISTENER DE CLICK EN PUNTOS INDIVIDUALES (SOLO UNA VEZ)
     // ============================================================
 
     if (!this._reportClickHandler) {
@@ -992,7 +984,6 @@
             const features = this.map.queryRenderedFeatures(e.point);
             if (!features.length) return;
 
-            // Buscar una feature de la capa 'unclustered-point' o que tenga ID
             const reportFeature = features.find(f =>
                 f.layer.id === 'unclustered-point' ||
                 (f.properties && f.properties.id)
@@ -1037,8 +1028,10 @@
         };
         this.map.on('click', this._reportClickHandler);
     }
-
 }
+
+
+
             async goToLocation(lat, lon, zoom = 15) {
                 if (!this.map) return;
                 this.map.flyTo({ center: [lon, lat], zoom: zoom, duration: 1500 });
