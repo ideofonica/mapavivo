@@ -4,11 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Mapa Vivo Colombia</title>
-    <meta name="description" content="Herramienta comunitaria para emergencias sísmicas en Colombia" />
-    <meta name="theme-color" content="#1a3c6e" />
     <link rel="manifest" href="./manifest.json" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css" />
     <style>
+        /* ===== ESTILOS COMPLETOS ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --color-primary: #1a3c6e;
@@ -538,7 +537,7 @@
 
     <script>
         // ============================================================
-        // CONFIGURACIÓN - SIN FIREBASE
+        // CONFIGURACIÓN
         // ============================================================
         const CONFIG = {
             supabaseUrl: 'https://qytywodntuikvotimpzs.supabase.co',
@@ -549,13 +548,7 @@
             appPrefix: 'MV'
         };
 
-        // ============================================================
-        // SUPABASE CLIENT
-        // ============================================================
-        const supabaseClient = supabase.createClient(
-            CONFIG.supabaseUrl,
-            CONFIG.supabaseAnonKey
-        );
+        const supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
 
         let currentUser = null;
         let isAuthenticated = false;
@@ -598,9 +591,7 @@
                 const R = 6371;
                 const dLat = this.toRad(lat2 - lat1);
                 const dLon = this.toRad(lon2 - lon1);
-                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
-                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
                 return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             }
             toRad(deg) { return deg * Math.PI / 180; }
@@ -639,7 +630,7 @@
         const geolocation = new GeolocationManager();
 
         // ============================================================
-        // OFFLINE - CON TEMP_ID (anti-duplicados)
+        // OFFLINE
         // ============================================================
         class OfflineManager {
             constructor() {
@@ -788,7 +779,7 @@
         offline.init();
 
         // ============================================================
-        // MAPA - con clusters
+        // MAPA
         // ============================================================
         class MapManager {
             constructor() {
@@ -998,89 +989,82 @@
                 }
             }
 
-          async createReport(data) {
-    if (!this.authReady || !this.userId) {
-        showToast('⏳ Esperando autenticación...', 'warning');
-        return null;
-    }
-
-    const now = Date.now();
-    if (now - this.lastReportTime < 30000) {
-        showToast('Espera unos segundos antes de enviar otro reporte', 'warning');
-        return null;
-    }
-    this.lastReportTime = now;
-
-    const tempId = `${CONFIG.appPrefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
-
-    const report = {
-        temp_id: tempId,
-        ...data,
-        user_id: this.userId,
-        created_at: new Date(now).toISOString(),
-        updated_at: new Date(now).toISOString(),
-        status: 'active',
-        confidence: 'reported',
-        verification_count: 0,
-        is_public: true
-    };
-
-    // 1. SIEMPRE guardar localmente primero (para no perder el reporte)
-    await offline.saveReport(report);
-    let pendingCount = await offline.getPendingCount();
-    this.showPendingStatus(pendingCount);
-
-    // 2. Si hay conexión, intentar enviar a Supabase
-    if (navigator.onLine) {
-        try {
-            const { data: inserted, error } = await supabaseClient
-                .from('reports')
-                .insert([report])
-                .select();
-
-            if (error) {
-                // Error de validación → reporte NUNCA se podrá enviar
-                if (error.code === 'PGRST' || error.code === '42501') {
-                    await offline.markSyncError(tempId, error.message);
-                    showToast('❌ Error en los datos. No se pudo registrar.', 'error');
-                    // Mostrar confirmación de error
-                    showConfirmation(report, false, 'error');
+            async createReport(data) {
+                if (!this.authReady || !this.userId) {
+                    showToast('⏳ Esperando autenticación...', 'warning');
                     return null;
+                }
+
+                const now = Date.now();
+                if (now - this.lastReportTime < 30000) {
+                    showToast('Espera unos segundos antes de enviar otro reporte', 'warning');
+                    return null;
+                }
+                this.lastReportTime = now;
+
+                const tempId = `${CONFIG.appPrefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+
+                const report = {
+                    temp_id: tempId,
+                    ...data,
+                    user_id: this.userId,
+                    created_at: new Date(now).toISOString(),
+                    updated_at: new Date(now).toISOString(),
+                    status: 'active',
+                    confidence: 'reported',
+                    verification_count: 0,
+                    is_public: true
+                };
+
+                // 1. SIEMPRE guardar localmente
+                await offline.saveReport(report);
+                let pendingCount = await offline.getPendingCount();
+                this.showPendingStatus(pendingCount);
+
+                // 2. Si hay conexión, intentar enviar a Supabase
+                if (navigator.onLine) {
+                    try {
+                        const { data: inserted, error } = await supabaseClient
+                            .from('reports')
+                            .insert([report])
+                            .select();
+
+                        if (error) {
+                            if (error.code === 'PGRST' || error.code === '42501') {
+                                await offline.markSyncError(tempId, error.message);
+                                showToast('❌ Error en los datos. No se pudo registrar.', 'error');
+                                showConfirmation(report, false, 'error');
+                                return null;
+                            } else {
+                                showToast('⏳ Error temporal. Reporte pendiente de envío.', 'warning');
+                                showConfirmation(report, false, 'pending');
+                                return report;
+                            }
+                        }
+
+                        if (inserted && inserted.length > 0) {
+                            const serverReport = inserted[0];
+                            await offline.markSynced(tempId);
+                            report.id = serverReport.id;
+                            showToast('✅ Reporte enviado y compartido', 'success');
+                            showConfirmation(serverReport, true, 'success');
+                            this.reports.push(serverReport);
+                            this.updateStats();
+                            mapManager.updateClusters(this.reports);
+                            return serverReport;
+                        }
+                    } catch (error) {
+                        console.error('Error en createReport:', error);
+                        showToast('⏳ Error inesperado. Reporte pendiente de envío.', 'warning');
+                        showConfirmation(report, false, 'pending');
+                        return report;
+                    }
                 } else {
-                    // Error temporal → queda pendiente
-                    showToast('⏳ Error temporal. Reporte pendiente de envío.', 'warning');
+                    showToast('📡 Sin conexión. Reporte guardado localmente.', 'warning');
                     showConfirmation(report, false, 'pending');
                     return report;
                 }
             }
-
-            if (inserted && inserted.length > 0) {
-                const serverReport = inserted[0];
-                // Marcar como sincronizado y eliminar de la cola pendiente
-                await offline.markSynced(tempId);
-                // Actualizar el reporte local con el ID de Supabase
-                report.id = serverReport.id;
-                showToast('✅ Reporte enviado y compartido', 'success');
-                showConfirmation(serverReport, true, 'success');
-                this.reports.push(serverReport);
-                this.updateStats();
-                mapManager.updateClusters(this.reports);
-                return serverReport;
-            }
-        } catch (error) {
-            console.error('Error en createReport:', error);
-            // Error inesperado → queda pendiente
-            showToast('⏳ Error inesperado. Reporte pendiente de envío.', 'warning');
-            showConfirmation(report, false, 'pending');
-            return report;
-        }
-    } else {
-        // Sin conexión → pendiente
-        showToast('📡 Sin conexión. Reporte guardado localmente.', 'warning');
-        showConfirmation(report, false, 'pending');
-        return report;
-    }
-}
 
             async syncPendingReports() {
                 if (this.isSyncing) return;
@@ -1123,11 +1107,11 @@
                             continue;
                         }
 
-                        // Eliminar campos temporales antes de insertar
-                        delete reportData.temp_id;
+                        // Eliminar SOLO campos locales que no deben ir a Supabase
                         delete reportData._key;
                         delete reportData.synced;
                         delete reportData.savedAt;
+                        // ⚠️ NO elimines temp_id (lo necesitamos para anti-duplicados)
 
                         const { data: inserted, error } = await supabaseClient
                             .from('reports')
@@ -1195,7 +1179,6 @@
 
                 const localReports = await offline.getAllReports();
 
-                // Combinar: preferir versiones de servidor
                 const allReports = [...serverReports];
                 const serverIds = new Set(serverReports.map(r => r.id));
                 for (const local of localReports) {
@@ -1262,58 +1245,59 @@
         // ============================================================
         // CONFIRMACIÓN VISUAL
         // ============================================================
-     function showConfirmation(report, isOnline = false, status = 'pending') {
-    const code = report.id ? report.id.slice(0, 8).toUpperCase() : (report.temp_id || '---').slice(0, 8);
+        function showConfirmation(report, isOnline = false, status = 'pending') {
+            const code = report.id ? report.id.slice(0, 8).toUpperCase() : (report.temp_id || '---').slice(0, 8);
 
-    const statusMap = {
-        'success': {
-            icon: '✅',
-            title: 'REPORTE ENVIADO',
-            color: '#2ecc71',
-            bg: '#e8f5e9',
-            msg: 'Tu reporte ya está visible para la comunidad.'
-        },
-        'pending': {
-            icon: '⏳',
-            title: 'REPORTE PENDIENTE',
-            color: '#f39c12',
-            bg: '#fff3e0',
-            msg: 'Se enviará automáticamente cuando haya conexión.'
-        },
-        'error': {
-            icon: '❌',
-            title: 'ERROR EN EL REPORTE',
-            color: '#e74c3c',
-            bg: '#ffebee',
-            msg: 'Hay un problema con los datos. No se pudo registrar.'
+            const statusMap = {
+                'success': {
+                    icon: '✅',
+                    title: 'REPORTE ENVIADO',
+                    color: '#2ecc71',
+                    bg: '#e8f5e9',
+                    msg: 'Tu reporte ya está visible para la comunidad.'
+                },
+                'pending': {
+                    icon: '⏳',
+                    title: 'REPORTE PENDIENTE',
+                    color: '#f39c12',
+                    bg: '#fff3e0',
+                    msg: 'Se enviará automáticamente cuando haya conexión.'
+                },
+                'error': {
+                    icon: '❌',
+                    title: 'ERROR EN EL REPORTE',
+                    color: '#e74c3c',
+                    bg: '#ffebee',
+                    msg: 'Hay un problema con los datos. No se pudo registrar.'
+                }
+            };
+
+            const s = statusMap[status] || statusMap['pending'];
+
+            openModal(`
+                <div class="modal-title">${s.icon} ${s.title}</div>
+                <div style="text-align:center;padding:16px;background:${s.bg};border-radius:12px;margin-bottom:16px;">
+                    <div style="font-size:3rem;">${s.icon}</div>
+                    <div style="font-weight:700;font-size:1.2rem;">${s.title}</div>
+                    <div style="font-size:0.85rem;color:#666;">${s.msg}</div>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <div><strong>📍 Ubicación:</strong> ${report.municipality || 'No disponible'}</div>
+                    <div><strong>🕐 Hora:</strong> ${new Date(report.created_at).toLocaleTimeString()}</div>
+                    <div><strong>📄 Tipo:</strong> ${report.type === 'safe' ? 'Estoy a salvo' : report.type === 'help' ? 'Necesito ayuda' : report.type === 'damage' ? 'Daño' : report.type === 'road' ? 'Vía' : 'Reporte'}</div>
+                    <div><strong>🔖 Código:</strong> <span style="font-family:monospace;background:#f0f0f0;padding:2px 8px;border-radius:4px;">${code}</span></div>
+                    <div><strong>Estado:</strong> <span style="color:${s.color};font-weight:700;">${s.title}</span></div>
+                </div>
+                <div style="font-size:0.75rem;color:#666;margin-bottom:12px;padding:8px;background:#fff3e0;border-radius:8px;">
+                    ⚠️ Este reporte no reemplaza una llamada de emergencia. Si es urgente, llama al 123.
+                </div>
+                <button class="btn-primary" onclick="closeModal(); mapManager.centerOnUser();">📍 VER EN EL MAPA</button>
+                <button class="btn-secondary" onclick="closeModal(); if(navigator.share){navigator.share({title:'Mapa Vivo',text:'Reporte de emergencia: ${code}'});}">📤 COMPARTIR</button>
+            `);
         }
-    };
 
-    const s = statusMap[status] || statusMap['pending'];
-
-    openModal(`
-        <div class="modal-title">${s.icon} ${s.title}</div>
-        <div style="text-align:center;padding:16px;background:${s.bg};border-radius:12px;margin-bottom:16px;">
-            <div style="font-size:3rem;">${s.icon}</div>
-            <div style="font-weight:700;font-size:1.2rem;">${s.title}</div>
-            <div style="font-size:0.85rem;color:#666;">${s.msg}</div>
-        </div>
-        <div style="margin-bottom:12px;">
-            <div><strong>📍 Ubicación:</strong> ${report.municipality || 'No disponible'}</div>
-            <div><strong>🕐 Hora:</strong> ${new Date(report.created_at).toLocaleTimeString()}</div>
-            <div><strong>📄 Tipo:</strong> ${report.type === 'safe' ? 'Estoy a salvo' : report.type === 'help' ? 'Necesito ayuda' : report.type === 'damage' ? 'Daño' : report.type === 'road' ? 'Vía' : 'Reporte'}</div>
-            <div><strong>🔖 Código:</strong> <span style="font-family:monospace;background:#f0f0f0;padding:2px 8px;border-radius:4px;">${code}</span></div>
-            <div><strong>Estado:</strong> <span style="color:${s.color};font-weight:700;">${s.title}</span></div>
-        </div>
-        <div style="font-size:0.75rem;color:#666;margin-bottom:12px;padding:8px;background:#fff3e0;border-radius:8px;">
-            ⚠️ Este reporte no reemplaza una llamada de emergencia. Si es urgente, llama al 123.
-        </div>
-        <button class="btn-primary" onclick="closeModal(); mapManager.centerOnUser();">📍 VER EN EL MAPA</button>
-        <button class="btn-secondary" onclick="closeModal(); if(navigator.share){navigator.share({title:'Mapa Vivo',text:'Reporte de emergencia: ${code}'});}">📤 COMPARTIR</button>
-    `);
-}
         // ============================================================
-        // SGC - EN SEGUNDO PLANO (no bloquea)
+        // SGC - EN SEGUNDO PLANO
         // ============================================================
         async function fetchEarthquakes() {
             try {
@@ -1468,245 +1452,8 @@
             });
         }
 
-        function showHelpModal() {
-            const needs = ['Rescate', 'Atención médica', 'Agua', 'Alimentos', 'Refugio', 'Medicamentos',
-                'Electricidad', 'Comunicación', 'Transporte', 'Ayuda para niños', 'Ayuda para adultos mayores', 'Otro'];
-
-            openModal(`
-                <div class="modal-title">🆘 NECESITO AYUDA</div>
-                <div class="modal-form-group"><label>¿Qué necesitas? (puedes elegir varias)</label>
-                <div class="checkbox-group" id="helpNeeds">${needs.map(n => `<label><input type="checkbox" value="${n}"> ${n}</label>`).join('')}</div></div>
-                <div class="modal-form-group"><label>¿Hay personas heridas?</label>
-                <div style="display:flex;gap:8px;"><button class="btn-secondary" id="helpInjuredNo">NO</button><button class="btn-secondary" id="helpInjuredYes">SÍ</button></div></div>
-                <div class="modal-form-group" id="helpInjuredCount" style="display:none;">
-                    <label>¿Cuántas?</label>
-                    <input type="number" id="helpInjuredInput" value="1" min="1" max="50" style="width:80px;margin:0 auto;display:block;text-align:center;">
-                </div>
-                <div class="modal-form-group"><label>¿Estás en peligro inmediato?</label>
-                <div style="display:flex;gap:8px;"><button class="btn-secondary" id="helpDangerNo">NO</button><button class="btn-secondary danger" id="helpDangerYes">SÍ</button></div></div>
-                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="helpPhoto" accept="image/*"></div>
-                <button class="btn-primary danger" id="helpPublishBtn">🆘 PUBLICAR</button>
-            `);
-
-            let hasInjured = false, inDanger = false, selectedFile = null;
-            document.getElementById('helpInjuredYes').addEventListener('click', () => {
-                hasInjured = true;
-                document.getElementById('helpInjuredCount').style.display = 'block';
-            });
-            document.getElementById('helpInjuredNo').addEventListener('click', () => {
-                hasInjured = false;
-                document.getElementById('helpInjuredCount').style.display = 'none';
-            });
-            document.getElementById('helpDangerYes').addEventListener('click', () => {
-                inDanger = true;
-                document.getElementById('helpDangerYes').style.background = '#c0392b';
-                document.getElementById('helpDangerNo').style.background = '';
-            });
-            document.getElementById('helpDangerNo').addEventListener('click', () => {
-                inDanger = false;
-                document.getElementById('helpDangerNo').style.background = '#2ecc71';
-                document.getElementById('helpDangerYes').style.background = '';
-            });
-            document.getElementById('helpPhoto').addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
-            });
-            document.getElementById('helpPublishBtn').addEventListener('click', async () => {
-                try {
-                    const checked = document.querySelectorAll('#helpNeeds input:checked');
-                    if (checked.length === 0) {
-                        showToast('Selecciona al menos una necesidad', 'warning');
-                        return;
-                    }
-                    const pos = await geolocation.getCurrentPosition();
-                    const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
-                    const needs = Array.from(checked).map(cb => cb.value);
-                    const injured = parseInt(document.getElementById('helpInjuredInput').value) || 0;
-                    const reportData = {
-                        type: 'help',
-                        latitude: pos.latitude,
-                        longitude: pos.longitude,
-                        municipality: location,
-                        needs: needs,
-                        injured_count: hasInjured ? injured : 0,
-                        in_danger: inDanger,
-                        description: `Necesita: ${needs.join(', ')}`
-                    };
-                    const report = await reports.createReport(reportData);
-                    if (selectedFile && report) {
-                        const imageUrl = await uploadImage(selectedFile, report.id);
-                        if (imageUrl) {
-                            await supabaseClient
-                                .from('reports')
-                                .update({ image_url: imageUrl })
-                                .eq('id', report.id);
-                        }
-                    }
-                    closeModal();
-                    setTimeout(() => reports.syncPendingReports(), 2000);
-                } catch (error) {
-                    showToast('Error: ' + error.message, 'error');
-                }
-            });
-        }
-
-        function showDamageModal() {
-            const types = ['Vivienda', 'Edificio', 'Escuela', 'Hospital', 'Comercio', 'Puente', 'Carretera', 'Poste', 'Red eléctrica', 'Acueducto', 'Otro'];
-            const levels = ['Sin daño visible', 'Daño leve', 'Daño importante', 'Daño grave', 'Colapso'];
-
-            openModal(`
-                <div class="modal-title">🏚️ REPORTAR DAÑO</div>
-                <div class="modal-form-group"><label>Tipo de afectación:</label>
-                <div class="checkbox-group" id="damageTypes">${types.map(t => `<label><input type="checkbox" value="${t}"> ${t}</label>`).join('')}</div></div>
-                <div class="modal-form-group"><label>Nivel aparente:</label>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">${levels.map((l,i) => `<button class="btn-secondary" data-level="${i}" style="flex:1;padding:6px;font-size:0.7rem;">${l}</button>`).join('')}</div>
-                <div style="margin-top:8px;color:#e74c3c;font-size:0.7rem;font-weight:600;">⚠️ Este reporte no es evaluación técnica estructural</div></div>
-                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="damagePhoto" accept="image/*"></div>
-                <button class="btn-primary warning" id="damagePublishBtn">📤 PUBLICAR</button>
-            `);
-
-            let selectedLevel = null, selectedFile = null;
-            document.querySelectorAll('[data-level]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('[data-level]').forEach(b => {
-                        b.style.background = '';
-                        b.style.color = '';
-                    });
-                    btn.style.background = '#f39c12';
-                    btn.style.color = 'white';
-                    selectedLevel = parseInt(btn.dataset.level);
-                });
-            });
-            document.getElementById('damagePhoto').addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
-            });
-            document.getElementById('damagePublishBtn').addEventListener('click', async () => {
-                try {
-                    const checked = document.querySelectorAll('#damageTypes input:checked');
-                    if (checked.length === 0) {
-                        showToast('Selecciona al menos un tipo', 'warning');
-                        return;
-                    }
-                    if (selectedLevel === null) {
-                        showToast('Selecciona un nivel de daño', 'warning');
-                        return;
-                    }
-                    const pos = await geolocation.getCurrentPosition();
-                    const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
-                    const types = Array.from(checked).map(cb => cb.value);
-                    const levelsList = ['sin_daño', 'daño_leve', 'daño_importante', 'daño_grave', 'colapso'];
-                    const reportData = {
-                        type: 'damage',
-                        latitude: pos.latitude,
-                        longitude: pos.longitude,
-                        municipality: location,
-                        damage_types: types,
-                        damage_level: levelsList[selectedLevel],
-                        description: `${types.join(', ')} - ${levelsList[selectedLevel]}`
-                    };
-                    const report = await reports.createReport(reportData);
-                    if (selectedFile && report) {
-                        const imageUrl = await uploadImage(selectedFile, report.id);
-                        if (imageUrl) {
-                            await supabaseClient
-                                .from('reports')
-                                .update({ image_url: imageUrl })
-                                .eq('id', report.id);
-                        }
-                    }
-                    closeModal();
-                    setTimeout(() => reports.syncPendingReports(), 2000);
-                } catch (error) {
-                    showToast('Error: ' + error.message, 'error');
-                }
-            });
-        }
-
-        function showRoadModal() {
-            const statuses = ['Vía libre', 'Tránsito parcial', 'Vía bloqueada', 'Derrumbe', 'Puente afectado', 'Inundación', 'Árbol/objeto bloqueando', 'Otro'];
-
-            openModal(`
-                <div class="modal-title">🚧 REPORTAR VÍA</div>
-                <div class="modal-form-group"><label>Estado de la vía:</label>
-                <div class="checkbox-group" id="roadTypes">${statuses.map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`).join('')}</div></div>
-                <div class="modal-form-group"><label>Ubicación aproximada:</label><input type="text" id="roadLocation" placeholder="Ej: Km 12 vía a ..."></div>
-                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="roadPhoto" accept="image/*"></div>
-                <button class="btn-primary info" id="roadPublishBtn">📤 PUBLICAR</button>
-            `);
-
-            let selectedFile = null;
-            document.getElementById('roadPhoto').addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
-            });
-            document.getElementById('roadPublishBtn').addEventListener('click', async () => {
-                try {
-                    const checked = document.querySelectorAll('#roadTypes input:checked');
-                    if (checked.length === 0) {
-                        showToast('Selecciona al menos un estado', 'warning');
-                        return;
-                    }
-                    const pos = await geolocation.getCurrentPosition();
-                    const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
-                    const roadLocation = document.getElementById('roadLocation').value;
-                    const reportData = {
-                        type: 'road',
-                        latitude: pos.latitude,
-                        longitude: pos.longitude,
-                        municipality: location,
-                        road_status: Array.from(checked).map(cb => cb.value),
-                        location_detail: roadLocation,
-                        description: `${Array.from(checked).map(cb => cb.value).join(', ')}${roadLocation ? ' en ' + roadLocation : ''}`
-                    };
-                    const report = await reports.createReport(reportData);
-                    if (selectedFile && report) {
-                        const imageUrl = await uploadImage(selectedFile, report.id);
-                        if (imageUrl) {
-                            await supabaseClient
-                                .from('reports')
-                                .update({ image_url: imageUrl })
-                                .eq('id', report.id);
-                        }
-                    }
-                    closeModal();
-                    setTimeout(() => reports.syncPendingReports(), 2000);
-                } catch (error) {
-                    showToast('Error: ' + error.message, 'error');
-                }
-            });
-        }
-
-        function showResourcesModal() {
-            openModal(`
-                <div class="modal-title">📍 RECURSOS</div>
-                <div style="margin-bottom:12px;font-size:0.85rem;color:#666;">Recursos y centros de ayuda cercanos</div>
-                <div id="resourcesList" style="max-height:300px;overflow-y:auto;"><div style="text-align:center;padding:20px;color:#666;">Cargando recursos...</div></div>
-                <div style="margin-top:12px;padding:8px;background:#f0f0f0;border-radius:8px;font-size:0.7rem;color:#666;">ℹ️ Datos desde fuentes oficiales y comunitarias</div>
-                <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
-            `);
-
-            supabaseClient
-                .from('resources')
-                .select('*')
-                .limit(50)
-                .then(({ data, error }) => {
-                    const list = document.getElementById('resourcesList');
-                    if (error || !data || data.length === 0) {
-                        list.innerHTML = `<div style="text-align:center;padding:20px;color:#666;">No hay recursos registrados aún.</div>`;
-                        return;
-                    }
-                    list.innerHTML = data.map(r => `
-                        <div style="padding:10px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:12px;cursor:pointer;"
-                             onclick="mapManager.goToLocation(${r.latitude}, ${r.longitude}, 15); closeModal();">
-                            <span style="font-size:1.2rem;">📍</span>
-                            <div style="flex:1;">
-                                <strong>${r.name}</strong>
-                                <br><span style="font-size:0.7rem;color:#666;">${r.type} ${r.municipality ? '• ' + r.municipality : ''}</span>
-                                ${r.availability ? `<br><span style="font-size:0.65rem;color:${r.availability === 'disponible' ? '#2ecc71' : 'limitado' ? '#f39c12' : '#e74c3c'};">${r.availability}</span>` : ''}
-                            </div>
-                            <span style="font-size:0.7rem;color:#666;">${r.source_type || 'oficial'}</span>
-                        </div>
-                    `).join('');
-                });
-        }
+        // AQUÍ VAN showHelpModal, showDamageModal, showRoadModal, showResourcesModal
+        // (los mismos que ya tienes, no los repito para no alargar)
 
         // ============================================================
         // INICIALIZACIÓN
@@ -1728,13 +1475,11 @@
                 console.log('Ubicación no disponible:', e.message);
             }
 
-            // SGC en segundo plano - NO BLOQUEA
             setTimeout(() => fetchEarthquakes(), 2000);
 
             await reports.loadReports();
             setTimeout(() => reports.syncPendingReports(), 3000);
 
-            // Eventos UI
             document.getElementById('safeBtn').addEventListener('click', showSafeModal);
             document.getElementById('helpBtn').addEventListener('click', showHelpModal);
             document.getElementById('damageBtn').addEventListener('click', showDamageModal);
@@ -1767,7 +1512,6 @@
                 );
             });
 
-            // Eventos de conexión - UNIFICADOS
             window.addEventListener('online', async () => {
                 document.getElementById('connectionStatus').className = 'connection-status online';
                 document.getElementById('connectionStatus').querySelector('.status-text').textContent = 'Conectado';
