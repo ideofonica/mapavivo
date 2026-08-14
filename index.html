@@ -1757,21 +1757,41 @@
                 }
             }
 
-            updateStats() {
-                const stats = {
-                    safe: this.reports.filter(r => r.type === 'safe').length,
-                    help: this.reports.filter(r => r.type === 'help').length,
-                    damage: this.reports.filter(r => r.type === 'damage').length,
-                    road: this.reports.filter(r => r.type === 'road').length,
-                    resources: this.reports.filter(r => r.type === 'resource').length
-                };
-                document.getElementById('statPeople').textContent = stats.safe;
-                document.getElementById('statHelp').textContent = stats.help;
-                document.getElementById('statDamage').textContent = stats.damage;
-                document.getElementById('statRoads').textContent = stats.road;
-                document.getElementById('statResources').textContent = stats.resources;
-            }
+           updateStats() {
+    const reports = Array.isArray(this.reports) ? this.reports : [];
 
+    const stats = {
+        safe: reports.filter(r => r.type === 'safe').length,
+        help: reports.filter(r => r.type === 'help').length,
+        damage: reports.filter(r => r.type === 'damage').length,
+        road: reports.filter(r => r.type === 'road').length,
+        resource: reports.filter(r => r.type === 'resource').length
+    };
+
+    const elements = {
+        statPeople: stats.safe,
+        statHelp: stats.help,
+        statDamage: stats.damage,
+        statRoads: stats.road,
+        statResources: stats.resource
+    };
+
+    for (const [id, value] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+
+        if (el) {
+            el.textContent = value;
+        } else {
+            console.warn(`⚠️ Elemento estadístico no encontrado: #${id}`);
+        }
+    }
+
+    // Estadísticas generales opcionales
+    const total = document.getElementById('statTotal');
+    if (total) {
+        total.textContent = reports.length;
+    }
+}
             // ============================================================
             // REALTIME – UNA SOLA IMPLEMENTACIÓN
             // ============================================================
@@ -2445,46 +2465,124 @@
 
             setTimeout(() => fetchEarthquakes(), 2000);
 
-            await reports.loadReports();
-            reports.subscribeToRealtime();
-            setTimeout(() => reports.syncPendingReports(), 3000);
+           // ============================================================
+// UI — CONECTAR BOTONES INMEDIATAMENTE
+// ============================================================
 
-            // Eventos botones
-            document.getElementById('safeBtn').addEventListener('click', showSafeModal);
-            document.getElementById('helpBtn').addEventListener('click', showHelpModal);
-            document.getElementById('damageBtn').addEventListener('click', showDamageModal);
-            document.getElementById('roadBtn').addEventListener('click', showRoadModal);
-            document.getElementById('resourcesBtn').addEventListener('click', showResourcesModal);
+const safeBtn = document.getElementById('safeBtn');
+const helpBtn = document.getElementById('helpBtn');
+const damageBtn = document.getElementById('damageBtn');
+const roadBtn = document.getElementById('roadBtn');
+const resourcesBtn = document.getElementById('resourcesBtn');
 
-            document.getElementById('myLocationBtn').addEventListener('click', () => {
-                mapManager.centerOnUser();
-            });
-            document.getElementById('zoomInBtn').addEventListener('click', () => { if (mapManager.map) mapManager.map
-                    .zoomIn(); });
-            document.getElementById('zoomOutBtn').addEventListener('click', () => { if (mapManager.map) mapManager.map
-                    .zoomOut(); });
+if (safeBtn) {
+    safeBtn.addEventListener('click', showSafeModal);
+}
 
-            document.getElementById('emergencyModeBtn').addEventListener('click', () => {
-                document.getElementById('app').classList.toggle('emergency-mode');
-                showToast(document.getElementById('app').classList.contains('emergency-mode') ? '🚨 MODO EMERGENCIA' :
-                    'Modo normal', 'info');
-            });
+if (helpBtn) {
+    helpBtn.addEventListener('click', showHelpModal);
+}
 
-            document.getElementById('lowDataBtn').addEventListener('click', () => {
-                document.getElementById('app').classList.toggle('low-data-mode');
-                showToast(document.getElementById('app').classList.contains('low-data-mode') ? '📶 BAJO CONSUMO' :
-                    'Modo normal', 'info');
-            });
+if (damageBtn) {
+    damageBtn.addEventListener('click', showDamageModal);
+}
 
-            window.addEventListener('online', async () => {
-                document.getElementById('connectionStatus').className = 'connection-status online';
-                document.getElementById('connectionStatus').querySelector('.status-text').textContent = 'Conectado';
-                document.getElementById('offline-indicator').classList.add('hidden');
-                const pending = await offline.getPendingCount();
-                if (pending > 0) showToast(`📡 Sincronizando ${pending} reportes pendientes...`, 'info');
-                reports.syncPendingReports();
-                if (!reports.realtimeChannel) reports.subscribeToRealtime();
-            });
+if (roadBtn) {
+    roadBtn.addEventListener('click', showRoadModal);
+}
+
+if (resourcesBtn) {
+    resourcesBtn.addEventListener('click', showResourcesModal);
+}
+
+const myLocationBtn = document.getElementById('myLocationBtn');
+
+if (myLocationBtn) {
+    myLocationBtn.addEventListener('click', () => {
+        mapManager.centerOnUser();
+    });
+}
+
+const zoomInBtn = document.getElementById('zoomInBtn');
+
+if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', () => {
+        if (mapManager.map) mapManager.map.zoomIn();
+    });
+}
+
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+
+if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', () => {
+        if (mapManager.map) mapManager.map.zoomOut();
+    });
+}
+
+const statsToggle = document.getElementById('statsToggle');
+
+if (statsToggle) {
+    statsToggle.addEventListener('click', () => {
+        const content = document.getElementById('statsContent');
+
+        if (content) {
+            content.classList.toggle('hidden');
+        }
+    });
+}
+
+const emergencyModeBtn = document.getElementById('emergencyModeBtn');
+
+if (emergencyModeBtn) {
+    emergencyModeBtn.addEventListener('click', () => {
+        document.getElementById('app')?.classList.toggle('emergency-mode');
+
+        showToast(
+            document.getElementById('app')?.classList.contains('emergency-mode')
+                ? '🚨 MODO EMERGENCIA'
+                : 'Modo normal',
+            'info'
+        );
+    });
+}
+
+const lowDataBtn = document.getElementById('lowDataBtn');
+
+if (lowDataBtn) {
+    lowDataBtn.addEventListener('click', () => {
+        document.getElementById('app')?.classList.toggle('low-data-mode');
+
+        showToast(
+            document.getElementById('app')?.classList.contains('low-data-mode')
+                ? '📶 BAJO CONSUMO'
+                : 'Modo normal',
+            'info'
+        );
+    });
+}
+
+// ============================================================
+// AHORA SÍ: CARGAR DATOS
+// ============================================================
+
+try {
+    await reports.loadReports();
+} catch (error) {
+    console.error('❌ Error cargando reportes:', error);
+    showToast('⚠️ No se pudieron cargar algunos reportes', 'warning');
+}
+
+try {
+    reports.subscribeToRealtime();
+} catch (error) {
+    console.error('❌ Error iniciando Realtime:', error);
+}
+
+setTimeout(() => {
+    reports.syncPendingReports().catch(error => {
+        console.warn('⚠️ Error sincronizando:', error);
+    });
+}, 3000);
 
             window.addEventListener('offline', () => {
                 document.getElementById('connectionStatus').className = 'connection-status offline';
