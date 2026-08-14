@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Mapa Vivo Colombia V2</title>
-    <meta name="description" content="Herramienta comunitaria para emergencias sísmicas en Colombia" />
+    <title>Mapa Vivo Colombia</title>
+    <meta name="description" content="Herramienta comunitaria para emergencias sísmicas y ambientales en Colombia" />
     <meta name="theme-color" content="#0B2A4A" />
     <link rel="manifest" href="./manifest.json" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css" />
@@ -22,6 +22,7 @@
             --color-success: #20C963;
             --color-danger: #E53935;
             --color-warning: #F59E0B;
+            --color-fire: #D32F2F;
             --color-dark: #10182B;
             --color-light: #F0F4FA;
             --color-white: #ffffff;
@@ -214,6 +215,9 @@
         .situation-safe {
             color: var(--color-success);
         }
+        .situation-fire {
+            color: var(--color-fire);
+        }
 
         /* ===== MAPA ===== */
         #main-content {
@@ -269,7 +273,7 @@
             color: white;
         }
 
-        /* ===== BARRA INFERIOR ===== */
+        /* ===== BARRA INFERIOR (6 botones) ===== */
         #quick-actions {
             position: fixed;
             bottom: 0;
@@ -280,7 +284,7 @@
             backdrop-filter: blur(12px);
             padding: 6px 6px max(6px, var(--safe-area-bottom));
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 4px;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
@@ -340,11 +344,88 @@
         .quick-action-btn.road-btn .btn-label {
             color: #90CAF9;
         }
+        .quick-action-btn.fire-btn {
+            background: rgba(211, 47, 47, 0.3);
+        }
+        .quick-action-btn.fire-btn .btn-label {
+            color: #FF8A80;
+        }
         .quick-action-btn.resources-btn {
             background: rgba(255, 255, 255, 0.05);
         }
         .quick-action-btn.resources-btn .btn-label {
             color: #B0BEC5;
+        }
+
+        /* ===== RESPONSIVE BARRA ===== */
+        @media (max-width: 370px) {
+            #quick-actions {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2px;
+            }
+        }
+        @media (min-width: 768px) {
+            #quick-actions {
+                max-width: 700px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 24px 24px 0 0;
+                padding: 8px 10px max(8px, var(--safe-area-bottom));
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .quick-action-btn {
+                min-height: 68px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1.6rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.6rem;
+            }
+        }
+        @media (min-width: 1024px) {
+            #quick-actions {
+                max-width: 800px;
+            }
+            .quick-action-btn {
+                min-height: 76px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1.8rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.65rem;
+            }
+        }
+        @media (max-width: 768px) and (orientation: landscape) {
+            #quick-actions {
+                padding: 4px 6px max(4px, var(--safe-area-bottom));
+                gap: 3px;
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .quick-action-btn {
+                min-height: 44px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.35rem;
+            }
+            #map-controls {
+                bottom: 70px;
+            }
+            .map-control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            #header {
+                min-height: 44px;
+            }
+            #situation-panel {
+                display: none;
+            }
         }
 
         /* ===== MODAL ===== */
@@ -564,6 +645,9 @@
         .btn-primary.warning {
             background: var(--color-warning);
         }
+        .btn-primary.fire {
+            background: var(--color-fire);
+        }
         .btn-secondary {
             width: 100%;
             padding: 14px;
@@ -637,6 +721,9 @@
         #toast.info {
             border-left: 4px solid var(--color-blue-bright);
         }
+        #toast.fire {
+            border-left: 4px solid var(--color-fire);
+        }
 
         /* ===== OFFLINE INDICATOR ===== */
         #offline-indicator {
@@ -665,7 +752,7 @@
             display: none;
         }
 
-        /* ===== V2: PESTAÑAS GESTIÓN ===== */
+        /* ===== TABS Y RECURSOS ===== */
         .tabs-container {
             display: flex;
             gap: 4px;
@@ -755,15 +842,6 @@
             background: rgba(32, 201, 99, 0.25);
             color: #6AE8A0;
         }
-        .status-urgente {
-            color: var(--color-danger);
-        }
-        .status-parcial {
-            color: var(--color-warning);
-        }
-        .status-cubierto {
-            color: var(--color-success);
-        }
         .aid-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -811,74 +889,6 @@
                 font-size: 0.6rem;
             }
         }
-        @media (min-width: 768px) {
-            #quick-actions {
-                max-width: 600px;
-                left: 50%;
-                transform: translateX(-50%);
-                border-radius: 24px 24px 0 0;
-                padding: 8px 10px max(8px, var(--safe-area-bottom));
-            }
-            .quick-action-btn {
-                min-height: 68px;
-            }
-            .quick-action-btn .btn-icon {
-                font-size: 1.6rem;
-            }
-            .quick-action-btn .btn-label {
-                font-size: 0.6rem;
-            }
-            #modal-container {
-                max-width: 560px;
-                padding: 28px 24px;
-            }
-            #situation-panel {
-                max-width: 240px;
-            }
-        }
-        @media (min-width: 1024px) {
-            #quick-actions {
-                max-width: 700px;
-            }
-            .quick-action-btn {
-                min-height: 76px;
-            }
-            .quick-action-btn .btn-icon {
-                font-size: 1.8rem;
-            }
-            .quick-action-btn .btn-label {
-                font-size: 0.65rem;
-            }
-        }
-        @media (max-width: 768px) and (orientation: landscape) {
-            #quick-actions {
-                padding: 4px 6px max(4px, var(--safe-area-bottom));
-                gap: 3px;
-            }
-            .quick-action-btn {
-                min-height: 44px;
-            }
-            .quick-action-btn .btn-icon {
-                font-size: 1rem;
-            }
-            .quick-action-btn .btn-label {
-                font-size: 0.35rem;
-            }
-            #map-controls {
-                bottom: 70px;
-            }
-            .map-control-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
-            }
-            #header {
-                min-height: 44px;
-            }
-            #situation-panel {
-                display: none;
-            }
-        }
         @media (prefers-color-scheme: light) {
              :root {
                 --color-dark: #F0F4FA;
@@ -913,6 +923,9 @@
             }
             .quick-action-btn.road-btn {
                 background: rgba(25, 118, 210, 0.15);
+            }
+            .quick-action-btn.fire-btn {
+                background: rgba(211, 47, 47, 0.15);
             }
             #modal-container {
                 background: white;
@@ -1012,7 +1025,7 @@
         <header id="header">
             <div class="header-content">
                 <h1>🗺️ MAPA VIVO</h1>
-                <span class="header-subtitle">COLOMBIA V2</span>
+                <span class="header-subtitle">COLOMBIA</span>
                 <span id="syncStatus" class="sync-status synced">✅ Sincronizado</span>
                 <div class="header-actions">
                     <button id="emergencyModeBtn" aria-label="Modo emergencia">🚨</button>
@@ -1042,6 +1055,7 @@
                 <div class="situation-row"><span>🔴 Ayuda</span><span class="situation-value situation-critical" id="situHelp">0</span></div>
                 <div class="situation-row"><span>🟠 Daños</span><span class="situation-value situation-warning" id="situDamage">0</span></div>
                 <div class="situation-row"><span>🔵 Vías</span><span class="situation-value" id="situRoads">0</span></div>
+                <div class="situation-row"><span>🔥 Incendios</span><span class="situation-value situation-fire" id="situFire">0</span></div>
                 <div class="situation-row"><span>🕐 Actualizado</span><span class="situation-value" id="situTime">ahora</span></div>
             </div>
 
@@ -1051,7 +1065,7 @@
             </div>
         </main>
 
-        <!-- BARRA INFERIOR -->
+        <!-- BARRA INFERIOR (6 botones) -->
         <div id="quick-actions">
             <button id="safeBtn" class="quick-action-btn safe-btn">
                 <span class="btn-icon">🟢</span>
@@ -1068,6 +1082,10 @@
             <button id="roadBtn" class="quick-action-btn road-btn">
                 <span class="btn-icon">🚧</span>
                 <span class="btn-label">REPORTAR VÍA</span>
+            </button>
+            <button id="fireBtn" class="quick-action-btn fire-btn">
+                <span class="btn-icon">🔥</span>
+                <span class="btn-label">INCENDIO</span>
             </button>
             <button id="resourcesBtn" class="quick-action-btn resources-btn">
                 <span class="btn-icon">📍</span>
@@ -1111,8 +1129,7 @@
             authReady = false;
 
         // ============================================================
-        // PUNTOS DE ACOPIO OFICIALES - DATOS REALES (investigados)
-        // Fuentes: Cruz Roja, Alcaldías, UNGRD, medios verificados
+        // PUNTOS DE ACOPIO OFICIALES (40+ REALES)
         // ============================================================
         const OFFICIAL_COLLECTION_POINTS = [{
             id: 'cr1',
@@ -1842,7 +1859,9 @@
                     { name: 'Sincelejo', lat: 9.3047, lon: -75.3977, radius: 15 },
                     { name: 'Valledupar', lat: 10.4760, lon: -73.2480, radius: 15 },
                     { name: 'Chía', lat: 4.8580, lon: -74.0530, radius: 10 },
-                    { name: 'Yumbo', lat: 3.5300, lon: -76.4900, radius: 10 }
+                    { name: 'Yumbo', lat: 3.5300, lon: -76.4900, radius: 10 },
+                    { name: 'Cáqueza', lat: 4.4050, lon: -73.9470, radius: 10 },
+                    { name: 'Pacho', lat: 5.1330, lon: -74.1600, radius: 10 }
                 ];
                 let closest = null,
                     closestDist = Infinity;
@@ -1860,7 +1879,7 @@
         const geolocation = new GeolocationManager();
 
         // ============================================================
-        // OFFLINE
+        // OFFLINE MANAGER
         // ============================================================
         class OfflineManager {
             constructor() {
@@ -1905,7 +1924,7 @@
                 if (!this.isReady) await this.init();
                 if (!report.temp_id) {
                     report.temp_id =
-                    `MV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+                        `MV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
                 }
                 const reportData = { ...report, temp_id: report.temp_id, synced: false, savedAt: Date.now() };
                 return new Promise((resolve, reject) => {
@@ -2029,7 +2048,7 @@
         offline.init();
 
         // ============================================================
-        // MAPA
+        // MAP MANAGER (con soporte para incendios)
         // ============================================================
         class MapManager {
             constructor() {
@@ -2124,7 +2143,6 @@
                     }
                 });
 
-                // Popup para puntos de acopio
                 this.map.on('click', 'collection-points', (e) => {
                     const props = e.features[0].properties;
                     const point = OFFICIAL_COLLECTION_POINTS.find(p => p.id === props.id);
@@ -2247,7 +2265,10 @@
                             in_danger: report.in_danger || false,
                             injured_count: report.injured_count || 0,
                             road_status: report.road_status || null,
-                            road_name: report.road_name || null
+                            road_name: report.road_name || null,
+                            fire_type: report.fire_type || null,
+                            magnitude: report.magnitude || null,
+                            wind_direction: report.wind_direction || null
                         }
                     }));
 
@@ -2269,6 +2290,7 @@
                                     'help', '#e74c3c',
                                     'damage', '#f39c12',
                                     'road', '#3498db',
+                                    'fire', '#D32F2F',
                                     'resource', '#1a3c6e',
                                     '#7f8c8d'
                                 ],
@@ -2348,6 +2370,7 @@
                             'help', '#e74c3c',
                             'damage', '#f39c12',
                             'road', '#3498db',
+                            'fire', '#D32F2F',
                             'resource', '#1a3c6e',
                             '#7f8c8d'
                         ],
@@ -2419,7 +2442,17 @@
                         let roadInfo = '';
                         if (report.type === 'road' && report.road_name) {
                             roadInfo =
-                            `<br><span style="font-size:0.7rem;color:#3498db;">🛣️ ${report.road_name} ${report.road_status ? '• ' + report.road_status.join(', ') : ''}</span>`;
+                                `<br><span style="font-size:0.7rem;color:#3498db;">🛣️ ${report.road_name} ${report.road_status ? '• ' + report.road_status.join(', ') : ''}</span>`;
+                        }
+
+                        let fireInfo = '';
+                        if (report.type === 'fire') {
+                            const emoji = report.fire_type === 'humo' ? '🌫️' : report.fire_type === 'fuego' ? '🔥' :
+                                '🌫️🔥';
+                            const mag = report.magnitude ? ` • ${report.magnitude}` : '';
+                            const wind = report.wind_direction ? ` • Viento: ${report.wind_direction}` : '';
+                            fireInfo =
+                                `<br><span style="font-size:0.7rem;color:#D32F2F;">${emoji} Incendio${mag}${wind}</span>`;
                         }
 
                         let priorityIcon = '';
@@ -2435,6 +2468,7 @@
                                     ${priorityIcon ? `<span style="font-size:1.2rem;font-weight:700;color:${priorityColor};">${priorityIcon}</span> ` : ''}
                                     <strong>${report.description || report.type || 'Reporte'}</strong>
                                     ${roadInfo}
+                                    ${fireInfo}
                                     <br>
                                     <span style="font-size:0.65rem;color:#666;">
                                         ${report.municipality || 'Ubicación no especificada'}
@@ -2503,7 +2537,7 @@
                     'Bucaramanga', 'Pereira', 'Cúcuta', 'Ibagué', 'Villavicencio',
                     'Pasto', 'Manizales', 'Neiva', 'Santa Marta', 'Armenia',
                     'Popayán', 'Montería', 'Quibdó', 'Valledupar', 'Sincelejo',
-                    'Soacha', 'Chía', 'Yumbo'
+                    'Soacha', 'Chía', 'Yumbo', 'Cáqueza', 'Pacho'
                 ];
                 openModal(`
                     <div class="modal-title">📍 SELECCIONAR UBICACIÓN</div>
@@ -2544,7 +2578,9 @@
                     'Sincelejo': [9.3047, -75.3977],
                     'Soacha': [4.5790, -74.2170],
                     'Chía': [4.8580, -74.0530],
-                    'Yumbo': [3.5300, -76.4900]
+                    'Yumbo': [3.5300, -76.4900],
+                    'Cáqueza': [4.4050, -73.9470],
+                    'Pacho': [5.1330, -74.1600]
                 };
 
                 document.getElementById('manualLocationConfirm').addEventListener('click', async () => {
@@ -2591,7 +2627,7 @@
         });
 
         // ============================================================
-        // REPORTES
+        // REPORT MANAGER (con incendios)
         // ============================================================
         class ReportManager {
             constructor() {
@@ -2876,12 +2912,14 @@
                     help: reports.filter(r => r.type === 'help').length,
                     damage: reports.filter(r => r.type === 'damage').length,
                     road: reports.filter(r => r.type === 'road').length,
+                    fire: reports.filter(r => r.type === 'fire').length,
                     resource: reports.filter(r => r.type === 'resource').length
                 };
                 document.getElementById('situSafe').textContent = stats.safe;
                 document.getElementById('situHelp').textContent = stats.help;
                 document.getElementById('situDamage').textContent = stats.damage;
                 document.getElementById('situRoads').textContent = stats.road;
+                document.getElementById('situFire').textContent = stats.fire;
                 updateSituationPanel(this.reports);
             }
 
@@ -2985,8 +3023,10 @@
                 <div style="margin-bottom:10px;font-size:0.85rem;">
                     <div><strong>📍 Ubicación:</strong> ${report.municipality || 'No disponible'}</div>
                     <div><strong>🕐 Hora:</strong> ${new Date(report.created_at).toLocaleTimeString()}</div>
-                    <div><strong>📄 Tipo:</strong> ${report.type === 'safe' ? 'Estoy a salvo' : report.type === 'help' ? 'Necesito ayuda' : report.type === 'damage' ? 'Daño' : report.type === 'road' ? 'Vía' : 'Reporte'}</div>
+                    <div><strong>📄 Tipo:</strong> ${report.type === 'safe' ? 'Estoy a salvo' : report.type === 'help' ? 'Necesito ayuda' : report.type === 'damage' ? 'Daño' : report.type === 'road' ? 'Vía' : report.type === 'fire' ? 'Incendio' : 'Reporte'}</div>
                     ${report.road_name ? `<div><strong>🛣️ Vía:</strong> ${report.road_name}</div>` : ''}
+                    ${report.fire_type ? `<div><strong>🔥 Tipo:</strong> ${report.fire_type}</div>` : ''}
+                    ${report.magnitude ? `<div><strong>📏 Magnitud:</strong> ${report.magnitude}</div>` : ''}
                     <div><strong>🔖 Código:</strong> <span style="font-family:monospace;background:#f0f0f0;padding:2px 6px;border-radius:4px;">${code}</span></div>
                     <div><strong>Estado:</strong> <span style="color:${s.color};font-weight:700;">${s.title}</span></div>
                 </div>
@@ -2997,54 +3037,6 @@
                 <button class="btn-secondary" onclick="closeModal(); if(navigator.share){navigator.share({title:'Mapa Vivo',text:'Reporte de emergencia: ${code}'});}">📤 COMPARTIR</button>
             `);
         }
-
-        // ============================================================
-        // FUNCIÓN PARA MOSTRAR DETALLE DE PUNTO DE ACOPIO
-        // ============================================================
-        window.showCollectionPointDetail = function(id) {
-            const point = OFFICIAL_COLLECTION_POINTS.find(p => p.id === id);
-            if (!point) return;
-
-            const accepts = point.accepts ? point.accepts.map(a => `✅ ${a}`).join('<br>') : 'No especificado';
-            const notAccepts = point.not_accepts && point.not_accepts.length > 0 ?
-                point.not_accepts.map(a => `❌ ${a}`).join('<br>') :
-                'No especificado';
-
-            openModal(`
-                <div class="modal-title">🏛️ ${point.name}</div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:0.8rem;color:var(--color-text);">
-                        <strong>Organización:</strong> ${point.organization}
-                    </div>
-                    <div style="font-size:0.8rem;color:var(--color-text);">
-                        <strong>Ciudad:</strong> ${point.city}
-                    </div>
-                    <div style="font-size:0.8rem;color:var(--color-text);">
-                        <strong>Dirección:</strong> ${point.address || 'No especificada'}
-                    </div>
-                    ${point.phone ? `<div style="font-size:0.8rem;color:var(--color-text);"><strong>Teléfono:</strong> ${point.phone}</div>` : ''}
-                    ${point.hours ? `<div style="font-size:0.8rem;color:var(--color-text);"><strong>Horario:</strong> ${point.hours}</div>` : ''}
-                    <div style="font-size:0.8rem;color:var(--color-text);">
-                        <strong>Estado:</strong> <span style="color:#2ecc71;">✅ Activo</span>
-                    </div>
-                    <div style="font-size:0.7rem;color:var(--color-gray);margin-top:4px;">
-                        <strong>Fuente:</strong> ${point.source} (${point.last_verified})
-                    </div>
-                </div>
-                <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:12px;">
-                    <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;">📦 Lo que RECIBEN:</div>
-                    <div style="font-size:0.75rem;color:var(--color-text);">${accepts}</div>
-                </div>
-                ${point.not_accepts && point.not_accepts.length > 0 ? `
-                <div style="background:rgba(229,57,53,0.08);border-radius:12px;padding:12px;margin-bottom:12px;border-left:3px solid #e74c3c;">
-                    <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;color:#e74c3c;">⛔ NO RECIBEN:</div>
-                    <div style="font-size:0.75rem;color:var(--color-text);">${notAccepts}</div>
-                </div>
-                ` : ''}
-                <button class="btn-primary" onclick="closeModal(); mapManager.goToLocation(${point.latitude}, ${point.longitude}, 16);">📍 VER EN MAPA</button>
-                <button class="btn-secondary" onclick="closeModal();">Cerrar</button>
-            `);
-        };
 
         // ============================================================
         // SGC
@@ -3141,7 +3133,55 @@
         }
 
         // ============================================================
-        // MODALES V2 - CON IDENTIFICACIÓN DE VÍA
+        // SHOW COLLECTION POINT DETAIL
+        // ============================================================
+        window.showCollectionPointDetail = function(id) {
+            const point = OFFICIAL_COLLECTION_POINTS.find(p => p.id === id);
+            if (!point) return;
+
+            const accepts = point.accepts ? point.accepts.map(a => `✅ ${a}`).join('<br>') : 'No especificado';
+            const notAccepts = point.not_accepts && point.not_accepts.length > 0 ?
+                point.not_accepts.map(a => `❌ ${a}`).join('<br>') :
+                'No especificado';
+
+            openModal(`
+                <div class="modal-title">🏛️ ${point.name}</div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:0.8rem;color:var(--color-text);">
+                        <strong>Organización:</strong> ${point.organization}
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--color-text);">
+                        <strong>Ciudad:</strong> ${point.city}
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--color-text);">
+                        <strong>Dirección:</strong> ${point.address || 'No especificada'}
+                    </div>
+                    ${point.phone ? `<div style="font-size:0.8rem;color:var(--color-text);"><strong>Teléfono:</strong> ${point.phone}</div>` : ''}
+                    ${point.hours ? `<div style="font-size:0.8rem;color:var(--color-text);"><strong>Horario:</strong> ${point.hours}</div>` : ''}
+                    <div style="font-size:0.8rem;color:var(--color-text);">
+                        <strong>Estado:</strong> <span style="color:#2ecc71;">✅ Activo</span>
+                    </div>
+                    <div style="font-size:0.7rem;color:var(--color-gray);margin-top:4px;">
+                        <strong>Fuente:</strong> ${point.source} (${point.last_verified})
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:12px;">
+                    <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;">📦 Lo que RECIBEN:</div>
+                    <div style="font-size:0.75rem;color:var(--color-text);">${accepts}</div>
+                </div>
+                ${point.not_accepts && point.not_accepts.length > 0 ? `
+                <div style="background:rgba(229,57,53,0.08);border-radius:12px;padding:12px;margin-bottom:12px;border-left:3px solid #e74c3c;">
+                    <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;color:#e74c3c;">⛔ NO RECIBEN:</div>
+                    <div style="font-size:0.75rem;color:var(--color-text);">${notAccepts}</div>
+                </div>
+                ` : ''}
+                <button class="btn-primary" onclick="closeModal(); mapManager.goToLocation(${point.latitude}, ${point.longitude}, 16);">📍 VER EN MAPA</button>
+                <button class="btn-secondary" onclick="closeModal();">Cerrar</button>
+            `);
+        };
+
+        // ============================================================
+        // MODALES
         // ============================================================
 
         // --- Safe Modal ---
@@ -3402,7 +3442,7 @@
             });
         }
 
-        // --- Road Modal V2 - CON IDENTIFICACIÓN DE VÍA ---
+        // --- Road Modal ---
         function showRoadModal() {
             const statuses = ['Vía libre', 'Tránsito parcial', 'Vía bloqueada', 'Derrumbe', 'Puente afectado',
                 'Inundación', 'Árbol/objeto bloqueando', 'Otro'
@@ -3486,194 +3526,263 @@
             });
         }
 
-        // --- Resources Modal V2 - CON GESTIÓN DE AYUDAS ---
-      function showResourcesModal() {
-    // ========== DETECTAR CIUDAD DEL USUARIO ==========
-    let detectedCity = 'Bogotá'; // fallback
-
-    // Intentar obtener ubicación
-    geolocation.getCurrentPosition()
-        .then(pos => geolocation.getLocationName(pos.latitude, pos.longitude))
-        .then(city => {
-            detectedCity = city;
-            // Si el selector ya existe, actualizar valor y filtrar
-            const select = document.getElementById('cityFilter');
-            if (select) {
-                select.value = city;
-                filterResources(city);
-            }
-        })
-        .catch(() => {
-            console.log('No se pudo detectar ciudad, mostrando Bogotá por defecto');
-        });
-
-    // ========== DATOS ==========
-    const cities = [...new Set(OFFICIAL_COLLECTION_POINTS.map(p => p.city))].sort();
-    const totalPoints = OFFICIAL_COLLECTION_POINTS.length;
-    const oficiales = OFFICIAL_COLLECTION_POINTS.filter(p => p.type === 'oficial').length;
-
-    // ========== FUNCIÓN FILTRAR ==========
-    function filterResources(city) {
-        const filtered = city === 'TODAS' ? OFFICIAL_COLLECTION_POINTS : OFFICIAL_COLLECTION_POINTS.filter(p => p.city === city);
-        const list = document.getElementById('resourcesList');
-        if (!list) return;
-
-        if (filtered.length === 0) {
-            list.innerHTML = `
-                <div style="text-align:center;padding:30px;color:var(--color-text);">
-                    <div style="font-size:2rem;">📍</div>
-                    <p style="font-size:0.9rem;">No hay puntos de acopio en esta ciudad</p>
+        // --- Fire Modal ---
+        function showFireModal() {
+            openModal(`
+                <div class="modal-title">🔥 REPORTAR INCENDIO FORESTAL</div>
+                <div style="text-align:center;margin-bottom:14px;">
+                    <p style="color:var(--color-text);font-size:0.85rem;">
+                        Reporta un incendio o humo para alertar a la comunidad
+                    </p>
                 </div>
+                <div class="modal-form-group">
+                    <label>🔥 ¿Qué estás viendo?</label>
+                    <div class="grid-options" id="fireType">
+                        <label><input type="radio" name="fireType" value="humo"> 🌫️ Humo</label>
+                        <label><input type="radio" name="fireType" value="fuego"> 🔥 Fuego</label>
+                        <label><input type="radio" name="fireType" value="humo_fuego"> 🌫️🔥 Humo + fuego</label>
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label>📏 Magnitud aproximada</label>
+                    <div class="grid-options" id="fireMagnitude">
+                        <label><input type="radio" name="magnitude" value="pequeño"> Pequeño</label>
+                        <label><input type="radio" name="magnitude" value="mediano"> Mediano</label>
+                        <label><input type="radio" name="magnitude" value="grande"> Grande</label>
+                        <label><input type="radio" name="magnitude" value="no_determinado"> No puedo determinarlo</label>
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label>🌬️ Dirección del humo/fuego (opcional)</label>
+                    <input type="text" id="fireWind" placeholder="Ej: hacia el norte, hacia la montaña" />
+                </div>
+                <div class="modal-form-group">
+                    <label>📷 Foto (opcional)</label>
+                    <input type="file" id="firePhoto" accept="image/*" style="padding:10px;border:2px dashed rgba(255,255,255,0.15);border-radius:12px;background:transparent;width:100%;color:white;">
+                </div>
+                <button class="btn-primary fire" id="firePublishBtn">🔥 REPORTAR INCENDIO</button>
+            `);
+
+            let selectedFile = null;
+            document.getElementById('firePhoto').addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
+            });
+
+            document.getElementById('firePublishBtn').addEventListener('click', async () => {
+                try {
+                    const fireType = document.querySelector('input[name="fireType"]:checked');
+                    const magnitude = document.querySelector('input[name="magnitude"]:checked');
+                    if (!fireType) {
+                        showToast('Selecciona qué estás viendo (humo, fuego, ambos)', 'warning');
+                        return;
+                    }
+                    if (!magnitude) {
+                        showToast('Selecciona la magnitud aproximada', 'warning');
+                        return;
+                    }
+                    const wind = document.getElementById('fireWind').value.trim();
+
+                    let pos = await geolocation.getCurrentPosition();
+                    const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
+
+                    const reportData = {
+                        type: 'fire',
+                        latitude: pos.latitude,
+                        longitude: pos.longitude,
+                        municipality: location,
+                        fire_type: fireType.value,
+                        magnitude: magnitude.value,
+                        wind_direction: wind || null,
+                        description: `Incendio forestal: ${fireType.value} - Magnitud: ${magnitude.value}${wind ? ' - Viento: ' + wind : ''}`
+                    };
+
+                    const report = await reports.createReport(reportData);
+                    if (selectedFile && report) {
+                        const imageUrl = await uploadImage(selectedFile, report.id);
+                        if (imageUrl) {
+                            await supabaseClient.from('reports').update({ image_url: imageUrl }).eq('id', report.id);
+                        }
+                    }
+                    closeModal();
+                    setTimeout(() => reports.syncPendingReports(), 2000);
+                } catch (error) {
+                    showToast('📍 ' + error.message, 'warning');
+                    mapManager.showLocationPicker();
+                    closeModal();
+                }
+            });
+        }
+
+        // --- Resources Modal (con filtro por ciudad) ---
+        function showResourcesModal() {
+            let detectedCity = 'Bogotá';
+            geolocation.getCurrentPosition()
+                .then(pos => geolocation.getLocationName(pos.latitude, pos.longitude))
+                .then(city => {
+                    detectedCity = city;
+                    const select = document.getElementById('cityFilter');
+                    if (select) {
+                        select.value = city;
+                        filterResources(city);
+                    }
+                })
+                .catch(() => {
+                    console.log('No se pudo detectar ciudad, mostrando Bogotá por defecto');
+                });
+
+            const cities = [...new Set(OFFICIAL_COLLECTION_POINTS.map(p => p.city))].sort();
+            const totalPoints = OFFICIAL_COLLECTION_POINTS.length;
+            const oficiales = OFFICIAL_COLLECTION_POINTS.filter(p => p.type === 'oficial').length;
+
+            function filterResources(city) {
+                const filtered = city === 'TODAS' ? OFFICIAL_COLLECTION_POINTS : OFFICIAL_COLLECTION_POINTS.filter(p => p.city === city);
+                const list = document.getElementById('resourcesList');
+                if (!list) return;
+
+                if (filtered.length === 0) {
+                    list.innerHTML = `
+                        <div style="text-align:center;padding:30px;color:var(--color-text);">
+                            <div style="font-size:2rem;">📍</div>
+                            <p style="font-size:0.9rem;">No hay puntos de acopio en esta ciudad</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = filtered.map(p => `
+                    <div class="resource-item" onclick="showCollectionPointDetail('${p.id}')">
+                        <span class="icon">🏛️</span>
+                        <div class="info">
+                            <div class="name">${p.name}</div>
+                            <div class="detail">${p.city} • ${p.organization}</div>
+                        </div>
+                        <span class="badge badge-oficial">OFICIAL</span>
+                    </div>
+                `).join('');
+            }
+
+            const modalContent = `
+                <div class="modal-title">📍 RECURSOS Y AYUDAS</div>
+                <div class="aid-stats">
+                    <div class="aid-stat">
+                        <div class="number">${totalPoints}</div>
+                        <div class="label">Puntos de acopio</div>
+                    </div>
+                    <div class="aid-stat">
+                        <div class="number">${oficiales}</div>
+                        <div class="label">Oficiales verificados</div>
+                    </div>
+                    <div class="aid-stat">
+                        <div class="number">${cities.length}</div>
+                        <div class="label">Ciudades</div>
+                    </div>
+                </div>
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="tab-puntos">🏛️ Puntos de acopio</button>
+                    <button class="tab-btn" data-tab="tab-ayudas">📦 Necesidades</button>
+                </div>
+                <div id="tab-puntos" class="tab-content active">
+                    <div class="modal-form-group">
+                        <label>📍 Filtrar por ciudad</label>
+                        <select id="cityFilter" style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);color:white;font-size:1rem;">
+                            <option value="TODAS">🌎 Todas las ciudades</option>
+                            ${cities.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div id="resourcesList" style="max-height:300px;overflow-y:auto;">
+                        <div style="text-align:center;padding:30px;color:var(--color-text);">
+                            <div style="font-size:2rem;">⏳</div>
+                            <p style="font-size:0.9rem;">Cargando puntos...</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="tab-ayudas" class="tab-content">
+                    <div style="font-size:0.85rem;color:var(--color-text);margin-bottom:10px;text-align:center;">
+                        📦 Lo que se necesita en los puntos de acopio (información nacional)
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;max-height:300px;overflow-y:auto;">
+                        <div style="font-weight:700;font-size:0.8rem;margin-bottom:6px;color:#2ecc71;">✅ Alimentos no perecederos:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Arroz, aceite, pastas, enlatados, granos (fríjol, lentejas), harina, panela, leche en polvo, chocolate, avena
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Agua e hidratación:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Agua potable embotellada, bebidas hidratantes
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Elementos de albergue:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Colchonetas, frazadas, cobijas, mantas, almohadas, toldillos, sábanas
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Higiene y aseo:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Jabón, champú, cepillos dentales, crema dental, toallas higiénicas, papel higiénico, pañales, toallitas húmedas
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Primeros auxilios:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Tapabocas, gasas estériles, alcohol, clorhexidina, guantes quirúrgicos, vendajes
+                        </div>
+                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#f39c12;">⚠️ NO se reciben:</div>
+                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                            Medicamentos, ropa usada, elementos usados, alimentos perecederos, productos vencidos
+                        </div>
+                        <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:0.65rem;color:var(--color-text);text-align:center;">
+                            ℹ️ Datos verificados desde fuentes oficiales: Cruz Roja, Alcaldías y UNGRD
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-secondary" onclick="closeModal()" style="margin-top:10px;">Cerrar</button>
             `;
-            return;
+
+            openModal(modalContent);
+
+            setTimeout(() => {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        btn.classList.add('active');
+                        document.getElementById(btn.dataset.tab).classList.add('active');
+                    });
+                });
+
+                const select = document.getElementById('cityFilter');
+                if (select) {
+                    if (detectedCity && cities.includes(detectedCity)) {
+                        select.value = detectedCity;
+                    } else {
+                        select.value = 'TODAS';
+                    }
+                    filterResources(select.value);
+                    select.addEventListener('change', (e) => {
+                        filterResources(e.target.value);
+                    });
+                } else {
+                    filterResources('TODAS');
+                }
+            }, 100);
         }
-
-        list.innerHTML = filtered.map(p => `
-            <div class="resource-item" onclick="showCollectionPointDetail('${p.id}')">
-                <span class="icon">🏛️</span>
-                <div class="info">
-                    <div class="name">${p.name}</div>
-                    <div class="detail">${p.city} • ${p.organization}</div>
-                </div>
-                <span class="badge badge-oficial">OFICIAL</span>
-            </div>
-        `).join('');
-    }
-
-    // ========== CONSTRUIR MODAL ==========
-    const modalContent = `
-        <div class="modal-title">📍 RECURSOS Y AYUDAS</div>
-
-        <div class="aid-stats">
-            <div class="aid-stat">
-                <div class="number">${totalPoints}</div>
-                <div class="label">Puntos de acopio</div>
-            </div>
-            <div class="aid-stat">
-                <div class="number">${oficiales}</div>
-                <div class="label">Oficiales verificados</div>
-            </div>
-            <div class="aid-stat">
-                <div class="number">${cities.length}</div>
-                <div class="label">Ciudades</div>
-            </div>
-        </div>
-
-        <div class="tabs-container">
-            <button class="tab-btn active" data-tab="tab-puntos">🏛️ Puntos de acopio</button>
-            <button class="tab-btn" data-tab="tab-ayudas">📦 Necesidades</button>
-        </div>
-
-        <!-- PESTAÑA 1: PUNTOS DE ACOPIO -->
-        <div id="tab-puntos" class="tab-content active">
-            <div class="modal-form-group">
-                <label>📍 Filtrar por ciudad</label>
-                <select id="cityFilter" style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);color:white;font-size:1rem;">
-                    <option value="TODAS">🌎 Todas las ciudades</option>
-                    ${cities.map(c => `<option value="${c}">${c}</option>`).join('')}
-                </select>
-            </div>
-            <div id="resourcesList" style="max-height:300px;overflow-y:auto;">
-                <div style="text-align:center;padding:30px;color:var(--color-text);">
-                    <div style="font-size:2rem;">⏳</div>
-                    <p style="font-size:0.9rem;">Cargando puntos...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- PESTAÑA 2: NECESIDADES (sin filtro, es nacional) -->
-        <div id="tab-ayudas" class="tab-content">
-            <div style="font-size:0.85rem;color:var(--color-text);margin-bottom:10px;text-align:center;">
-                📦 Lo que se necesita en los puntos de acopio (información nacional)
-            </div>
-            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;max-height:300px;overflow-y:auto;">
-                <div style="font-weight:700;font-size:0.8rem;margin-bottom:6px;color:#2ecc71;">✅ Alimentos no perecederos:</div>
-                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                    Arroz, aceite, pastas, enlatados, granos (fríjol, lentejas), harina, panela, leche en polvo, chocolate, avena
-                </div>
-                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Agua e hidratación:</div>
-                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                    Agua potable embotellada, bebidas hidratantes
-                </div>
-                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Elementos de albergue:</div>
-                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                    Colchonetas, frazadas, cobijas, mantas, almohadas, toldillos, sábanas
-                </div>
-                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Higiene y aseo:</div>
-                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                    Jabón, champú, cepillos dentales, crema dental, toallas higiénicas, papel higiénico, pañales, toallitas húmedas
-                </div>
-                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Primeros auxilios:</div>
-                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                    Tapabocas, gasas estériles, alcohol, clorhexidina, guantes quirúrgicos, vendajes
-                </div>
-                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#f39c12;">⚠️ NO se reciben:</div>
-                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                    Medicamentos, ropa usada, elementos usados, alimentos perecederos, productos vencidos
-                </div>
-                <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:0.65rem;color:var(--color-text);text-align:center;">
-                    ℹ️ Datos verificados desde fuentes oficiales: Cruz Roja, Alcaldías y UNGRD
-                </div>
-            </div>
-        </div>
-
-        <button class="btn-secondary" onclick="closeModal()" style="margin-top:10px;">Cerrar</button>
-    `;
-
-    openModal(modalContent);
-
-    // ========== CONFIGURAR TABS Y FILTRO DESPUÉS DE RENDERIZAR ==========
-    setTimeout(() => {
-        // Tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.tab).classList.add('active');
-            });
-        });
-
-        // Selector de ciudad
-        const select = document.getElementById('cityFilter');
-        if (select) {
-            // Preseleccionar ciudad detectada (si existe en la lista)
-            if (detectedCity && cities.includes(detectedCity)) {
-                select.value = detectedCity;
-            } else {
-                select.value = 'TODAS';
-            }
-            // Filtrar inicial
-            filterResources(select.value);
-            // Evento cambio
-            select.addEventListener('change', (e) => {
-                filterResources(e.target.value);
-            });
-        } else {
-            filterResources('TODAS');
-        }
-    }, 100);
-}
 
         // ============================================================
-        // ACTUALIZAR PANEL DE SITUACIÓN
+        // UPDATE SITUATION PANEL
         // ============================================================
         function updateSituationPanel(reports) {
             const safe = reports.filter(r => r.type === 'safe').length;
             const help = reports.filter(r => r.type === 'help').length;
             const damage = reports.filter(r => r.type === 'damage').length;
             const roads = reports.filter(r => r.type === 'road').length;
+            const fire = reports.filter(r => r.type === 'fire').length;
 
             document.getElementById('situSafe').textContent = safe;
             document.getElementById('situHelp').textContent = help;
             document.getElementById('situDamage').textContent = damage;
             document.getElementById('situRoads').textContent = roads;
+            document.getElementById('situFire').textContent = fire;
             document.getElementById('situTime').textContent = new Date().toLocaleTimeString([], { hour: '2-digit',
                 minute: '2-digit' });
         }
 
         // ============================================================
-        // CORROBORAR (global)
+        // CORROBORATE (global)
         // ============================================================
         window.corroborateReport = async function(reportId) {
             if (!reports.authReady) {
@@ -3687,12 +3796,13 @@
         // INICIALIZACIÓN
         // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🔗 Conectando botones V2...');
+            console.log('🔗 Conectando botones...');
 
             document.getElementById('safeBtn').addEventListener('click', showSafeModal);
             document.getElementById('helpBtn').addEventListener('click', showHelpModal);
             document.getElementById('damageBtn').addEventListener('click', showDamageModal);
             document.getElementById('roadBtn').addEventListener('click', showRoadModal);
+            document.getElementById('fireBtn').addEventListener('click', showFireModal);
             document.getElementById('resourcesBtn').addEventListener('click', showResourcesModal);
 
             document.getElementById('myLocationBtn').addEventListener('click', () => mapManager.centerOnUser());
@@ -3725,14 +3835,15 @@
                 if (e.key === '2') document.getElementById('helpBtn').click();
                 if (e.key === '3') document.getElementById('damageBtn').click();
                 if (e.key === '4') document.getElementById('roadBtn').click();
-                if (e.key === '5') document.getElementById('resourcesBtn').click();
+                if (e.key === '5') document.getElementById('fireBtn').click();
+                if (e.key === '6') document.getElementById('resourcesBtn').click();
             });
 
             init();
         });
 
         async function init() {
-            console.log('🗺️ Iniciando Mapa Vivo Colombia V2');
+            console.log('🗺️ Iniciando Mapa Vivo Colombia - con incendios');
             console.log('📡 Conectado a Supabase:', CONFIG.supabaseUrl);
             console.log(`📍 ${OFFICIAL_COLLECTION_POINTS.length} puntos de acopio oficiales cargados`);
 
@@ -3755,8 +3866,6 @@
             reports.subscribeToRealtime();
             setTimeout(() => reports.syncPendingReports(), 3000);
 
-            // Ya no necesitamos initResources() porque los puntos de acopio están en el código
-
             window.addEventListener('offline', () => {
                 document.getElementById('connectionStatus').className = 'connection-status offline';
                 document.getElementById('connectionStatus').querySelector('.status-text').textContent = 'Sin conexión';
@@ -3774,7 +3883,7 @@
                 if (navigator.onLine && reports.authReady) reports.syncPendingReports();
             }, 30000);
 
-            console.log('✅ Aplicación V2 lista');
+            console.log('✅ Aplicación lista con soporte para incendios');
             console.log(`👤 Usuario autenticado: ${reports.authReady}`);
         }
 
@@ -3783,6 +3892,7 @@
         window.closeModal = closeModal;
         window.showToast = showToast;
         window.showCollectionPointDetail = showCollectionPointDetail;
+        window.corroborateReport = corroborateReport;
     </script>
 </body>
 </html>
