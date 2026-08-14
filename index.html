@@ -537,6 +537,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
+        // ============================================================
+        // CONFIGURACIÓN
+        // ============================================================
         const CONFIG = {
             supabaseUrl: 'https://qytywodntuikvotimpzs.supabase.co',
             supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dHl3b2RudHVpa3ZvdGltcHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTA4MzcsImV4cCI6MjEwMjIyNjgzN30.DEroSVOkETVrzVOroYuEU1AWQnOcT_TpGE5ljyemyHI',
@@ -550,16 +553,14 @@
         let currentUser = null, isAuthenticated = false, authReady = false;
 
         // ============================================================
-        // GEOLOCALIZACIÓN
+        // GEOLOCALIZACIÓN - SIN INVENTAR UBICACIÓN
         // ============================================================
         class GeolocationManager {
             constructor() { this.position = null; }
             getCurrentPosition() {
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) {
-                        this.position = { latitude: 5.6900, longitude: -76.6600, accuracy: 99999, timestamp: Date.now() };
-                        showToast('📍 GPS no disponible, usando Quibdó', 'warning');
-                        resolve(this.position);
+                        reject(new Error('Tu dispositivo no tiene GPS. Por favor, selecciona tu ubicación en el mapa.'));
                         return;
                     }
                     navigator.geolocation.getCurrentPosition(
@@ -574,9 +575,7 @@
                         },
                         (error) => {
                             console.warn('GPS falló:', error.message);
-                            this.position = { latitude: 5.6900, longitude: -76.6600, accuracy: 99999, timestamp: Date.now() };
-                            showToast('📍 GPS falló, usando Quibdó', 'warning');
-                            resolve(this.position);
+                            reject(new Error('No se pudo obtener tu ubicación. Por favor, selecciona tu ubicación en el mapa.'));
                         },
                         { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
                     );
@@ -625,32 +624,32 @@
         const geolocation = new GeolocationManager();
 
         // ============================================================
-        // OFFLINE - MIGRADO A VERSIÓN 4
+        // OFFLINE - VERSIÓN 5 (RECONSTRUCCIÓN FORZADA)
         // ============================================================
         class OfflineManager {
             constructor() {
                 this.dbName = 'MapaVivoDB';
-                this.dbVersion = 4;
+                this.dbVersion = 5;
                 this.db = null;
                 this.isReady = false;
             }
+
             async init() {
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(this.dbName, this.dbVersion);
                     request.onupgradeneeded = (e) => {
                         const db = e.target.result;
-                        if (e.oldVersion < 4) {
-                            if (db.objectStoreNames.contains('reports')) db.deleteObjectStore('reports');
-                            if (db.objectStoreNames.contains('pending')) db.deleteObjectStore('pending');
-                            if (db.objectStoreNames.contains('sync_queue')) db.deleteObjectStore('sync_queue');
-                            if (db.objectStoreNames.contains('images')) db.deleteObjectStore('images');
-                            const reportsStore = db.createObjectStore('reports', { keyPath: 'temp_id' });
-                            reportsStore.createIndex('temp_id', 'temp_id', { unique: true });
-                            db.createObjectStore('pending', { keyPath: 'temp_id' });
-                            const syncQueueStore = db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
-                            syncQueueStore.createIndex('temp_id', 'temp_id');
-                            db.createObjectStore('images', { keyPath: 'id' });
-                        }
+                        // Eliminar stores antiguos y recrearlos con keyPath 'temp_id'
+                        if (db.objectStoreNames.contains('reports')) db.deleteObjectStore('reports');
+                        if (db.objectStoreNames.contains('pending')) db.deleteObjectStore('pending');
+                        if (db.objectStoreNames.contains('sync_queue')) db.deleteObjectStore('sync_queue');
+                        if (db.objectStoreNames.contains('images')) db.deleteObjectStore('images');
+                        const reportsStore = db.createObjectStore('reports', { keyPath: 'temp_id' });
+                        reportsStore.createIndex('temp_id', 'temp_id', { unique: true });
+                        db.createObjectStore('pending', { keyPath: 'temp_id' });
+                        const syncQueueStore = db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
+                        syncQueueStore.createIndex('temp_id', 'temp_id');
+                        db.createObjectStore('images', { keyPath: 'id' });
                     };
                     request.onsuccess = (e) => {
                         this.db = e.target.result;
@@ -661,6 +660,7 @@
                     request.onerror = () => reject(request.error);
                 });
             }
+
             async saveReport(report) {
                 if (!this.isReady) await this.init();
                 if (!report.temp_id) {
@@ -698,6 +698,7 @@
                     };
                 });
             }
+
             async getPending() {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -707,10 +708,12 @@
                     request.onerror = () => reject(request.error);
                 });
             }
+
             async getPendingCount() {
                 const pending = await this.getPending();
                 return pending.length;
             }
+
             async markSynced(tempId) {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -733,6 +736,7 @@
                     tx.onerror = () => reject(tx.error);
                 });
             }
+
             async markSyncError(tempId, errorMessage) {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -758,6 +762,7 @@
                     tx.onerror = () => reject(tx.error);
                 });
             }
+
             async getAllReports() {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -767,6 +772,7 @@
                     request.onerror = () => reject(request.error);
                 });
             }
+
             async updatePendingCount() {
                 const count = await this.getPendingCount();
                 document.getElementById('statPending').textContent = count;
@@ -883,7 +889,7 @@
                         return pos;
                     }
                 } catch (error) {
-                    showToast('No se pudo obtener tu ubicación', 'error');
+                    showToast('📍 ' + error.message, 'warning');
                 }
                 return null;
             }
@@ -1031,16 +1037,10 @@
                             .select();
 
                         if (error) {
-                            if (error.code === 'PGRST' || error.code === '42501') {
-                                await offline.markSyncError(tempId, error.message);
-                                showToast('❌ Error en los datos. No se pudo registrar.', 'error');
-                                showConfirmation(report, false, 'error');
-                                return null;
-                            } else {
-                                showToast('⏳ Error temporal. Reporte pendiente de envío.', 'warning');
-                                showConfirmation(report, false, 'pending');
-                                return report;
-                            }
+                            // Cualquier error -> guardar pendiente (más seguro para emergencia)
+                            showToast('⏳ Error temporal. Reporte pendiente de envío.', 'warning');
+                            showConfirmation(report, false, 'pending');
+                            return report;
                         }
 
                         if (inserted && inserted.length > 0) {
@@ -1117,13 +1117,8 @@
                             .select();
 
                         if (error) {
-                            if (error.code === 'PGRST' || error.code === '42501') {
-                                await offline.markSyncError(tempId, error.message);
-                                errors++;
-                            } else {
-                                await offline.markSyncError(tempId, 'Temporal: ' + error.message);
-                                errors++;
-                            }
+                            await offline.markSyncError(tempId, 'Temporal: ' + error.message);
+                            errors++;
                             continue;
                         }
 
@@ -1384,7 +1379,7 @@
         }
 
         // ============================================================
-        // MODALES - BOTONES FUNCIONALES
+        // MODALES - TODOS LOS BOTONES FUNCIONALES
         // ============================================================
         function showSafeModal() {
             openModal(`
@@ -1442,7 +1437,8 @@
                     closeModal();
                     setTimeout(() => reports.syncPendingReports(), 2000);
                 } catch (error) {
-                    showToast('Error: ' + error.message, 'error');
+                    showToast('📍 ' + error.message, 'warning');
+                    closeModal();
                 }
             });
         }
@@ -1522,7 +1518,8 @@
                     closeModal();
                     setTimeout(() => reports.syncPendingReports(), 2000);
                 } catch (error) {
-                    showToast('Error: ' + error.message, 'error');
+                    showToast('📍 ' + error.message, 'warning');
+                    closeModal();
                 }
             });
         }
@@ -1593,7 +1590,8 @@
                     closeModal();
                     setTimeout(() => reports.syncPendingReports(), 2000);
                 } catch (error) {
-                    showToast('Error: ' + error.message, 'error');
+                    showToast('📍 ' + error.message, 'warning');
+                    closeModal();
                 }
             });
         }
@@ -1645,7 +1643,8 @@
                     closeModal();
                     setTimeout(() => reports.syncPendingReports(), 2000);
                 } catch (error) {
-                    showToast('Error: ' + error.message, 'error');
+                    showToast('📍 ' + error.message, 'warning');
+                    closeModal();
                 }
             });
         }
@@ -1702,6 +1701,7 @@
                 }
             } catch (e) {
                 console.log('Ubicación no disponible:', e.message);
+                // No inventamos ubicación
             }
 
             setTimeout(() => fetchEarthquakes(), 2000);
