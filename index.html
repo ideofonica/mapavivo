@@ -715,27 +715,28 @@
             }
 
             async markSynced(tempId) {
-                if (!this.isReady) await this.init();
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(['pending', 'sync_queue'], 'readwrite');
-                    tx.objectStore('pending').delete(tempId);
-                    const index = tx.objectStore('sync_queue').index('temp_id');
-                    const request = index.getAll(tempId);
-                    request.onsuccess = () => {
-                        for (const item of request.result) {
-                            if (item.status === 'pending') {
-                                const updatedItem = { ...item, status: 'completed', completed_at: Date.now() };
-                                tx.objectStore('sync_queue').put(updatedItem);
-                            }
-                        }
-                    };
-                    tx.oncomplete = () => {
-                        this.updatePendingCount();
-                        resolve(true);
-                    };
-                    tx.onerror = () => reject(tx.error);
-                });
+    if (!this.isReady) await this.init();
+    return new Promise((resolve, reject) => {
+        const tx = this.db.transaction(['pending', 'sync_queue', 'reports'], 'readwrite');
+        tx.objectStore('pending').delete(tempId);
+        tx.objectStore('reports').delete(tempId); // <--- NUEVO
+        const index = tx.objectStore('sync_queue').index('temp_id');
+        const request = index.getAll(tempId);
+        request.onsuccess = () => {
+            for (const item of request.result) {
+                if (item.status === 'pending') {
+                    const updatedItem = { ...item, status: 'completed', completed_at: Date.now() };
+                    tx.objectStore('sync_queue').put(updatedItem);
+                }
             }
+        };
+        tx.oncomplete = () => {
+            this.updatePendingCount();
+            resolve(true);
+        };
+        tx.onerror = () => reject(tx.error);
+    });
+}
 
             async markSyncError(tempId, errorMessage) {
                 if (!this.isReady) await this.init();
@@ -811,72 +812,233 @@
                 });
                 return this.map;
             }
-            updateClusters(reports) {
-                if (!this.map || !this.isReady) return;
-                this.reports = reports || [];
-                if (this.map.getLayer('clusters')) this.map.removeLayer('clusters');
-                if (this.map.getLayer('cluster-count')) this.map.removeLayer('cluster-count');
-                if (this.map.getSource('reports-cluster')) this.map.removeSource('reports-cluster');
-                const features = this.reports
-                    .filter(r => r.latitude && r.longitude)
-                    .map(r => ({
-                        type: 'Feature',
-                        geometry: { type: 'Point', coordinates: [r.longitude, r.latitude] },
-                        properties: { id: r.id || r.temp_id, type: r.type, description: r.description || r.type }
-                    }));
-                if (features.length === 0) return;
-                this.map.addSource('reports-cluster', {
-                    type: 'geojson',
-                    data: { type: 'FeatureCollection', features: features },
-                    cluster: true,
-                    clusterMaxZoom: 14,
-                    clusterRadius: 50
-                });
-                this.map.addLayer({
-                    id: 'clusters',
-                    type: 'circle',
-                    source: 'reports-cluster',
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 10, '#f1f075', 30, '#f28cb1'],
-                        'circle-radius': ['step', ['get', 'point_count'], 20, 10, 30, 30, 40]
-                    }
-                });
-                this.map.addLayer({
-                    id: 'cluster-count',
-                    type: 'symbol',
-                    source: 'reports-cluster',
-                    filter: ['has', 'point_count'],
-                    layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'], 'text-size': 12 },
-                    paint: { 'text-color': '#ffffff' }
-                });
-                this.map.on('click', 'clusters', (e) => {
-                    const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-                    const clusterId = features[0].properties.cluster_id;
-                    this.map.getSource('reports-cluster').getClusterExpansionZoom(clusterId, (err, zoom) => {
-                        if (err) return;
-                        this.map.easeTo({ center: features[0].geometry.coordinates, zoom: zoom });
-                    });
-                });
-                this.map.on('click', (e) => {
-                    const features = this.map.queryRenderedFeatures(e.point);
-                    const reportFeature = features.find(f => f.layer.id === 'clusters' || f.properties.id);
-                    if (reportFeature && reportFeature.properties && reportFeature.properties.id) {
-                        const report = this.reports.find(r => (r.id === reportFeature.properties.id) || (r.temp_id === reportFeature.properties.id));
-                        if (report) {
-                            const popup = new maplibregl.Popup({ offset: 25 })
-                                .setLngLat([report.longitude, report.latitude])
-                                .setHTML(`<div style="font-size:0.8rem;padding:4px;max-width:220px;">
-                                    <strong>${report.description || report.type || 'Reporte'}</strong>
-                                    <br><span style="font-size:0.65rem;color:#666;">${new Date(report.created_at).toLocaleTimeString()}</span>
-                                    <br><span style="font-size:0.65rem;">✅ ${report.verification_count || 0} confirmaciones</span>
-                                    <br><button onclick="corroborateReport('${report.id || report.temp_id}')" style="margin-top:4px;padding:4px 8px;background:#2ecc71;border:none;border-radius:4px;color:white;cursor:pointer;font-size:0.7rem;">👍 Corroborar</button>
-                                </div>`)
-                                .addTo(this.map);
-                        }
-                    }
-                });
+          updateClusters(reports) {
+    if (!this.map || !this.isReady) return;
+
+    this.reports = Array.isArray(reports) ? reports : [];
+
+    // ============================================================
+    // 1. LIMPIAR CAPAS Y SOURCE ANTERIORES
+    // ============================================================
+
+    // Eliminar capas si existen
+    const layersToRemove = ['cluster-count', 'clusters', 'unclustered-point'];
+    for (const layerId of layersToRemove) {
+        if (this.map.getLayer(layerId)) {
+            this.map.removeLayer(layerId);
+        }
+    }
+
+    // Eliminar source
+    if (this.map.getSource('reports-cluster')) {
+        this.map.removeSource('reports-cluster');
+    }
+
+    // ============================================================
+    // 2. CREAR GEOJSON
+    // ============================================================
+
+    const features = this.reports
+        .filter(report => {
+            const lat = Number(report.latitude);
+            const lon = Number(report.longitude);
+            return (
+                Number.isFinite(lat) &&
+                Number.isFinite(lon) &&
+                lat >= -90 &&
+                lat <= 90 &&
+                lon >= -180 &&
+                lon <= 180
+            );
+        })
+        .map(report => ({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [
+                    Number(report.longitude),
+                    Number(report.latitude)
+                ]
+            },
+            properties: {
+                id: report.id || report.temp_id || '',
+                type: report.type || 'report',
+                description: report.description || report.type || 'Reporte'
             }
+        }));
+
+    if (features.length === 0) return;
+
+    // ============================================================
+    // 3. SOURCE GEOJSON
+    // ============================================================
+
+    this.map.addSource('reports-cluster', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: features
+        },
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50
+    });
+
+    // ============================================================
+    // 4. CAPA DE CLUSTERS (agrupados)
+    // ============================================================
+
+    this.map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'reports-cluster',
+        filter: ['has', 'point_count'],
+        paint: {
+            'circle-color': [
+                'step',
+                ['get', 'point_count'],
+                '#51bbd6',
+                10,
+                '#f1f075',
+                30,
+                '#f28cb1'
+            ],
+            'circle-radius': [
+                'step',
+                ['get', 'point_count'],
+                20,
+                10,
+                30,
+                30,
+                40
+            ],
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff'
+        }
+    });
+
+    // ============================================================
+    // 5. CAPA DE CONTADOR EN CLUSTERS
+    // ============================================================
+
+    this.map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'reports-cluster',
+        filter: ['has', 'point_count'],
+        layout: {
+            'text-field': ['get', 'point_count_abbreviated'],
+            'text-size': 12
+        },
+        paint: {
+            'text-color': '#ffffff'
+        }
+    });
+
+    // ============================================================
+    // 6. NUEVA CAPA: PUNTOS INDIVIDUALES (NO AGRUPADOS)
+    // ============================================================
+
+    this.map.addLayer({
+        id: 'unclustered-point',
+        type: 'circle',
+        source: 'reports-cluster',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+            'circle-color': [
+                'match',
+                ['get', 'type'],
+                'safe', '#2ecc71',
+                'help', '#e74c3c',
+                'damage', '#f39c12',
+                'road', '#3498db',
+                'resource', '#1a3c6e',
+                '#7f8c8d' // color por defecto
+            ],
+            'circle-radius': 9,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff'
+        }
+    });
+
+    // ============================================================
+    // 7. LISTENER DE CLUSTERS (con protección para evitar duplicados)
+    // ============================================================
+
+    if (!this._clusterClickHandler) {
+        this._clusterClickHandler = (e) => {
+            const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+            if (!features.length) return;
+            const clusterId = features[0].properties.cluster_id;
+            const source = this.map.getSource('reports-cluster');
+            if (!source) return;
+            source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+                if (err) return;
+                this.map.easeTo({
+                    center: features[0].geometry.coordinates,
+                    zoom: zoom
+                });
+            });
+        };
+        this.map.on('click', 'clusters', this._clusterClickHandler);
+    }
+
+    // ============================================================
+    // 8. LISTENER DE CLICK SOBRE PUNTOS INDIVIDUALES
+    // ============================================================
+
+    if (!this._reportClickHandler) {
+        this._reportClickHandler = (e) => {
+            const features = this.map.queryRenderedFeatures(e.point);
+            if (!features.length) return;
+
+            // Buscar una feature de la capa 'unclustered-point' o que tenga ID
+            const reportFeature = features.find(f =>
+                f.layer.id === 'unclustered-point' ||
+                (f.properties && f.properties.id)
+            );
+
+            if (!reportFeature || !reportFeature.properties) return;
+
+            const reportId = reportFeature.properties.id;
+            if (!reportId) return;
+
+            const report = this.reports.find(r =>
+                r.id === reportId || r.temp_id === reportId
+            );
+
+            if (!report) return;
+
+            const lat = Number(report.latitude);
+            const lon = Number(report.longitude);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+            new maplibregl.Popup({ offset: 25 })
+                .setLngLat([lon, lat])
+                .setHTML(`
+                    <div style="font-size:0.8rem;padding:4px;max-width:220px;">
+                        <strong>${report.description || report.type || 'Reporte'}</strong>
+                        <br>
+                        <span style="font-size:0.65rem;color:#666;">
+                            ${report.created_at ? new Date(report.created_at).toLocaleTimeString() : ''}
+                        </span>
+                        <br>
+                        <span style="font-size:0.65rem;">
+                            ✅ ${report.verification_count || 0} confirmaciones
+                        </span>
+                        <br>
+                        <button onclick="corroborateReport('${reportId}')"
+                            style="margin-top:4px;padding:4px 8px;background:#2ecc71;border:none;border-radius:4px;color:white;cursor:pointer;font-size:0.7rem;">
+                            👍 Corroborar
+                        </button>
+                    </div>
+                `)
+                .addTo(this.map);
+        };
+        this.map.on('click', this._reportClickHandler);
+    }
+
+}
             async goToLocation(lat, lon, zoom = 15) {
                 if (!this.map) return;
                 this.map.flyTo({ center: [lon, lat], zoom: zoom, duration: 1500 });
@@ -1171,15 +1333,18 @@ class ReportManager {
                     console.warn('Error cargando desde Supabase:', error);
                 }
 
-                const localReports = await offline.getAllReports();
+               // Combinar: eliminar duplicados por id o temp_id
+const allReports = [...serverReports];
+const serverIds = new Set(serverReports.map(r => r.id));
+const serverTempIds = new Set(serverReports.map(r => r.temp_id).filter(Boolean));
 
-                const allReports = [...serverReports];
-                const serverIds = new Set(serverReports.map(r => r.id));
-                for (const local of localReports) {
-                    if (!serverIds.has(local.id)) {
-                        allReports.push(local);
-                    }
-                }
+for (const local of localReports) {
+    // Si el local ya existe en el servidor (por id o temp_id), no lo agregamos
+    if (serverIds.has(local.id) || serverTempIds.has(local.temp_id)) {
+        continue;
+    }
+    allReports.push(local);
+}
 
                 this.reports = allReports;
                 mapManager.updateClusters(allReports);
@@ -1236,78 +1401,7 @@ class ReportManager {
                     // ============================================================
         // NUEVO: SUSCRIPCIÓN A REALTIME
         // ============================================================
-        subscribeToRealtime() {
-            if (!this.authReady || !this.userId) {
-                console.warn('⏳ No autenticado, no se puede suscribir a Realtime');
-                return;
-            }
-
-            if (this.realtimeChannel) {
-                console.log('ℹ️ Realtime ya suscrito');
-                return;
-            }
-
-            console.log('📡 Suscribiendo a Realtime...');
-            this.realtimeChannel = supabaseClient
-                .channel('reports-realtime')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'reports'
-                    },
-                    (payload) => {
-                        this.handleRealtimeEvent(payload);
-                    }
-                )
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log('✅ Realtime conectado');
-                    } else if (status === 'CHANNEL_ERROR') {
-                        console.warn('⚠️ Error en Realtime, reintentando en 5s...');
-                        setTimeout(() => {
-                            if (this.realtimeChannel) {
-                                this.realtimeChannel.unsubscribe();
-                                this.realtimeChannel = null;
-                                this.subscribeToRealtime();
-                            }
-                        }, 5000);
-                    }
-                });
-        }
-
-        // ============================================================
-        // NUEVO: MANEJADOR DE EVENTOS REALTIME
-        // ============================================================
-        handleRealtimeEvent(payload) {
-            const { eventType, new: newRecord, old: oldRecord } = payload;
-
-            if (!this.authReady) return;
-
-            try {
-                if (eventType === 'INSERT') {
-                    if (!this.reports.some(r => r.id === newRecord.id)) {
-                        this.reports.push(newRecord);
-                        this.updateStats();
-                        mapManager.updateClusters(this.reports);
-                    }
-                } else if (eventType === 'UPDATE') {
-                    const index = this.reports.findIndex(r => r.id === newRecord.id);
-                    if (index !== -1) {
-                        this.reports[index] = { ...this.reports[index], ...newRecord };
-                        this.updateStats();
-                        mapManager.updateClusters(this.reports);
-                    }
-                } else if (eventType === 'DELETE') {
-                    this.reports = this.reports.filter(r => r.id !== oldRecord.id);
-                    this.updateStats();
-                    mapManager.updateClusters(this.reports);
-                }
-            } catch (error) {
-                console.error('Error procesando evento Realtime:', error);
-            }
-        }
+       
 
                 // ============================================================
         // NUEVO: SUSCRIPCIÓN A REALTIME
