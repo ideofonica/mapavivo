@@ -9,7 +9,6 @@
     <link rel="manifest" href="./manifest.json" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css" />
     <style>
-        /* ===== ESTILOS COMPLETOS ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --color-primary: #1a3c6e;
@@ -90,12 +89,7 @@
             background: rgba(255,255,255,0.1);
             flex-shrink: 0;
         }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .connection-status.online .status-dot { background: var(--color-success); }
         .connection-status.offline .status-dot { background: var(--color-danger); }
         .sync-status {
@@ -150,10 +144,7 @@
             align-items: center;
             justify-content: center;
         }
-        .map-control-btn#myLocationBtn {
-            background: var(--color-primary);
-            color: white;
-        }
+        .map-control-btn#myLocationBtn { background: var(--color-primary); color: white; }
         #quick-actions {
             position: absolute;
             bottom: 16px;
@@ -233,11 +224,7 @@
             font-size: 0.7rem;
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
-        .stat-value {
-            font-weight: 700;
-            color: var(--color-primary);
-            font-size: 0.85rem;
-        }
+        .stat-value { font-weight: 700; color: var(--color-primary); font-size: 0.85rem; }
         #offline-indicator {
             position: absolute;
             top: 50%;
@@ -314,9 +301,7 @@
             font-weight: 600;
             margin-bottom: 4px;
         }
-        .modal-form-group input,
-        .modal-form-group select,
-        .modal-form-group textarea {
+        .modal-form-group input, .modal-form-group select, .modal-form-group textarea {
             width: 100%;
             padding: 10px 12px;
             border: 2px solid #e0e0e0;
@@ -328,8 +313,7 @@
             resize: vertical;
             min-height: 60px;
         }
-        .modal-form-group input:focus,
-        .modal-form-group textarea:focus {
+        .modal-form-group input:focus, .modal-form-group textarea:focus {
             outline: none;
             border-color: var(--color-primary);
         }
@@ -458,8 +442,7 @@
             .stat-value { color: #5a9eff; }
             #modal-container { background: #1a1a2e; }
             .modal-title { color: #5a9eff; }
-            .modal-form-group input,
-            .modal-form-group textarea {
+            .modal-form-group input, .modal-form-group textarea {
                 background: #2a2a4a;
                 border-color: #3a3a5a;
                 color: var(--color-light);
@@ -555,7 +538,7 @@
 
     <script>
         // ============================================================
-        // CONFIGURACIÓN
+        // CONFIGURACIÓN - SIN FIREBASE
         // ============================================================
         const CONFIG = {
             supabaseUrl: 'https://qytywodntuikvotimpzs.supabase.co',
@@ -563,7 +546,7 @@
             mapStyle: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
             mapCenter: [-74.0721, 4.7110],
             mapZoom: 6,
-            appPrefix: 'MV' // Para códigos de identificación
+            appPrefix: 'MV'
         };
 
         // ============================================================
@@ -582,19 +565,11 @@
         // GEOLOCALIZACIÓN
         // ============================================================
         class GeolocationManager {
-            constructor() {
-                this.position = null;
-            }
-
+            constructor() { this.position = null; }
             getCurrentPosition() {
                 return new Promise((resolve) => {
                     if (!navigator.geolocation) {
-                        this.position = {
-                            latitude: 5.6900,
-                            longitude: -76.6600,
-                            accuracy: 99999,
-                            timestamp: Date.now()
-                        };
+                        this.position = { latitude: 5.6900, longitude: -76.6600, accuracy: 99999, timestamp: Date.now() };
                         showToast('📍 GPS no disponible, usando Quibdó', 'warning');
                         resolve(this.position);
                         return;
@@ -611,12 +586,7 @@
                         },
                         (error) => {
                             console.warn('GPS falló:', error.message);
-                            this.position = {
-                                latitude: 5.6900,
-                                longitude: -76.6600,
-                                accuracy: 99999,
-                                timestamp: Date.now()
-                            };
+                            this.position = { latitude: 5.6900, longitude: -76.6600, accuracy: 99999, timestamp: Date.now() };
                             showToast('📍 GPS falló, usando Quibdó', 'warning');
                             resolve(this.position);
                         },
@@ -624,19 +594,16 @@
                     );
                 });
             }
-
             getDistance(lat1, lon1, lat2, lon2) {
                 const R = 6371;
                 const dLat = this.toRad(lat2 - lat1);
                 const dLon = this.toRad(lon2 - lon1);
-                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
                     Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
-                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             }
-
             toRad(deg) { return deg * Math.PI / 180; }
-
             async getLocationName(lat, lon) {
                 const cities = [
                     { name: 'Bogotá', lat: 4.7110, lon: -74.0721, radius: 50 },
@@ -658,8 +625,7 @@
                     { name: 'Montería', lat: 8.7493, lon: -75.8859, radius: 20 },
                     { name: 'Quibdó', lat: 5.6900, lon: -76.6600, radius: 15 }
                 ];
-                let closest = null;
-                let closestDist = Infinity;
+                let closest = null, closestDist = Infinity;
                 for (const city of cities) {
                     const dist = this.getDistance(lat, lon, city.lat, city.lon);
                     if (dist < city.radius && dist < closestDist) {
@@ -670,11 +636,10 @@
                 return closest || `Área ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
             }
         }
-
         const geolocation = new GeolocationManager();
 
         // ============================================================
-        // OFFLINE (IndexedDB) - CON ESTRATEGIA DE PENDIENTES
+        // OFFLINE - CON TEMP_ID (anti-duplicados)
         // ============================================================
         class OfflineManager {
             constructor() {
@@ -683,24 +648,21 @@
                 this.db = null;
                 this.isReady = false;
             }
-
             async init() {
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(this.dbName, this.dbVersion);
                     request.onupgradeneeded = (e) => {
                         const db = e.target.result;
                         if (!db.objectStoreNames.contains('reports')) {
-                            const store = db.createObjectStore('reports', { keyPath: '_key' });
-                            store.createIndex('temp_id', 'temp_id', { unique: false });
+                            const store = db.createObjectStore('reports', { keyPath: 'temp_id' });
+                            store.createIndex('temp_id', 'temp_id', { unique: true });
                         }
                         if (!db.objectStoreNames.contains('pending')) {
                             const store = db.createObjectStore('pending', { keyPath: 'temp_id' });
-                            store.createIndex('synced', 'synced');
                         }
                         if (!db.objectStoreNames.contains('sync_queue')) {
                             const store = db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
-                            store.createIndex('status', 'status');
-                            store.createIndex('temp_id', 'temp_id', { unique: false });
+                            store.createIndex('temp_id', 'temp_id');
                         }
                         if (!db.objectStoreNames.contains('images')) {
                             db.createObjectStore('images', { keyPath: 'id' });
@@ -715,7 +677,6 @@
                     request.onerror = () => reject(request.error);
                 });
             }
-
             async saveReport(report) {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -724,15 +685,14 @@
                     const pendingStore = tx.objectStore('pending');
                     const syncQueueStore = tx.objectStore('sync_queue');
 
-                    const tempId = report.temp_id || report.id || 'temp_' + Date.now();
-                    const reportData = { ...report, _key: tempId, temp_id: tempId, synced: false, savedAt: Date.now() };
+                    const tempId = report.temp_id || `MV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+                    const reportData = { ...report, temp_id: tempId, synced: false, savedAt: Date.now() };
                     reportsStore.put(reportData);
-                    pendingStore.put({ temp_id: tempId, data: reportData, synced: false, syncAttempts: 0 });
+                    pendingStore.put({ temp_id: tempId, data: reportData });
 
                     syncQueueStore.add({
                         temp_id: tempId,
                         operation: 'INSERT',
-                        table: 'reports',
                         data: report,
                         status: 'pending',
                         created_at: Date.now(),
@@ -746,46 +706,34 @@
                     tx.onerror = () => reject(tx.error);
                 });
             }
-
             async getPending() {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
                     const tx = this.db.transaction(['pending'], 'readonly');
-                    const store = tx.objectStore('pending');
-                    const request = store.getAll();
+                    const request = tx.objectStore('pending').getAll();
                     request.onsuccess = () => resolve(request.result || []);
                     request.onerror = () => reject(request.error);
                 });
             }
-
             async getPendingCount() {
                 const pending = await this.getPending();
                 return pending.length;
             }
-
             async markSynced(tempId) {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
                     const tx = this.db.transaction(['pending', 'sync_queue'], 'readwrite');
-                    const pendingStore = tx.objectStore('pending');
-                    const syncQueueStore = tx.objectStore('sync_queue');
-
-                    pendingStore.delete(tempId);
-
-                    const index = syncQueueStore.index('temp_id');
+                    tx.objectStore('pending').delete(tempId);
+                    const index = tx.objectStore('sync_queue').index('temp_id');
                     const request = index.getAll(tempId);
                     request.onsuccess = () => {
-                        const items = request.result || [];
-                        for (const item of items) {
+                        for (const item of request.result) {
                             if (item.status === 'pending') {
-                                const updateTx = this.db.transaction(['sync_queue'], 'readwrite');
-                                const updateStore = updateTx.objectStore('sync_queue');
                                 const updatedItem = { ...item, status: 'completed', completed_at: Date.now() };
-                                updateStore.put(updatedItem);
+                                tx.objectStore('sync_queue').put(updatedItem);
                             }
                         }
                     };
-
                     tx.oncomplete = () => {
                         this.updatePendingCount();
                         resolve(true);
@@ -793,25 +741,21 @@
                     tx.onerror = () => reject(tx.error);
                 });
             }
-
             async markSyncError(tempId, errorMessage) {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
                     const tx = this.db.transaction(['sync_queue'], 'readwrite');
-                    const store = tx.objectStore('sync_queue');
-                    const index = store.index('temp_id');
+                    const index = tx.objectStore('sync_queue').index('temp_id');
                     const request = index.getAll(tempId);
                     request.onsuccess = () => {
-                        const items = request.result || [];
-                        for (const item of items) {
+                        for (const item of request.result) {
                             if (item.status === 'pending') {
-                                const updatedItem = {
+                                tx.objectStore('sync_queue').put({
                                     ...item,
                                     status: 'error',
                                     error_message: errorMessage,
                                     retry_count: (item.retry_count || 0) + 1
-                                };
-                                store.put(updatedItem);
+                                });
                             }
                         }
                     };
@@ -822,18 +766,15 @@
                     tx.onerror = () => reject(tx.error);
                 });
             }
-
             async getAllReports() {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
                     const tx = this.db.transaction(['reports'], 'readonly');
-                    const store = tx.objectStore('reports');
-                    const request = store.getAll();
+                    const request = tx.objectStore('reports').getAll();
                     request.onsuccess = () => resolve(request.result || []);
                     request.onerror = () => reject(request.error);
                 });
             }
-
             async updatePendingCount() {
                 const count = await this.getPendingCount();
                 document.getElementById('statPending').textContent = count;
@@ -847,16 +788,14 @@
         offline.init();
 
         // ============================================================
-        // MAPA (con CLUSTERS)
+        // MAPA - con clusters
         // ============================================================
         class MapManager {
             constructor() {
                 this.map = null;
-                this.markers = [];
                 this.isReady = false;
                 this.reports = [];
             }
-
             init(containerId = 'map') {
                 if (this.map) return;
                 this.map = new maplibregl.Map({
@@ -874,12 +813,9 @@
                 });
                 return this.map;
             }
-
             updateClusters(reports) {
                 if (!this.map || !this.isReady) return;
                 this.reports = reports || [];
-
-                // Eliminar capas y fuentes antiguas
                 if (this.map.getLayer('clusters')) this.map.removeLayer('clusters');
                 if (this.map.getLayer('cluster-count')) this.map.removeLayer('cluster-count');
                 if (this.map.getSource('reports-cluster')) this.map.removeSource('reports-cluster');
@@ -888,26 +824,15 @@
                     .filter(r => r.latitude && r.longitude)
                     .map(r => ({
                         type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [r.longitude, r.latitude]
-                        },
-                        properties: {
-                            id: r.id || r._key || r.temp_id,
-                            type: r.type,
-                            description: r.description || r.type,
-                            verification_count: r.verification_count || 0
-                        }
+                        geometry: { type: 'Point', coordinates: [r.longitude, r.latitude] },
+                        properties: { id: r.id || r.temp_id, type: r.type, description: r.description || r.type }
                     }));
 
                 if (features.length === 0) return;
 
                 this.map.addSource('reports-cluster', {
                     type: 'geojson',
-                    data: {
-                        type: 'FeatureCollection',
-                        features: features
-                    },
+                    data: { type: 'FeatureCollection', features: features },
                     cluster: true,
                     clusterMaxZoom: 14,
                     clusterRadius: 50
@@ -919,20 +844,8 @@
                     source: 'reports-cluster',
                     filter: ['has', 'point_count'],
                     paint: {
-                        'circle-color': [
-                            'step',
-                            ['get', 'point_count'],
-                            '#51bbd6',
-                            10, '#f1f075',
-                            30, '#f28cb1'
-                        ],
-                        'circle-radius': [
-                            'step',
-                            ['get', 'point_count'],
-                            20,
-                            10, 30,
-                            30, 40
-                        ]
+                        'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 10, '#f1f075', 30, '#f28cb1'],
+                        'circle-radius': ['step', ['get', 'point_count'], 20, 10, 30, 30, 40]
                     }
                 });
 
@@ -941,26 +854,16 @@
                     type: 'symbol',
                     source: 'reports-cluster',
                     filter: ['has', 'point_count'],
-                    layout: {
-                        'text-field': ['get', 'point_count_abbreviated'],
-                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                        'text-size': 12
-                    },
-                    paint: {
-                        'text-color': '#ffffff'
-                    }
+                    layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'], 'text-size': 12 },
+                    paint: { 'text-color': '#ffffff' }
                 });
 
                 this.map.on('click', 'clusters', (e) => {
                     const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
                     const clusterId = features[0].properties.cluster_id;
-                    const source = this.map.getSource('reports-cluster');
-                    source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+                    this.map.getSource('reports-cluster').getClusterExpansionZoom(clusterId, (err, zoom) => {
                         if (err) return;
-                        this.map.easeTo({
-                            center: features[0].geometry.coordinates,
-                            zoom: zoom
-                        });
+                        this.map.easeTo({ center: features[0].geometry.coordinates, zoom: zoom });
                     });
                 });
 
@@ -968,34 +871,25 @@
                     const features = this.map.queryRenderedFeatures(e.point);
                     const reportFeature = features.find(f => f.layer.id === 'clusters' || f.properties.id);
                     if (reportFeature && reportFeature.properties && reportFeature.properties.id) {
-                        const report = this.reports.find(r => (r.id === reportFeature.properties.id) || (r._key === reportFeature.properties.id) || (r.temp_id === reportFeature.properties.id));
+                        const report = this.reports.find(r => (r.id === reportFeature.properties.id) || (r.temp_id === reportFeature.properties.id));
                         if (report) {
-                            this.showPopup(report);
+                            const popup = new maplibregl.Popup({ offset: 25 })
+                                .setLngLat([report.longitude, report.latitude])
+                                .setHTML(`<div style="font-size:0.8rem;padding:4px;max-width:220px;">
+                                    <strong>${report.description || report.type || 'Reporte'}</strong>
+                                    <br><span style="font-size:0.65rem;color:#666;">${new Date(report.created_at).toLocaleTimeString()}</span>
+                                    <br><span style="font-size:0.65rem;">✅ ${report.verification_count || 0} confirmaciones</span>
+                                    <br><button onclick="corroborateReport('${report.id || report.temp_id}')" style="margin-top:4px;padding:4px 8px;background:#2ecc71;border:none;border-radius:4px;color:white;cursor:pointer;font-size:0.7rem;">👍 Corroborar</button>
+                                </div>`)
+                                .addTo(this.map);
                         }
                     }
                 });
             }
-
-            showPopup(report) {
-                if (!this.map) return;
-                const popup = new maplibregl.Popup({ offset: 25 })
-                    .setLngLat([report.longitude, report.latitude])
-                    .setHTML(`
-                        <div style="font-size:0.8rem;padding:4px;max-width:220px;">
-                            <strong>${report.description || report.type || 'Reporte'}</strong>
-                            <br><span style="font-size:0.65rem;color:#666;">${new Date(report.created_at).toLocaleTimeString()}</span>
-                            <br><span style="font-size:0.65rem;">✅ ${report.verification_count || 0} confirmaciones</span>
-                            <br><button onclick="corroborateReport('${report.id || report._key}')" style="margin-top:4px;padding:4px 8px;background:#2ecc71;border:none;border-radius:4px;color:white;cursor:pointer;font-size:0.7rem;">👍 Corroborar</button>
-                        </div>
-                    `)
-                    .addTo(this.map);
-            }
-
             async goToLocation(lat, lon, zoom = 15) {
                 if (!this.map) return;
                 this.map.flyTo({ center: [lon, lat], zoom: zoom, duration: 1500 });
             }
-
             async centerOnUser() {
                 try {
                     const pos = await geolocation.getCurrentPosition();
@@ -1040,9 +934,6 @@
             if (e.target === e.currentTarget) closeModal();
         });
 
-        // ============================================================
-        // CORROBORACIÓN DESDE INTERFAZ
-        // ============================================================
         async function corroborateReport(reportId) {
             if (!reports.authReady) {
                 showToast('⏳ Esperando autenticación...', 'warning');
@@ -1052,7 +943,7 @@
         }
 
         // ============================================================
-        // REPORTES - CON ESTRATEGIA DE CONFIABILIDAD
+        // REPORTES
         // ============================================================
         class ReportManager {
             constructor() {
@@ -1088,7 +979,7 @@
 
             getUserId() {
                 if (!this.userId || !this.authReady) {
-                    throw new Error('Usuario no autenticado. Espera a que la app se conecte.');
+                    throw new Error('Usuario no autenticado');
                 }
                 return this.userId;
             }
@@ -1107,90 +998,89 @@
                 }
             }
 
-            async createReport(data) {
-                if (!this.authReady || !this.userId) {
-                    showToast('⏳ Esperando autenticación...', 'warning');
+          async createReport(data) {
+    if (!this.authReady || !this.userId) {
+        showToast('⏳ Esperando autenticación...', 'warning');
+        return null;
+    }
+
+    const now = Date.now();
+    if (now - this.lastReportTime < 30000) {
+        showToast('Espera unos segundos antes de enviar otro reporte', 'warning');
+        return null;
+    }
+    this.lastReportTime = now;
+
+    const tempId = `${CONFIG.appPrefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+
+    const report = {
+        temp_id: tempId,
+        ...data,
+        user_id: this.userId,
+        created_at: new Date(now).toISOString(),
+        updated_at: new Date(now).toISOString(),
+        status: 'active',
+        confidence: 'reported',
+        verification_count: 0,
+        is_public: true
+    };
+
+    // 1. SIEMPRE guardar localmente primero (para no perder el reporte)
+    await offline.saveReport(report);
+    let pendingCount = await offline.getPendingCount();
+    this.showPendingStatus(pendingCount);
+
+    // 2. Si hay conexión, intentar enviar a Supabase
+    if (navigator.onLine) {
+        try {
+            const { data: inserted, error } = await supabaseClient
+                .from('reports')
+                .insert([report])
+                .select();
+
+            if (error) {
+                // Error de validación → reporte NUNCA se podrá enviar
+                if (error.code === 'PGRST' || error.code === '42501') {
+                    await offline.markSyncError(tempId, error.message);
+                    showToast('❌ Error en los datos. No se pudo registrar.', 'error');
+                    // Mostrar confirmación de error
+                    showConfirmation(report, false, 'error');
                     return null;
-                }
-
-                const now = Date.now();
-                if (now - this.lastReportTime < 30000) {
-                    showToast('Espera unos segundos antes de enviar otro reporte', 'warning');
-                    return null;
-                }
-                this.lastReportTime = now;
-
-                // ID temporal para tracking local
-                const tempId = `${CONFIG.appPrefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-
-                const report = {
-                    temp_id: tempId,
-                    ...data,
-                    user_id: this.userId,
-                    created_at: new Date(now).toISOString(),
-                    updated_at: new Date(now).toISOString(),
-                    status: 'active',
-                    confidence: 'reported',
-                    verification_count: 0,
-                    is_public: true
-                    // NO incluimos 'id' → Supabase lo generará al insertar
-                };
-
-                // 1. Si no hay conexión → guardar local inmediatamente
-                if (!navigator.onLine) {
-                    await offline.saveReport(report);
-                    showToast('📡 Sin conexión. Reporte guardado localmente.', 'warning');
-                    const count = await offline.getPendingCount();
-                    this.showPendingStatus(count);
-                    showConfirmation(report, false);
-                    return report;
-                }
-
-                // 2. Intentar enviar a Supabase
-                try {
-                    const { data: inserted, error } = await supabaseClient
-                        .from('reports')
-                        .insert([report])
-                        .select();
-
-                    if (error) {
-                        // Distinguir tipo de error
-                        if (error.code === 'PGRST' || error.code === '42501') {
-                            showToast('❌ Error en los datos. Revisa el formulario.', 'error');
-                            return null;
-                        } else {
-                            // Error temporal → guardar pendiente
-                            await offline.saveReport(report);
-                            showToast('⏳ Error temporal. Reporte guardado para reintentar.', 'warning');
-                            const count = await offline.getPendingCount();
-                            this.showPendingStatus(count);
-                            showConfirmation(report, false);
-                            return report;
-                        }
-                    }
-
-                    if (inserted && inserted.length > 0) {
-                        const serverReport = inserted[0];
-                        // Guardar localmente el ID real de Supabase para referencia
-                        report.id = serverReport.id;
-                        await offline.markSynced(tempId);
-                        showToast('✅ Reporte enviado y compartido', 'success');
-                        showConfirmation(serverReport, true);
-                        this.reports.push(serverReport);
-                        this.updateStats();
-                        mapManager.updateClusters(this.reports);
-                        return serverReport;
-                    }
-                } catch (error) {
-                    console.error('Error en createReport:', error);
-                    await offline.saveReport(report);
-                    showToast('⏳ Error inesperado. Reporte guardado para reintentar.', 'warning');
-                    const count = await offline.getPendingCount();
-                    this.showPendingStatus(count);
-                    showConfirmation(report, false);
+                } else {
+                    // Error temporal → queda pendiente
+                    showToast('⏳ Error temporal. Reporte pendiente de envío.', 'warning');
+                    showConfirmation(report, false, 'pending');
                     return report;
                 }
             }
+
+            if (inserted && inserted.length > 0) {
+                const serverReport = inserted[0];
+                // Marcar como sincronizado y eliminar de la cola pendiente
+                await offline.markSynced(tempId);
+                // Actualizar el reporte local con el ID de Supabase
+                report.id = serverReport.id;
+                showToast('✅ Reporte enviado y compartido', 'success');
+                showConfirmation(serverReport, true, 'success');
+                this.reports.push(serverReport);
+                this.updateStats();
+                mapManager.updateClusters(this.reports);
+                return serverReport;
+            }
+        } catch (error) {
+            console.error('Error en createReport:', error);
+            // Error inesperado → queda pendiente
+            showToast('⏳ Error inesperado. Reporte pendiente de envío.', 'warning');
+            showConfirmation(report, false, 'pending');
+            return report;
+        }
+    } else {
+        // Sin conexión → pendiente
+        showToast('📡 Sin conexión. Reporte guardado localmente.', 'warning');
+        showConfirmation(report, false, 'pending');
+        return report;
+    }
+}
 
             async syncPendingReports() {
                 if (this.isSyncing) return;
@@ -1198,15 +1088,13 @@
                     await offline.updatePendingCount();
                     return;
                 }
-
                 if (!this.authReady || !this.userId) {
                     console.log('⏳ Esperando autenticación para sincronizar...');
                     return;
                 }
 
                 this.isSyncing = true;
-                let synced = 0;
-                let errors = 0;
+                let synced = 0, errors = 0;
 
                 try {
                     const pending = await offline.getPending();
@@ -1222,7 +1110,7 @@
                         const reportData = pendingItem.data || pendingItem;
                         const tempId = pendingItem.temp_id || reportData.temp_id;
 
-                        // Verificar si ya existe en Supabase (por temp_id)
+                        // Verificar si ya existe en Supabase por temp_id
                         const { data: existing } = await supabaseClient
                             .from('reports')
                             .select('id')
@@ -1240,7 +1128,6 @@
                         delete reportData._key;
                         delete reportData.synced;
                         delete reportData.savedAt;
-                        delete reportData.syncAttempts;
 
                         const { data: inserted, error } = await supabaseClient
                             .from('reports')
@@ -1273,7 +1160,6 @@
 
                     await offline.updatePendingCount();
                     this.loadReports();
-
                 } catch (error) {
                     console.error('Error en sincronización:', error);
                 } finally {
@@ -1309,7 +1195,7 @@
 
                 const localReports = await offline.getAllReports();
 
-                // Combinar: preferir versiones de servidor, pero mantener locales si no existen
+                // Combinar: preferir versiones de servidor
                 const allReports = [...serverReports];
                 const serverIds = new Set(serverReports.map(r => r.id));
                 for (const local of localReports) {
@@ -1330,13 +1216,9 @@
                     showToast('⏳ Esperando autenticación...', 'warning');
                     return false;
                 }
-
                 try {
                     const { data, error } = await supabaseClient
-                        .rpc('increment_report_verification', {
-                            p_report_id: reportId
-                        });
-
+                        .rpc('increment_report_verification', { p_report_id: reportId });
                     if (error) {
                         if (error.message.includes('Ya has corroborado')) {
                             showToast('Ya corroboraste este reporte', 'warning');
@@ -1349,11 +1231,9 @@
                         }
                         return false;
                     }
-
                     showToast('✅ Reporte corroborado', 'success');
                     this.loadReports();
                     return true;
-
                 } catch (error) {
                     console.error('Error corroborando:', error);
                     showToast('Error al corroborar', 'error');
@@ -1369,7 +1249,6 @@
                     road: this.reports.filter(r => r.type === 'road').length,
                     resources: this.reports.filter(r => r.type === 'resource').length
                 };
-
                 document.getElementById('statPeople').textContent = stats.safe;
                 document.getElementById('statHelp').textContent = stats.help;
                 document.getElementById('statDamage').textContent = stats.damage;
@@ -1381,118 +1260,115 @@
         const reports = new ReportManager();
 
         // ============================================================
-        // CONFIRMACIÓN VISUAL (Fase 1)
+        // CONFIRMACIÓN VISUAL
         // ============================================================
-        function showConfirmation(report, isOnline = true) {
-            const code = report.id ? report.id.slice(0, 8).toUpperCase() : (report.temp_id || '---').slice(0, 8);
-            const statusText = isOnline ? '✅ RECIBIDO' : '⏳ PENDIENTE DE ENVÍO';
-            const statusColor = isOnline ? '#2ecc71' : '#f39c12';
-            const statusMsg = isOnline ?
-                'Tu reporte ya está visible para la comunidad.' :
-                'Se enviará automáticamente cuando vuelva Internet.';
+     function showConfirmation(report, isOnline = false, status = 'pending') {
+    const code = report.id ? report.id.slice(0, 8).toUpperCase() : (report.temp_id || '---').slice(0, 8);
 
-            openModal(`
-                <div class="modal-title">${isOnline ? '✅' : '📡'} REPORTE ${isOnline ? 'ENVIADO' : 'GUARDADO'}</div>
-                <div style="text-align:center;padding:16px;background:${isOnline ? '#e8f5e9' : '#fff3e0'};border-radius:12px;margin-bottom:16px;">
-                    <div style="font-size:3rem;">${isOnline ? '✅' : '📡'}</div>
-                    <div style="font-weight:700;font-size:1.2rem;">${isOnline ? 'Reporte registrado' : 'Reporte guardado localmente'}</div>
-                    <div style="font-size:0.85rem;color:#666;">${statusMsg}</div>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <div><strong>📍 Ubicación:</strong> ${report.municipality || 'No disponible'}</div>
-                    <div><strong>🕐 Hora:</strong> ${new Date(report.created_at).toLocaleTimeString()}</div>
-                    <div><strong>📄 Tipo:</strong> ${report.type === 'safe' ? 'Estoy a salvo' : report.type === 'help' ? 'Necesito ayuda' : report.type === 'damage' ? 'Daño' : report.type === 'road' ? 'Vía' : 'Reporte'}</div>
-                    <div><strong>🔖 Código:</strong> <span style="font-family:monospace;background:#f0f0f0;padding:2px 8px;border-radius:4px;">${code}</span></div>
-                    <div><strong>Estado:</strong> <span style="color:${statusColor};font-weight:700;">${statusText}</span></div>
-                    ${!isOnline ? '<div style="font-size:0.7rem;color:#f39c12;">🔄 Se enviará automáticamente al recuperar conexión.</div>' : ''}
-                </div>
-                <div style="font-size:0.75rem;color:#666;margin-bottom:12px;padding:8px;background:#fff3e0;border-radius:8px;">
-                    ⚠️ Este reporte no reemplaza una llamada de emergencia. Si es urgente, llama al 123.
-                </div>
-                <button class="btn-primary" onclick="closeModal(); mapManager.centerOnUser();">📍 VER EN EL MAPA</button>
-                <button class="btn-secondary" onclick="closeModal(); if(navigator.share){navigator.share({title:'Mapa Vivo',text:'Reporte de emergencia: ${code}'});}">📤 COMPARTIR</button>
-            `);
+    const statusMap = {
+        'success': {
+            icon: '✅',
+            title: 'REPORTE ENVIADO',
+            color: '#2ecc71',
+            bg: '#e8f5e9',
+            msg: 'Tu reporte ya está visible para la comunidad.'
+        },
+        'pending': {
+            icon: '⏳',
+            title: 'REPORTE PENDIENTE',
+            color: '#f39c12',
+            bg: '#fff3e0',
+            msg: 'Se enviará automáticamente cuando haya conexión.'
+        },
+        'error': {
+            icon: '❌',
+            title: 'ERROR EN EL REPORTE',
+            color: '#e74c3c',
+            bg: '#ffebee',
+            msg: 'Hay un problema con los datos. No se pudo registrar.'
         }
+    };
 
+    const s = statusMap[status] || statusMap['pending'];
+
+    openModal(`
+        <div class="modal-title">${s.icon} ${s.title}</div>
+        <div style="text-align:center;padding:16px;background:${s.bg};border-radius:12px;margin-bottom:16px;">
+            <div style="font-size:3rem;">${s.icon}</div>
+            <div style="font-weight:700;font-size:1.2rem;">${s.title}</div>
+            <div style="font-size:0.85rem;color:#666;">${s.msg}</div>
+        </div>
+        <div style="margin-bottom:12px;">
+            <div><strong>📍 Ubicación:</strong> ${report.municipality || 'No disponible'}</div>
+            <div><strong>🕐 Hora:</strong> ${new Date(report.created_at).toLocaleTimeString()}</div>
+            <div><strong>📄 Tipo:</strong> ${report.type === 'safe' ? 'Estoy a salvo' : report.type === 'help' ? 'Necesito ayuda' : report.type === 'damage' ? 'Daño' : report.type === 'road' ? 'Vía' : 'Reporte'}</div>
+            <div><strong>🔖 Código:</strong> <span style="font-family:monospace;background:#f0f0f0;padding:2px 8px;border-radius:4px;">${code}</span></div>
+            <div><strong>Estado:</strong> <span style="color:${s.color};font-weight:700;">${s.title}</span></div>
+        </div>
+        <div style="font-size:0.75rem;color:#666;margin-bottom:12px;padding:8px;background:#fff3e0;border-radius:8px;">
+            ⚠️ Este reporte no reemplaza una llamada de emergencia. Si es urgente, llama al 123.
+        </div>
+        <button class="btn-primary" onclick="closeModal(); mapManager.centerOnUser();">📍 VER EN EL MAPA</button>
+        <button class="btn-secondary" onclick="closeModal(); if(navigator.share){navigator.share({title:'Mapa Vivo',text:'Reporte de emergencia: ${code}'});}">📤 COMPARTIR</button>
+    `);
+}
         // ============================================================
-        // DATOS OFICIALES (SGC) – Edge Function pública
+        // SGC - EN SEGUNDO PLANO (no bloquea)
         // ============================================================
         async function fetchEarthquakes() {
             try {
                 const response = await fetch('https://qytywodntuikvotimpzs.supabase.co/functions/v1/earthquakes');
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 const events = Array.isArray(data) ? data : (data.features || []);
-
                 if (events.length === 0) {
                     document.getElementById('statEarthquakes').textContent = '0';
                     return [];
                 }
-
                 document.getElementById('statEarthquakes').textContent = events.length;
-
                 for (const eq of events) {
                     const lat = eq.latitud || eq.lat || eq.geometry?.coordinates?.[1];
                     const lon = eq.longitud || eq.lon || eq.geometry?.coordinates?.[0];
-                    if (lat && lon) {
-                        const mag = eq.magnitud || eq.mag || '?';
-                        const location = eq.ubicacion || eq.location || 'Colombia';
-                        if (mapManager.isReady && mapManager.map) {
-                            const el = document.createElement('div');
-                            el.innerHTML = '🌊';
-                            el.style.cssText = 'font-size:20px;text-shadow: 0 0 5px white;';
-                            new maplibregl.Marker({ element: el })
-                                .setLngLat([lon, lat])
-                                .addTo(mapManager.map);
-                        }
+                    if (lat && lon && mapManager.isReady && mapManager.map) {
+                        const el = document.createElement('div');
+                        el.innerHTML = '🌊';
+                        el.style.cssText = 'font-size:20px;text-shadow:0 0 5px white;';
+                        new maplibregl.Marker({ element: el })
+                            .setLngLat([lon, lat])
+                            .addTo(mapManager.map);
                     }
                 }
-
                 return events;
-
             } catch (error) {
-                console.warn('⚠️ SGC API no disponible:', error.message);
+                console.warn('⚠️ SGC no disponible:', error.message);
                 document.getElementById('statEarthquakes').textContent = '⚠️';
                 return [];
             }
         }
 
         // ============================================================
-        // STORAGE (imágenes)
+        // STORAGE
         // ============================================================
         async function uploadImage(file, reportId) {
             if (!reports.authReady || !reports.userId) {
                 showToast('⏳ Esperando autenticación...', 'warning');
                 return null;
             }
-
             try {
                 if (!file || !reportId) return null;
-
                 const compressed = await compressImage(file, 800, 0.7);
-                const userId = reports.userId;
-                const fileName = `${userId}/${reportId}_${Date.now()}.webp`;
-
-                const { data, error } = await supabaseClient.storage
+                const fileName = `${reports.userId}/${reportId}_${Date.now()}.webp`;
+                const { error } = await supabaseClient.storage
                     .from('report-images')
-                    .upload(fileName, compressed, {
-                        contentType: 'image/webp',
-                        cacheControl: '3600'
-                    });
-
+                    .upload(fileName, compressed, { contentType: 'image/webp', cacheControl: '3600' });
                 if (error) {
                     console.warn('Error subiendo imagen:', error);
                     return null;
                 }
-
                 const { data: urlData } = supabaseClient.storage
                     .from('report-images')
                     .getPublicUrl(fileName);
-
                 return urlData?.publicUrl || null;
-
             } catch (error) {
                 console.error('Error en uploadImage:', error);
                 return null;
@@ -1507,8 +1383,7 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
+                        let width = img.width, height = img.height;
                         if (width > maxWidth) {
                             height = (maxWidth / width) * height;
                             width = maxWidth;
@@ -1530,25 +1405,16 @@
         }
 
         // ============================================================
-        // MODALES DE REPORTES
+        // MODALES
         // ============================================================
         function showSafeModal() {
             openModal(`
                 <div class="modal-title">🟢 ESTOY A SALVO</div>
-                <div style="text-align:center;margin-bottom:16px;">
-                    <div style="font-size:3rem;">🛡️</div>
-                    <p style="color:#666;">Reporta que estás seguro</p>
-                </div>
-                <div class="modal-form-group">
-                    <label>¿Estás a salvo?</label>
-                    <button class="btn-primary success" id="safeConfirmBtn">✅ SÍ, ESTOY A SALVO</button>
-                </div>
+                <div style="text-align:center;margin-bottom:16px;"><div style="font-size:3rem;">🛡️</div><p style="color:#666;">Reporta que estás seguro</p></div>
+                <div class="modal-form-group"><label>¿Estás a salvo?</label><button class="btn-primary success" id="safeConfirmBtn">✅ SÍ, ESTOY A SALVO</button></div>
                 <div class="modal-form-group" id="safeExtra" style="display:none;">
                     <label>¿Hay otras personas contigo?</label>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn-secondary" id="safePeopleNo">NO</button>
-                        <button class="btn-secondary" id="safePeopleYes">SÍ</button>
-                    </div>
+                    <div style="display:flex;gap:8px;"><button class="btn-secondary" id="safePeopleNo">NO</button><button class="btn-secondary" id="safePeopleYes">SÍ</button></div>
                 </div>
                 <div class="modal-form-group" id="safePeopleCount" style="display:none;">
                     <label>Número aproximado:</label>
@@ -1562,36 +1428,29 @@
             `);
 
             let peopleCount = 3;
-
             document.getElementById('safeConfirmBtn').addEventListener('click', () => {
                 document.getElementById('safeExtra').style.display = 'block';
                 document.getElementById('safeConfirmBtn').disabled = true;
             });
-
             document.getElementById('safePeopleYes').addEventListener('click', () => {
                 document.getElementById('safePeopleCount').style.display = 'block';
                 document.getElementById('safePublishBtn').style.display = 'block';
             });
-
             document.getElementById('safePeopleNo').addEventListener('click', () => {
                 document.getElementById('safePublishBtn').style.display = 'block';
             });
-
             document.getElementById('peopleMinus').addEventListener('click', () => {
                 peopleCount = Math.max(1, peopleCount - 1);
                 document.getElementById('peopleCount').textContent = peopleCount;
             });
-
             document.getElementById('peoplePlus').addEventListener('click', () => {
                 peopleCount = Math.min(20, peopleCount + 1);
                 document.getElementById('peopleCount').textContent = peopleCount;
             });
-
             document.getElementById('safePublishBtn').addEventListener('click', async () => {
                 try {
                     const pos = await geolocation.getCurrentPosition();
                     const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
-
                     const report = {
                         type: 'safe',
                         latitude: pos.latitude,
@@ -1600,7 +1459,6 @@
                         description: `${peopleCount} personas a salvo`,
                         people_count: peopleCount
                     };
-
                     await reports.createReport(report);
                     closeModal();
                     setTimeout(() => reports.syncPendingReports(), 2000);
@@ -1612,75 +1470,46 @@
 
         function showHelpModal() {
             const needs = ['Rescate', 'Atención médica', 'Agua', 'Alimentos', 'Refugio', 'Medicamentos',
-                'Electricidad', 'Comunicación', 'Transporte', 'Ayuda para niños', 'Ayuda para adultos mayores', 'Otro'
-            ];
+                'Electricidad', 'Comunicación', 'Transporte', 'Ayuda para niños', 'Ayuda para adultos mayores', 'Otro'];
 
             openModal(`
                 <div class="modal-title">🆘 NECESITO AYUDA</div>
-                <div class="modal-form-group">
-                    <label>¿Qué necesitas? (puedes elegir varias)</label>
-                    <div class="checkbox-group" id="helpNeeds">
-                        ${needs.map(n => `<label><input type="checkbox" value="${n}"> ${n}</label>`).join('')}
-                    </div>
-                </div>
-                <div class="modal-form-group">
-                    <label>¿Hay personas heridas?</label>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn-secondary" id="helpInjuredNo">NO</button>
-                        <button class="btn-secondary" id="helpInjuredYes">SÍ</button>
-                    </div>
-                </div>
+                <div class="modal-form-group"><label>¿Qué necesitas? (puedes elegir varias)</label>
+                <div class="checkbox-group" id="helpNeeds">${needs.map(n => `<label><input type="checkbox" value="${n}"> ${n}</label>`).join('')}</div></div>
+                <div class="modal-form-group"><label>¿Hay personas heridas?</label>
+                <div style="display:flex;gap:8px;"><button class="btn-secondary" id="helpInjuredNo">NO</button><button class="btn-secondary" id="helpInjuredYes">SÍ</button></div></div>
                 <div class="modal-form-group" id="helpInjuredCount" style="display:none;">
                     <label>¿Cuántas?</label>
                     <input type="number" id="helpInjuredInput" value="1" min="1" max="50" style="width:80px;margin:0 auto;display:block;text-align:center;">
                 </div>
-                <div class="modal-form-group">
-                    <label>¿Estás en peligro inmediato?</label>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn-secondary" id="helpDangerNo">NO</button>
-                        <button class="btn-secondary danger" id="helpDangerYes">SÍ</button>
-                    </div>
-                </div>
-                <div class="modal-form-group">
-                    <label>Foto (opcional):</label>
-                    <input type="file" id="helpPhoto" accept="image/*" style="padding:8px;">
-                    <div style="font-size:0.65rem;color:#666;margin-top:4px;">Máximo 800px, formato WebP</div>
-                </div>
+                <div class="modal-form-group"><label>¿Estás en peligro inmediato?</label>
+                <div style="display:flex;gap:8px;"><button class="btn-secondary" id="helpDangerNo">NO</button><button class="btn-secondary danger" id="helpDangerYes">SÍ</button></div></div>
+                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="helpPhoto" accept="image/*"></div>
                 <button class="btn-primary danger" id="helpPublishBtn">🆘 PUBLICAR</button>
             `);
 
-            let hasInjured = false;
-            let inDanger = false;
-            let selectedFile = null;
-
+            let hasInjured = false, inDanger = false, selectedFile = null;
             document.getElementById('helpInjuredYes').addEventListener('click', () => {
                 hasInjured = true;
                 document.getElementById('helpInjuredCount').style.display = 'block';
             });
-
             document.getElementById('helpInjuredNo').addEventListener('click', () => {
                 hasInjured = false;
                 document.getElementById('helpInjuredCount').style.display = 'none';
             });
-
             document.getElementById('helpDangerYes').addEventListener('click', () => {
                 inDanger = true;
                 document.getElementById('helpDangerYes').style.background = '#c0392b';
                 document.getElementById('helpDangerNo').style.background = '';
             });
-
             document.getElementById('helpDangerNo').addEventListener('click', () => {
                 inDanger = false;
                 document.getElementById('helpDangerNo').style.background = '#2ecc71';
                 document.getElementById('helpDangerYes').style.background = '';
             });
-
             document.getElementById('helpPhoto').addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                    selectedFile = e.target.files[0];
-                }
+                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
             });
-
             document.getElementById('helpPublishBtn').addEventListener('click', async () => {
                 try {
                     const checked = document.querySelectorAll('#helpNeeds input:checked');
@@ -1688,13 +1517,10 @@
                         showToast('Selecciona al menos una necesidad', 'warning');
                         return;
                     }
-
                     const pos = await geolocation.getCurrentPosition();
                     const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
-
                     const needs = Array.from(checked).map(cb => cb.value);
                     const injured = parseInt(document.getElementById('helpInjuredInput').value) || 0;
-
                     const reportData = {
                         type: 'help',
                         latitude: pos.latitude,
@@ -1705,9 +1531,7 @@
                         in_danger: inDanger,
                         description: `Necesita: ${needs.join(', ')}`
                     };
-
                     const report = await reports.createReport(reportData);
-
                     if (selectedFile && report) {
                         const imageUrl = await uploadImage(selectedFile, report.id);
                         if (imageUrl) {
@@ -1717,10 +1541,8 @@
                                 .eq('id', report.id);
                         }
                     }
-
                     closeModal();
                     setTimeout(() => reports.syncPendingReports(), 2000);
-
                 } catch (error) {
                     showToast('Error: ' + error.message, 'error');
                 }
@@ -1733,33 +1555,16 @@
 
             openModal(`
                 <div class="modal-title">🏚️ REPORTAR DAÑO</div>
-                <div class="modal-form-group">
-                    <label>Tipo de afectación:</label>
-                    <div class="checkbox-group" id="damageTypes">
-                        ${types.map(t => `<label><input type="checkbox" value="${t}"> ${t}</label>`).join('')}
-                    </div>
-                </div>
-                <div class="modal-form-group">
-                    <label>Nivel aparente:</label>
-                    <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                        ${levels.map((l, i) => `
-                            <button class="btn-secondary" data-level="${i}" style="flex:1;padding:6px;font-size:0.7rem;">${l}</button>
-                        `).join('')}
-                    </div>
-                    <div style="margin-top:8px;color:#e74c3c;font-size:0.7rem;font-weight:600;">
-                        ⚠️ Este reporte no es evaluación técnica estructural
-                    </div>
-                </div>
-                <div class="modal-form-group">
-                    <label>Foto (opcional):</label>
-                    <input type="file" id="damagePhoto" accept="image/*" style="padding:8px;">
-                </div>
+                <div class="modal-form-group"><label>Tipo de afectación:</label>
+                <div class="checkbox-group" id="damageTypes">${types.map(t => `<label><input type="checkbox" value="${t}"> ${t}</label>`).join('')}</div></div>
+                <div class="modal-form-group"><label>Nivel aparente:</label>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">${levels.map((l,i) => `<button class="btn-secondary" data-level="${i}" style="flex:1;padding:6px;font-size:0.7rem;">${l}</button>`).join('')}</div>
+                <div style="margin-top:8px;color:#e74c3c;font-size:0.7rem;font-weight:600;">⚠️ Este reporte no es evaluación técnica estructural</div></div>
+                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="damagePhoto" accept="image/*"></div>
                 <button class="btn-primary warning" id="damagePublishBtn">📤 PUBLICAR</button>
             `);
 
-            let selectedLevel = null;
-            let selectedFile = null;
-
+            let selectedLevel = null, selectedFile = null;
             document.querySelectorAll('[data-level]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('[data-level]').forEach(b => {
@@ -1771,13 +1576,9 @@
                     selectedLevel = parseInt(btn.dataset.level);
                 });
             });
-
             document.getElementById('damagePhoto').addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                    selectedFile = e.target.files[0];
-                }
+                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
             });
-
             document.getElementById('damagePublishBtn').addEventListener('click', async () => {
                 try {
                     const checked = document.querySelectorAll('#damageTypes input:checked');
@@ -1785,18 +1586,14 @@
                         showToast('Selecciona al menos un tipo', 'warning');
                         return;
                     }
-
                     if (selectedLevel === null) {
                         showToast('Selecciona un nivel de daño', 'warning');
                         return;
                     }
-
                     const pos = await geolocation.getCurrentPosition();
                     const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
-
                     const types = Array.from(checked).map(cb => cb.value);
                     const levelsList = ['sin_daño', 'daño_leve', 'daño_importante', 'daño_grave', 'colapso'];
-
                     const reportData = {
                         type: 'damage',
                         latitude: pos.latitude,
@@ -1806,9 +1603,7 @@
                         damage_level: levelsList[selectedLevel],
                         description: `${types.join(', ')} - ${levelsList[selectedLevel]}`
                     };
-
                     const report = await reports.createReport(reportData);
-
                     if (selectedFile && report) {
                         const imageUrl = await uploadImage(selectedFile, report.id);
                         if (imageUrl) {
@@ -1818,10 +1613,8 @@
                                 .eq('id', report.id);
                         }
                     }
-
                     closeModal();
                     setTimeout(() => reports.syncPendingReports(), 2000);
-
                 } catch (error) {
                     showToast('Error: ' + error.message, 'error');
                 }
@@ -1833,31 +1626,17 @@
 
             openModal(`
                 <div class="modal-title">🚧 REPORTAR VÍA</div>
-                <div class="modal-form-group">
-                    <label>Estado de la vía:</label>
-                    <div class="checkbox-group" id="roadTypes">
-                        ${statuses.map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`).join('')}
-                    </div>
-                </div>
-                <div class="modal-form-group">
-                    <label>Ubicación aproximada:</label>
-                    <input type="text" id="roadLocation" placeholder="Ej: Km 12 vía a ...">
-                </div>
-                <div class="modal-form-group">
-                    <label>Foto (opcional):</label>
-                    <input type="file" id="roadPhoto" accept="image/*" style="padding:8px;">
-                </div>
+                <div class="modal-form-group"><label>Estado de la vía:</label>
+                <div class="checkbox-group" id="roadTypes">${statuses.map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`).join('')}</div></div>
+                <div class="modal-form-group"><label>Ubicación aproximada:</label><input type="text" id="roadLocation" placeholder="Ej: Km 12 vía a ..."></div>
+                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="roadPhoto" accept="image/*"></div>
                 <button class="btn-primary info" id="roadPublishBtn">📤 PUBLICAR</button>
             `);
 
             let selectedFile = null;
-
             document.getElementById('roadPhoto').addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                    selectedFile = e.target.files[0];
-                }
+                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
             });
-
             document.getElementById('roadPublishBtn').addEventListener('click', async () => {
                 try {
                     const checked = document.querySelectorAll('#roadTypes input:checked');
@@ -1865,11 +1644,9 @@
                         showToast('Selecciona al menos un estado', 'warning');
                         return;
                     }
-
                     const pos = await geolocation.getCurrentPosition();
                     const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
                     const roadLocation = document.getElementById('roadLocation').value;
-
                     const reportData = {
                         type: 'road',
                         latitude: pos.latitude,
@@ -1879,9 +1656,7 @@
                         location_detail: roadLocation,
                         description: `${Array.from(checked).map(cb => cb.value).join(', ')}${roadLocation ? ' en ' + roadLocation : ''}`
                     };
-
                     const report = await reports.createReport(reportData);
-
                     if (selectedFile && report) {
                         const imageUrl = await uploadImage(selectedFile, report.id);
                         if (imageUrl) {
@@ -1891,10 +1666,8 @@
                                 .eq('id', report.id);
                         }
                     }
-
                     closeModal();
                     setTimeout(() => reports.syncPendingReports(), 2000);
-
                 } catch (error) {
                     showToast('Error: ' + error.message, 'error');
                 }
@@ -1904,15 +1677,9 @@
         function showResourcesModal() {
             openModal(`
                 <div class="modal-title">📍 RECURSOS</div>
-                <div style="margin-bottom:12px;font-size:0.85rem;color:#666;">
-                    Recursos y centros de ayuda cercanos
-                </div>
-                <div id="resourcesList" style="max-height:300px;overflow-y:auto;">
-                    <div style="text-align:center;padding:20px;color:#666;">Cargando recursos...</div>
-                </div>
-                <div style="margin-top:12px;padding:8px;background:#f0f0f0;border-radius:8px;font-size:0.7rem;color:#666;">
-                    ℹ️ Los datos se actualizan desde fuentes oficiales y comunitarias verificadas
-                </div>
+                <div style="margin-bottom:12px;font-size:0.85rem;color:#666;">Recursos y centros de ayuda cercanos</div>
+                <div id="resourcesList" style="max-height:300px;overflow-y:auto;"><div style="text-align:center;padding:20px;color:#666;">Cargando recursos...</div></div>
+                <div style="margin-top:12px;padding:8px;background:#f0f0f0;border-radius:8px;font-size:0.7rem;color:#666;">ℹ️ Datos desde fuentes oficiales y comunitarias</div>
                 <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
             `);
 
@@ -1923,15 +1690,9 @@
                 .then(({ data, error }) => {
                     const list = document.getElementById('resourcesList');
                     if (error || !data || data.length === 0) {
-                        list.innerHTML = `
-                            <div style="text-align:center;padding:20px;color:#666;">
-                                No hay recursos registrados aún.<br>
-                                <span style="font-size:0.7rem;">Los recursos se agregan desde fuentes oficiales</span>
-                            </div>
-                        `;
+                        list.innerHTML = `<div style="text-align:center;padding:20px;color:#666;">No hay recursos registrados aún.</div>`;
                         return;
                     }
-
                     list.innerHTML = data.map(r => `
                         <div style="padding:10px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:12px;cursor:pointer;"
                              onclick="mapManager.goToLocation(${r.latitude}, ${r.longitude}, 15); closeModal();">
@@ -1939,7 +1700,7 @@
                             <div style="flex:1;">
                                 <strong>${r.name}</strong>
                                 <br><span style="font-size:0.7rem;color:#666;">${r.type} ${r.municipality ? '• ' + r.municipality : ''}</span>
-                                ${r.availability ? `<br><span style="font-size:0.65rem;color:${r.availability === 'disponible' ? '#2ecc71' : r.availability === 'limitado' ? '#f39c12' : '#e74c3c'};">${r.availability}</span>` : ''}
+                                ${r.availability ? `<br><span style="font-size:0.65rem;color:${r.availability === 'disponible' ? '#2ecc71' : 'limitado' ? '#f39c12' : '#e74c3c'};">${r.availability}</span>` : ''}
                             </div>
                             <span style="font-size:0.7rem;color:#666;">${r.source_type || 'oficial'}</span>
                         </div>
@@ -1967,29 +1728,22 @@
                 console.log('Ubicación no disponible:', e.message);
             }
 
-            // Cargar SGC en segundo plano (no bloquea)
-            setTimeout(() => fetchEarthquakes(), 1000);
+            // SGC en segundo plano - NO BLOQUEA
+            setTimeout(() => fetchEarthquakes(), 2000);
 
             await reports.loadReports();
             setTimeout(() => reports.syncPendingReports(), 3000);
 
+            // Eventos UI
             document.getElementById('safeBtn').addEventListener('click', showSafeModal);
             document.getElementById('helpBtn').addEventListener('click', showHelpModal);
             document.getElementById('damageBtn').addEventListener('click', showDamageModal);
             document.getElementById('roadBtn').addEventListener('click', showRoadModal);
             document.getElementById('resourcesBtn').addEventListener('click', showResourcesModal);
 
-            document.getElementById('myLocationBtn').addEventListener('click', () => {
-                mapManager.centerOnUser();
-            });
-
-            document.getElementById('zoomInBtn').addEventListener('click', () => {
-                if (mapManager.map) mapManager.map.zoomIn();
-            });
-
-            document.getElementById('zoomOutBtn').addEventListener('click', () => {
-                if (mapManager.map) mapManager.map.zoomOut();
-            });
+            document.getElementById('myLocationBtn').addEventListener('click', () => mapManager.centerOnUser());
+            document.getElementById('zoomInBtn').addEventListener('click', () => { if (mapManager.map) mapManager.map.zoomIn(); });
+            document.getElementById('zoomOutBtn').addEventListener('click', () => { if (mapManager.map) mapManager.map.zoomOut(); });
 
             document.getElementById('statsToggle').addEventListener('click', () => {
                 document.getElementById('statsContent').classList.toggle('hidden');
@@ -2013,6 +1767,7 @@
                 );
             });
 
+            // Eventos de conexión - UNIFICADOS
             window.addEventListener('online', async () => {
                 document.getElementById('connectionStatus').className = 'connection-status online';
                 document.getElementById('connectionStatus').querySelector('.status-text').textContent = 'Conectado';
