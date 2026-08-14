@@ -1307,16 +1307,25 @@ class ReportManager {
                 }
             }
 
-           async loadReports() {
+         async loadReports() {
+    // Declarar localReports al inicio para que esté disponible en todo el ámbito
+    let localReports = [];
+    try {
+        localReports = await offline.getAllReports();
+    } catch (e) {
+        console.warn('Error obteniendo reportes locales:', e);
+    }
+
+    // Si no autenticado, mostrar solo los reportes locales
     if (!this.authReady || !this.userId) {
-        console.log('⏳ Esperando autenticación para cargar reportes...');
-        const localReports = await offline.getAllReports();
+        console.log('⏳ No autenticado, mostrando reportes locales...');
         this.reports = localReports;
         mapManager.updateClusters(localReports);
         this.updateStats();
         return this.reports;
     }
 
+    // Cargar desde servidor
     let serverReports = [];
     try {
         const { data, error } = await supabaseClient
@@ -1333,21 +1342,13 @@ class ReportManager {
         console.warn('Error cargando desde Supabase:', error);
     }
 
-    const localReports = await offline.getAllReports();
-
-    // ============================================================
-    // COMBINAR Y DEDUPLICAR
-    // ============================================================
-    // 1. IDs de los reportes del servidor (ya sean id o temp_id)
+    // Deduplicar: evitar duplicados locales que ya están en el servidor
     const serverIds = new Set(serverReports.map(r => r.id));
     const serverTempIds = new Set(serverReports.map(r => r.temp_id).filter(Boolean));
 
-    // 2. Construir array final con los del servidor primero
     const allReports = [...serverReports];
 
-    // 3. Agregar locales solo si no existen ya en el servidor
     for (const local of localReports) {
-        // Si el local tiene un id que ya está en el servidor, o su temp_id ya existe en el servidor -> omitir
         if (serverIds.has(local.id) || serverTempIds.has(local.temp_id)) {
             continue;
         }
@@ -1406,10 +1407,7 @@ class ReportManager {
                 document.getElementById('statResources').textContent = stats.resources;
             }
 
-                    // ============================================================
-        // NUEVO: SUSCRIPCIÓN A REALTIME
-        // ============================================================
-       
+
 
                 // ============================================================
         // NUEVO: SUSCRIPCIÓN A REALTIME
