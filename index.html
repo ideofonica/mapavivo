@@ -3488,15 +3488,15 @@
 
         // --- Resources Modal V2 - CON GESTIÓN DE AYUDAS ---
       function showResourcesModal() {
-    // Obtener ciudad actual del usuario
-    let currentCity = 'Bogotá'; // valor por defecto
+    // ========== DETECTAR CIUDAD DEL USUARIO ==========
+    let detectedCity = 'Bogotá'; // fallback
 
-    // Intentar obtener ubicación para detectar ciudad
+    // Intentar obtener ubicación
     geolocation.getCurrentPosition()
         .then(pos => geolocation.getLocationName(pos.latitude, pos.longitude))
         .then(city => {
-            currentCity = city;
-            // Actualizar el selector si ya está abierto
+            detectedCity = city;
+            // Si el selector ya existe, actualizar valor y filtrar
             const select = document.getElementById('cityFilter');
             if (select) {
                 select.value = city;
@@ -3504,18 +3504,15 @@
             }
         })
         .catch(() => {
-            // Si falla GPS, usar Bogotá por defecto (o mostrar todas)
-            console.log('No se pudo detectar ciudad, mostrando todas');
+            console.log('No se pudo detectar ciudad, mostrando Bogotá por defecto');
         });
 
-    // Obtener lista de ciudades únicas desde los puntos de acopio
+    // ========== DATOS ==========
     const cities = [...new Set(OFFICIAL_COLLECTION_POINTS.map(p => p.city))].sort();
-
-    // Contar puntos por ciudad
     const totalPoints = OFFICIAL_COLLECTION_POINTS.length;
     const oficiales = OFFICIAL_COLLECTION_POINTS.filter(p => p.type === 'oficial').length;
 
-    // Función para filtrar y renderizar
+    // ========== FUNCIÓN FILTRAR ==========
     function filterResources(city) {
         const filtered = city === 'TODAS' ? OFFICIAL_COLLECTION_POINTS : OFFICIAL_COLLECTION_POINTS.filter(p => p.city === city);
         const list = document.getElementById('resourcesList');
@@ -3543,18 +3540,18 @@
         `).join('');
     }
 
-    // Construir modal con selector de ciudad
+    // ========== CONSTRUIR MODAL ==========
     const modalContent = `
         <div class="modal-title">📍 RECURSOS Y AYUDAS</div>
 
         <div class="aid-stats">
             <div class="aid-stat">
                 <div class="number">${totalPoints}</div>
-                <div class="label">Puntos totales</div>
+                <div class="label">Puntos de acopio</div>
             </div>
             <div class="aid-stat">
                 <div class="number">${oficiales}</div>
-                <div class="label">Oficiales</div>
+                <div class="label">Oficiales verificados</div>
             </div>
             <div class="aid-stat">
                 <div class="number">${cities.length}</div>
@@ -3562,46 +3559,97 @@
             </div>
         </div>
 
-        <div class="modal-form-group">
-            <label>📍 Filtrar por ciudad</label>
-            <select id="cityFilter" style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);color:white;font-size:1rem;">
-                <option value="TODAS">🌎 Todas las ciudades</option>
-                ${cities.map(c => `<option value="${c}">${c}</option>`).join('')}
-            </select>
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="tab-puntos">🏛️ Puntos de acopio</button>
+            <button class="tab-btn" data-tab="tab-ayudas">📦 Necesidades</button>
         </div>
 
-        <div id="resourcesList" style="max-height:300px;overflow-y:auto;">
-            <div style="text-align:center;padding:30px;color:var(--color-text);">
-                <div style="font-size:2rem;">⏳</div>
-                <p style="font-size:0.9rem;">Cargando puntos...</p>
+        <!-- PESTAÑA 1: PUNTOS DE ACOPIO -->
+        <div id="tab-puntos" class="tab-content active">
+            <div class="modal-form-group">
+                <label>📍 Filtrar por ciudad</label>
+                <select id="cityFilter" style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);color:white;font-size:1rem;">
+                    <option value="TODAS">🌎 Todas las ciudades</option>
+                    ${cities.map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
+            </div>
+            <div id="resourcesList" style="max-height:300px;overflow-y:auto;">
+                <div style="text-align:center;padding:30px;color:var(--color-text);">
+                    <div style="font-size:2rem;">⏳</div>
+                    <p style="font-size:0.9rem;">Cargando puntos...</p>
+                </div>
             </div>
         </div>
 
-        <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;font-size:0.65rem;color:var(--color-text);text-align:center;">
-            ℹ️ Datos desde fuentes oficiales: Cruz Roja, Alcaldías y UNGRD
+        <!-- PESTAÑA 2: NECESIDADES (sin filtro, es nacional) -->
+        <div id="tab-ayudas" class="tab-content">
+            <div style="font-size:0.85rem;color:var(--color-text);margin-bottom:10px;text-align:center;">
+                📦 Lo que se necesita en los puntos de acopio (información nacional)
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;max-height:300px;overflow-y:auto;">
+                <div style="font-weight:700;font-size:0.8rem;margin-bottom:6px;color:#2ecc71;">✅ Alimentos no perecederos:</div>
+                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                    Arroz, aceite, pastas, enlatados, granos (fríjol, lentejas), harina, panela, leche en polvo, chocolate, avena
+                </div>
+                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Agua e hidratación:</div>
+                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                    Agua potable embotellada, bebidas hidratantes
+                </div>
+                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Elementos de albergue:</div>
+                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                    Colchonetas, frazadas, cobijas, mantas, almohadas, toldillos, sábanas
+                </div>
+                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Higiene y aseo:</div>
+                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                    Jabón, champú, cepillos dentales, crema dental, toallas higiénicas, papel higiénico, pañales, toallitas húmedas
+                </div>
+                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Primeros auxilios:</div>
+                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                    Tapabocas, gasas estériles, alcohol, clorhexidina, guantes quirúrgicos, vendajes
+                </div>
+                <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#f39c12;">⚠️ NO se reciben:</div>
+                <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
+                    Medicamentos, ropa usada, elementos usados, alimentos perecederos, productos vencidos
+                </div>
+                <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:0.65rem;color:var(--color-text);text-align:center;">
+                    ℹ️ Datos verificados desde fuentes oficiales: Cruz Roja, Alcaldías y UNGRD
+                </div>
+            </div>
         </div>
+
         <button class="btn-secondary" onclick="closeModal()" style="margin-top:10px;">Cerrar</button>
     `;
 
     openModal(modalContent);
 
-    // Una vez montado el DOM, asignar el evento del selector
+    // ========== CONFIGURAR TABS Y FILTRO DESPUÉS DE RENDERIZAR ==========
     setTimeout(() => {
+        // Tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Selector de ciudad
         const select = document.getElementById('cityFilter');
         if (select) {
-            // Si ya tenemos ciudad detectada, ponerla
-            if (currentCity && cities.includes(currentCity)) {
-                select.value = currentCity;
+            // Preseleccionar ciudad detectada (si existe en la lista)
+            if (detectedCity && cities.includes(detectedCity)) {
+                select.value = detectedCity;
+            } else {
+                select.value = 'TODAS';
             }
-            // Filtrar inicialmente con el valor actual
+            // Filtrar inicial
             filterResources(select.value);
-
             // Evento cambio
             select.addEventListener('change', (e) => {
                 filterResources(e.target.value);
             });
         } else {
-            // Fallback: mostrar todas
             filterResources('TODAS');
         }
     }, 100);
