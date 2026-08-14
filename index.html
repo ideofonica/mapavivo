@@ -554,33 +554,30 @@
 
     <script>
     // ================================================================
-    // 1. CONFIGURACIÓN - SUPABASE REAL (SIN FIREBASE)
+    // CONFIGURACIÓN
     // ================================================================
-// ================================================================
-// CONFIGURACIÓN
-// ================================================================
-const CONFIG = {
-    supabaseUrl: 'https://qytywodntuikvotimpzs.supabase.co',
-    supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dHl3b2RudHVpa3ZvdGltcHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTA4MzcsImV4cCI6MjEwMjIyNjgzN30.DEroSVOkETVrzVOroYuEU1AWQnOcT_TpGE5ljyemyHI',
-    mapStyle: 'https://tiles.stadiamaps.com/styles/osm_bright.json',
-    mapCenter: [-74.0721, 4.7110],
-    mapZoom: 6
-};
+    const CONFIG = {
+        supabaseUrl: 'https://qytywodntuikvotimpzs.supabase.co',
+        supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dHl3b2RudHVpa3ZvdGltcHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTA4MzcsImV4cCI6MjEwMjIyNjgzN30.DEroSVOkETVrzVOroYuEU1AWQnOcT_TpGE5ljyemyHI',
+        mapStyle: 'https://tiles.stadiamaps.com/styles/osm_bright.json',
+        mapCenter: [-74.0721, 4.7110],
+        mapZoom: 6
+    };
 
-// ================================================================
-// SUPABASE CLIENT - UNA SOLA VEZ
-// ================================================================
-const supabase = supabase.createClient(
-    CONFIG.supabaseUrl,
-    CONFIG.supabaseAnonKey
-);
+    // ================================================================
+    // SUPABASE CLIENT - UNA SOLA VEZ
+    // ================================================================
+    const supabase = supabase.createClient(
+        CONFIG.supabaseUrl,
+        CONFIG.supabaseAnonKey
+    );
 
     let currentUser = null;
     let isAuthenticated = false;
     let authReady = false;
 
     // ================================================================
-    // 3. GEOLOCALIZACIÓN
+    // GEOLOCALIZACIÓN
     // ================================================================
     class GeolocationManager {
         constructor() {
@@ -658,7 +655,7 @@ const supabase = supabase.createClient(
     const geolocation = new GeolocationManager();
 
     // ================================================================
-    // 4. OFFLINE - INDEXEDDB CON SYNC_QUEUE
+    // OFFLINE - INDEXEDDB CON SYNC_QUEUE
     // ================================================================
     class OfflineManager {
         constructor() {
@@ -830,7 +827,7 @@ const supabase = supabase.createClient(
     offline.init();
 
     // ================================================================
-    // 5. MAPA
+    // MAPA
     // ================================================================
     class MapManager {
         constructor() {
@@ -937,7 +934,7 @@ const supabase = supabase.createClient(
     const mapManager = new MapManager();
 
     // ================================================================
-    // 6. UI HELPERS
+    // UI HELPERS
     // ================================================================
     function showToast(message, type = 'info') {
         const toast = document.getElementById('toast');
@@ -965,7 +962,7 @@ const supabase = supabase.createClient(
     });
 
     // ================================================================
-    // 7. SISTEMA DE REPORTES - SOLO SUPABASE AUTH
+    // SISTEMA DE REPORTES - SOLO SUPABASE AUTH
     // ================================================================
     class ReportManager {
         constructor() {
@@ -1007,7 +1004,6 @@ const supabase = supabase.createClient(
         }
 
         async createReport(data) {
-            // Verificar autenticación
             if (!this.authReady || !this.userId) {
                 showToast('⏳ Esperando autenticación...', 'warning');
                 return null;
@@ -1084,7 +1080,6 @@ const supabase = supabase.createClient(
                 return;
             }
 
-            // Verificar autenticación
             if (!this.authReady || !this.userId) {
                 console.log('⏳ Esperando autenticación para sincronizar...');
                 return;
@@ -1104,7 +1099,6 @@ const supabase = supabase.createClient(
                 let synced = 0;
 
                 for (const report of pending) {
-                    // Verificar que el reporte tenga user_id
                     if (!report.user_id) {
                         report.user_id = this.userId;
                     }
@@ -1165,10 +1159,8 @@ const supabase = supabase.createClient(
         }
 
         async loadReports() {
-            // Verificar autenticación
             if (!this.authReady || !this.userId) {
                 console.log('⏳ Esperando autenticación para cargar reportes...');
-                // Cargar solo locales mientras espera auth
                 const localReports = await offline.getAllReports();
                 this.reports = localReports;
                 this.updateStats();
@@ -1280,7 +1272,7 @@ const supabase = supabase.createClient(
     const reports = new ReportManager();
 
     // ================================================================
-    // 8. DATOS OFICIALES - SGC REAL (SIN DATOS FICTICIOS)
+    // DATOS OFICIALES - SGC REAL
     // ================================================================
     async function fetchEarthquakes() {
         try {
@@ -1319,7 +1311,7 @@ const supabase = supabase.createClient(
     }
 
     // ================================================================
-    // 9. STORAGE - SUBIDA DE IMÁGENES
+    // STORAGE - SUBIDA DE IMÁGENES
     // ================================================================
     async function uploadImage(file, reportId) {
         if (!reports.authReady || !reports.userId) {
@@ -1389,7 +1381,7 @@ const supabase = supabase.createClient(
     }
 
     // ================================================================
-    // 10. MODALES
+    // MODALES
     // ================================================================
 
     // ESTOY A SALVO
@@ -1814,19 +1806,16 @@ const supabase = supabase.createClient(
     }
 
     // ================================================================
-    // 11. INICIALIZACIÓN
+    // INICIALIZACIÓN
     // ================================================================
     async function init() {
         console.log('🗺️ Iniciando Mapa Vivo Colombia');
         console.log('📡 Conectado a Supabase:', CONFIG.supabaseUrl);
 
-        // Inicializar autenticación primero
         await reports.initAuth();
 
-        // Inicializar mapa
         mapManager.init('map');
 
-        // Geolocalización
         try {
             const pos = await geolocation.getCurrentPosition();
             if (pos) {
@@ -1836,16 +1825,10 @@ const supabase = supabase.createClient(
             console.log('Ubicación no disponible:', e.message);
         }
 
-        // Cargar datos oficiales
         await fetchEarthquakes();
-
-        // Cargar reportes
         await reports.loadReports();
-
-        // Sincronizar pendientes
         setTimeout(() => reports.syncPendingReports(), 3000);
 
-        // Eventos UI
         document.getElementById('safeBtn').addEventListener('click', showSafeModal);
         document.getElementById('helpBtn').addEventListener('click', showHelpModal);
         document.getElementById('damageBtn').addEventListener('click', showDamageModal);
@@ -1886,7 +1869,6 @@ const supabase = supabase.createClient(
             );
         });
 
-        // Conexión
         window.addEventListener('online', () => {
             document.getElementById('connectionStatus').className = 'connection-status online';
             document.getElementById('connectionStatus').querySelector('.status-text').textContent = 'Conectado';
@@ -1901,7 +1883,6 @@ const supabase = supabase.createClient(
             offline.updatePendingCount();
         });
 
-        // Atajos de teclado
         document.addEventListener('keydown', (e) => {
             if (e.key === '1') document.getElementById('safeBtn').click();
             if (e.key === '2') document.getElementById('helpBtn').click();
@@ -1910,7 +1891,6 @@ const supabase = supabase.createClient(
             if (e.key === '5') document.getElementById('resourcesBtn').click();
         });
 
-        // Sincronización periódica
         setInterval(() => {
             if (navigator.onLine && reports.authReady) {
                 reports.syncPendingReports();
