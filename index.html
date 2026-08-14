@@ -5,30 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Mapa Vivo Colombia</title>
     <meta name="description" content="Herramienta comunitaria para emergencias sísmicas en Colombia" />
-    <meta name="theme-color" content="#1a3c6e" />
-    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#0B2A4A" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css" />
     <style>
+        /* ===== RESET Y VARIABLES ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --color-primary: #1a3c6e;
-            --color-success: #2ecc71;
-            --color-danger: #e74c3c;
-            --color-warning: #f39c12;
-            --color-info: #3498db;
-            --color-dark: #2c3e50;
-            --color-light: #ecf0f1;
+            --color-primary: #0B2A4A;
+            --color-secondary: #123F6D;
+            --color-blue-bright: #1976D2;
+            --color-success: #20C963;
+            --color-danger: #E53935;
+            --color-warning: #F59E0B;
+            --color-dark: #10182B;
+            --color-light: #F0F4FA;
             --color-white: #ffffff;
-            --color-gray: #95a5a6;
-            --shadow: 0 2px 10px rgba(0,0,0,0.15);
-            --radius: 12px;
+            --color-gray: #8A9BB5;
+            --color-text: #B8C4D6;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --radius: 16px;
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         }
+
         html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: var(--font-family);
-            background: var(--color-light);
-            color: var(--color-dark);
+            background: var(--color-dark);
+            color: var(--color-white);
             overflow: hidden;
             height: 100vh;
             height: 100dvh;
@@ -37,6 +41,7 @@
             padding: 0;
             position: fixed;
         }
+
         #app {
             display: flex;
             flex-direction: column;
@@ -44,8 +49,10 @@
             height: 100dvh;
             overflow: hidden;
             position: relative;
-            background: var(--color-light);
+            background: var(--color-dark);
         }
+
+        /* ===== HEADER MODERNO ===== */
         #header {
             background: var(--color-primary);
             color: var(--color-white);
@@ -55,66 +62,112 @@
             justify-content: space-between;
             flex-shrink: 0;
             z-index: 100;
-            min-height: 52px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            min-height: 64px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-top: env(safe-area-inset-top, 8px);
         }
+
         .header-content {
             display: flex;
             align-items: center;
             gap: 6px;
             flex: 1;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow: hidden;
         }
-        #header h1 { font-size: 1.1rem; font-weight: 700; margin: 0; }
-        .header-subtitle { font-size: 0.65rem; opacity: 0.8; letter-spacing: 1px; }
-        .header-actions { display: flex; gap: 4px; }
+
+        #header h1 {
+            font-size: clamp(1.1rem, 4vw, 1.6rem);
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+        }
+
+        .header-subtitle {
+            font-size: clamp(0.55rem, 1.5vw, 0.75rem);
+            font-weight: 400;
+            opacity: 0.8;
+            letter-spacing: 1px;
+            margin-left: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
         .header-actions button {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.10);
             border: none;
             color: white;
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 1.1rem;
+            padding: 6px 8px;
+            border-radius: 10px;
+            font-size: clamp(1rem, 2vw, 1.2rem);
             cursor: pointer;
-            min-width: 36px;
-            min-height: 36px;
+            min-width: 38px;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            backdrop-filter: blur(4px);
         }
+
+        .header-actions button:active { background: rgba(255,255,255,0.20); }
+
         #connectionStatus {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.65rem;
-            padding: 4px 10px;
+            font-size: clamp(0.5rem, 1.2vw, 0.65rem);
+            padding: 4px 12px;
             border-radius: 20px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.08);
             flex-shrink: 0;
+            backdrop-filter: blur(4px);
         }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
         .connection-status.online .status-dot { background: var(--color-success); }
         .connection-status.offline .status-dot { background: var(--color-danger); }
+
         .sync-status {
-            font-size: 0.55rem;
+            font-size: clamp(0.45rem, 1vw, 0.55rem);
             padding: 2px 8px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.12);
             margin-left: 4px;
             white-space: nowrap;
             font-weight: 600;
         }
-        .sync-status.pending { background: var(--color-warning); color: #2c3e50; }
+        .sync-status.pending { background: var(--color-warning); color: #0B2A4A; }
         .sync-status.synced { background: var(--color-success); color: white; }
         .sync-status.error { background: var(--color-danger); color: white; }
         .sync-status.offline { background: var(--color-gray); color: white; }
+
+        /* ===== CONTENIDO PRINCIPAL ===== */
         #main-content {
             flex: 1;
             position: relative;
             overflow: hidden;
         }
+
         #map-container {
             width: 100%;
             height: 100%;
             position: relative;
         }
+
         #map {
             width: 100%;
             height: 100%;
@@ -122,130 +175,174 @@
             top: 0;
             left: 0;
         }
+
+        /* ===== CONTROLES DEL MAPA (más grandes y mejor ubicados) ===== */
         #map-controls {
             position: absolute;
             right: 12px;
             bottom: 120px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
             z-index: 10;
         }
+
         .map-control-btn {
-            width: 44px;
-            height: 44px;
+            width: 50px;
+            height: 50px;
             border: none;
             border-radius: 50%;
-            background: var(--color-white);
-            box-shadow: var(--shadow);
+            background: rgba(255,255,255,0.95);
+            color: var(--color-dark);
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             cursor: pointer;
-            font-size: 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: transform 0.1s, background 0.2s;
+            backdrop-filter: blur(8px);
+            touch-action: manipulation;
+            user-select: none;
         }
-        .map-control-btn#myLocationBtn { background: var(--color-primary); color: white; }
+        .map-control-btn:active { transform: scale(0.94); background: white; }
+        .map-control-btn#myLocationBtn { background: var(--color-blue-bright); color: white; }
+
+        /* ===== BARRA INFERIOR – NAVEGACIÓN PRINCIPAL ===== */
         #quick-actions {
-            position: absolute;
-            bottom: 16px;
+            position: fixed;
+            bottom: 0;
             left: 0;
             right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            padding: 0 8px;
             z-index: 20;
-            flex-wrap: wrap;
+            background: rgba(11, 42, 74, 0.92);
+            backdrop-filter: blur(12px);
+            padding: 8px 8px max(8px, var(--safe-area-bottom));
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
         }
+
         .quick-action-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px 12px;
+            padding: 6px 4px;
             border: none;
-            border-radius: var(--radius);
-            background: var(--color-white);
-            box-shadow: var(--shadow);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.05);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
             cursor: pointer;
-            min-width: 60px;
-            min-height: 56px;
-            flex: 1;
-            max-width: 80px;
-            transition: transform 0.1s;
+            min-height: 64px;
+            transition: transform 0.1s, background 0.2s;
+            touch-action: manipulation;
+            user-select: none;
+            gap: 2px;
         }
-        .quick-action-btn:active { transform: scale(0.95); }
-        .quick-action-btn .btn-icon { font-size: 1.4rem; }
+        .quick-action-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.12); }
+
+        .quick-action-btn .btn-icon { font-size: clamp(1.4rem, 4.5vw, 1.9rem); line-height: 1; }
         .quick-action-btn .btn-label {
-            font-size: 0.55rem;
-            font-weight: 600;
+            font-size: clamp(0.45rem, 1.2vw, 0.6rem);
+            font-weight: 700;
             text-align: center;
-            margin-top: 2px;
-            color: var(--color-dark);
+            color: rgba(255,255,255,0.85);
+            letter-spacing: 0.3px;
+            line-height: 1.2;
         }
-        .quick-action-btn.safe-btn { background: var(--color-success); color: white; }
-        .quick-action-btn.safe-btn .btn-label { color: white; }
-        .quick-action-btn.help-btn { background: var(--color-danger); color: white; }
-        .quick-action-btn.help-btn .btn-label { color: white; }
-        .quick-action-btn.damage-btn { background: var(--color-warning); color: white; }
-        .quick-action-btn.damage-btn .btn-label { color: white; }
-        .quick-action-btn.road-btn { background: var(--color-info); color: white; }
-        .quick-action-btn.road-btn .btn-label { color: white; }
-        .quick-action-btn.resources-btn { background: var(--color-primary); color: white; }
-        .quick-action-btn.resources-btn .btn-label { color: white; }
+
+        .quick-action-btn.safe-btn { background: rgba(32, 201, 99, 0.25); }
+        .quick-action-btn.safe-btn .btn-label { color: #6AE8A0; }
+        .quick-action-btn.help-btn { background: rgba(229, 57, 53, 0.25); }
+        .quick-action-btn.help-btn .btn-label { color: #FF8A80; }
+        .quick-action-btn.damage-btn { background: rgba(245, 158, 11, 0.25); }
+        .quick-action-btn.damage-btn .btn-label { color: #FDE68A; }
+        .quick-action-btn.road-btn { background: rgba(25, 118, 210, 0.25); }
+        .quick-action-btn.road-btn .btn-label { color: #90CAF9; }
+        .quick-action-btn.resources-btn { background: rgba(255,255,255,0.05); }
+        .quick-action-btn.resources-btn .btn-label { color: #B0BEC5; }
+
+        /* ===== ESTADÍSTICAS (botón flotante) ===== */
         #stats-panel {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 16px;
+            right: 16px;
             z-index: 15;
         }
+
         .stats-toggle {
-            background: rgba(255,255,255,0.95);
-            border: none;
-            border-radius: 20px;
-            padding: 6px 12px;
-            box-shadow: var(--shadow);
+            background: rgba(11, 42, 74, 0.85);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 40px;
+            padding: 8px 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+            backdrop-filter: blur(8px);
+            transition: background 0.2s;
+            touch-action: manipulation;
         }
+        .stats-toggle:active { background: rgba(11, 42, 74, 0.95); }
+
         .stats-content {
-            background: rgba(255,255,255,0.97);
+            background: rgba(11, 42, 74, 0.92);
             border-radius: var(--radius);
-            padding: 12px;
-            margin-top: 6px;
-            box-shadow: var(--shadow);
-            min-width: 140px;
+            padding: 14px 16px;
+            margin-top: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
+            min-width: 150px;
         }
         .stats-content.hidden { display: none; }
+
         .stat-item {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            font-size: 0.7rem;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 5px 0;
+            font-size: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            color: var(--color-text);
         }
-        .stat-value { font-weight: 700; color: var(--color-primary); font-size: 0.85rem; }
+        .stat-value {
+            font-weight: 700;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        /* ===== OFFLINE INDICATOR ===== */
         #offline-indicator {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.8);
             color: white;
-            padding: 16px 24px;
+            padding: 20px 28px;
             border-radius: var(--radius);
             text-align: center;
             z-index: 50;
-            font-weight: 500;
-            backdrop-filter: blur(8px);
+            font-weight: 600;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         #offline-indicator span {
             display: block;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             opacity: 0.7;
             margin-top: 4px;
+            font-weight: 400;
         }
         #offline-indicator.hidden { display: none; }
+
+        /* ===== MODAL MODERNO ===== */
         #modal-overlay {
             position: fixed;
             top: 0;
@@ -258,134 +355,222 @@
             align-items: center;
             justify-content: center;
             padding: 16px;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+            animation: fadeIn 0.2s ease;
         }
         #modal-overlay.hidden { display: none; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         #modal-container {
-            background: var(--color-white);
-            border-radius: var(--radius);
+            background: #172A44;
+            border-radius: 24px;
             width: 100%;
-            max-width: 480px;
-            max-height: 90vh;
+            max-width: 520px;
+            max-height: calc(100dvh - 32px);
             overflow-y: auto;
-            padding: 20px;
+            padding: 24px 20px 28px;
             position: relative;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
-            animation: modalIn 0.25s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            animation: slideUp 0.25s ease;
+            border: 1px solid rgba(255,255,255,0.06);
         }
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
+
         .modal-close {
             position: absolute;
             top: 12px;
             right: 12px;
-            background: none;
+            background: rgba(255,255,255,0.08);
             border: none;
-            font-size: 1.4rem;
-            color: var(--color-gray);
+            font-size: 1.6rem;
+            color: var(--color-text);
             cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            touch-action: manipulation;
         }
+        .modal-close:active { background: rgba(255,255,255,0.15); }
+
         .modal-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--color-primary);
-            margin-bottom: 16px;
+            font-size: clamp(1.4rem, 6vw, 2rem);
+            font-weight: 800;
+            color: white;
+            margin-bottom: 20px;
             text-align: center;
+            letter-spacing: -0.5px;
         }
-        .modal-form-group { margin-bottom: 14px; }
+        .modal-title .highlight { color: var(--color-blue-bright); }
+
+        .modal-form-group { margin-bottom: 18px; }
         .modal-form-group label {
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            color: var(--color-text);
+            letter-spacing: 0.3px;
         }
-        .modal-form-group input, .modal-form-group select, .modal-form-group textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-family: inherit;
-        }
+
+        .modal-form-group input,
+        .modal-form-group select,
         .modal-form-group textarea {
-            resize: vertical;
-            min-height: 60px;
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: rgba(255,255,255,0.04);
+            color: white;
+            transition: border-color 0.2s, background 0.2s;
+            min-height: 54px;
         }
-        .modal-form-group input:focus, .modal-form-group textarea:focus {
+        .modal-form-group input:focus,
+        .modal-form-group select:focus,
+        .modal-form-group textarea:focus {
             outline: none;
-            border-color: var(--color-primary);
+            border-color: var(--color-blue-bright);
+            background: rgba(255,255,255,0.06);
         }
+        .modal-form-group textarea { min-height: 80px; resize: vertical; }
+
+        .modal-form-group input::placeholder,
+        .modal-form-group textarea::placeholder {
+            color: var(--color-gray);
+            opacity: 0.7;
+        }
+
+        /* ===== TARJETAS PARA OPCIONES (checkbox/radio) ===== */
+        .grid-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .grid-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 12px;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: white;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            user-select: none;
+            min-height: 56px;
+        }
+        .grid-options label:active { transform: scale(0.97); background: rgba(255,255,255,0.08); }
+        .grid-options label:has(input:checked) {
+            border-color: var(--color-blue-bright);
+            background: rgba(25, 118, 210, 0.15);
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+        }
+        .grid-options input[type="checkbox"],
+        .grid-options input[type="radio"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            flex-shrink: 0;
+            background: transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .grid-options input[type="checkbox"]:checked,
+        .grid-options input[type="radio"]:checked {
+            background: var(--color-blue-bright);
+            border-color: var(--color-blue-bright);
+        }
+        .grid-options input[type="checkbox"]:checked::after {
+            content: "✓";
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .grid-options input[type="radio"] { border-radius: 50%; }
+
+        /* ===== BOTÓN PUBLICAR ===== */
         .btn-primary {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 700;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 800;
             color: white;
-            background: var(--color-primary);
+            background: var(--color-blue-bright);
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            min-height: 60px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3);
         }
+        .btn-primary:active { transform: scale(0.97); opacity: 0.85; }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary.success { background: var(--color-success); }
         .btn-primary.danger { background: var(--color-danger); }
         .btn-primary.warning { background: var(--color-warning); }
+
         .btn-secondary {
             width: 100%;
-            padding: 14px;
-            border: 2px solid var(--color-gray);
-            border-radius: 8px;
+            padding: 16px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
             font-size: 1rem;
             font-weight: 600;
-            color: var(--color-dark);
+            color: white;
             background: transparent;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-secondary:active { background: var(--color-light); }
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
-            padding: 6px 12px;
-            background: var(--color-light);
-            border-radius: 20px;
-            cursor: pointer;
             transition: all 0.2s;
+            touch-action: manipulation;
+            min-height: 54px;
         }
-        .checkbox-group label:has(input:checked) {
-            background: var(--color-primary);
-            color: white;
-        }
-        .checkbox-group input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--color-primary);
-        }
+        .btn-secondary:active { background: rgba(255,255,255,0.05); transform: scale(0.97); }
+
+        /* ===== TOAST ===== */
         #toast {
             position: fixed;
-            bottom: 100px;
+            bottom: 110px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.85);
             color: white;
-            padding: 12px 24px;
-            border-radius: var(--radius);
-            font-size: 0.85rem;
+            padding: 14px 24px;
+            border-radius: 16px;
+            font-size: 0.9rem;
             z-index: 2000;
             max-width: 90%;
             text-align: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
             transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
         #toast.hidden {
             opacity: 0;
@@ -395,61 +580,98 @@
         #toast.success { border-left: 4px solid var(--color-success); }
         #toast.error { border-left: 4px solid var(--color-danger); }
         #toast.warning { border-left: 4px solid var(--color-warning); }
-        #toast.info { border-left: 4px solid var(--color-info); }
+        #toast.info { border-left: 4px solid var(--color-blue-bright); }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 370px) {
-            #header h1 { font-size: 0.9rem; }
-            .quick-action-btn { min-width: 48px; min-height: 48px; padding: 6px 8px; }
-            .quick-action-btn .btn-icon { font-size: 1.1rem; }
-            .quick-action-btn .btn-label { font-size: 0.45rem; }
-            .sync-status { font-size: 0.45rem; padding: 1px 4px; }
+            .grid-options { grid-template-columns: 1fr; }
+            .quick-action-btn .btn-label { font-size: 0.4rem; }
+            #header h1 { font-size: 0.95rem; }
+            .header-subtitle { display: none; }
+            #connectionStatus { font-size: 0.5rem; padding: 2px 8px; }
         }
+
         @media (min-width: 768px) {
-            .quick-action-btn { min-width: 80px; min-height: 70px; max-width: 100px; }
+            #quick-actions {
+                max-width: 600px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 24px 24px 0 0;
+                padding: 10px 12px max(10px, var(--safe-area-bottom));
+            }
+            .quick-action-btn { min-height: 72px; }
             .quick-action-btn .btn-icon { font-size: 1.8rem; }
             .quick-action-btn .btn-label { font-size: 0.65rem; }
-            #header h1 { font-size: 1.4rem; }
+            #modal-container { max-width: 560px; padding: 32px 28px; }
         }
-        .emergency-mode .quick-action-btn {
-            min-width: 76px;
-            min-height: 64px;
+
+        @media (min-width: 1024px) {
+            #quick-actions { max-width: 700px; }
+            .quick-action-btn { min-height: 80px; }
+            .quick-action-btn .btn-icon { font-size: 2rem; }
+            .quick-action-btn .btn-label { font-size: 0.7rem; }
         }
-        .emergency-mode .quick-action-btn .btn-icon { font-size: 1.8rem; }
-        .emergency-mode .quick-action-btn .btn-label { font-size: 0.6rem; }
-        .emergency-mode #header { min-height: 48px; padding: 6px 10px; }
-        .low-data-mode #map-legend { display: none; }
-        .low-data-mode .header-actions #lowDataBtn { display: none; }
-        .low-data-mode .stats-content { display: none; }
+
+        @media (max-width: 768px) and (orientation: landscape) {
+            #quick-actions {
+                padding: 4px 8px max(4px, var(--safe-area-bottom));
+                gap: 3px;
+            }
+            .quick-action-btn { min-height: 48px; }
+            .quick-action-btn .btn-icon { font-size: 1.1rem; }
+            .quick-action-btn .btn-label { font-size: 0.4rem; }
+            #map-controls { bottom: 80px; }
+            .map-control-btn { width: 40px; height: 40px; font-size: 1rem; }
+            #header { min-height: 48px; }
+        }
+
+        /* ===== DARK MODE (preferencia del sistema) ===== */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --color-dark: #F0F4FA;
+                --color-white: #ffffff;
+                --color-light: #e8eef6;
+                --color-text: #2C3E50;
+                --color-gray: #6A7A8A;
+                --shadow: 0 4px 20px rgba(0,0,0,0.1);
+            }
+            body { background: var(--color-dark); }
+            #header { background: #0B2A4A; border-bottom: none; }
+            #quick-actions { background: rgba(255,255,255,0.95); border-top: 1px solid rgba(0,0,0,0.05); }
+            .quick-action-btn .btn-label { color: #1A2A3A; }
+            .quick-action-btn.safe-btn { background: rgba(32, 201, 99, 0.15); }
+            .quick-action-btn.help-btn { background: rgba(229, 57, 53, 0.15); }
+            .quick-action-btn.damage-btn { background: rgba(245, 158, 11, 0.15); }
+            .quick-action-btn.road-btn { background: rgba(25, 118, 210, 0.15); }
+            #modal-container { background: white; color: #1A2A3A; }
+            .modal-title { color: #0B2A4A; }
+            .modal-close { color: #6A7A8A; }
+            .modal-form-group label { color: #2C3E50; }
+            .modal-form-group input, .modal-form-group select, .modal-form-group textarea {
+                background: #F0F4FA;
+                border-color: #D0D8E0;
+                color: #1A2A3A;
+            }
+            .grid-options label { background: #F0F4FA; border-color: #D0D8E0; color: #1A2A3A; }
+            .grid-options label:has(input:checked) { background: rgba(25, 118, 210, 0.08); border-color: var(--color-blue-bright); }
+            .stats-toggle { background: rgba(255,255,255,0.9); color: #0B2A4A; border-color: #D0D8E0; }
+            .stats-content { background: rgba(255,255,255,0.95); color: #1A2A3A; border-color: #D0D8E0; }
+            .stat-item { color: #2C3E50; border-bottom-color: #E0E8F0; }
+            .stat-value { color: #0B2A4A; }
+            .btn-secondary { border-color: #D0D8E0; color: #1A2A3A; }
+            #toast { background: rgba(255,255,255,0.95); color: #1A2A3A; border: 1px solid #D0D8E0; }
+            .map-control-btn { background: white; color: #1A2A3A; }
+            .map-control-btn#myLocationBtn { background: var(--color-blue-bright); color: white; }
+            .sync-status { background: rgba(0,0,0,0.06); color: #1A2A3A; }
+            .sync-status.pending { background: var(--color-warning); color: white; }
+            .sync-status.synced { background: var(--color-success); color: white; }
+            .sync-status.error { background: var(--color-danger); color: white; }
+            .sync-status.offline { background: var(--color-gray); color: white; }
+        }
+
+        /* ===== REDUCIR MOVIMIENTO ===== */
         @media (prefers-reduced-motion: reduce) {
             * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-        }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --color-light: #1a1a2e;
-                --color-white: #16213e;
-                --color-dark: #ecf0f1;
-                --color-gray: #7f8c8d;
-                --shadow: 0 2px 10px rgba(0,0,0,0.4);
-            }
-            .quick-action-btn { background: #2a2a4a; }
-            .quick-action-btn .btn-label { color: var(--color-light); }
-            .quick-action-btn.safe-btn .btn-label,
-            .quick-action-btn.help-btn .btn-label,
-            .quick-action-btn.damage-btn .btn-label,
-            .quick-action-btn.road-btn .btn-label,
-            .quick-action-btn.resources-btn .btn-label { color: white; }
-            .stats-toggle { background: rgba(30,30,60,0.95); color: var(--color-light); }
-            .stats-content { background: rgba(30,30,60,0.97); color: var(--color-light); }
-            .stat-value { color: #5a9eff; }
-            #modal-container { background: #1a1a2e; }
-            .modal-title { color: #5a9eff; }
-            .modal-form-group input, .modal-form-group textarea {
-                background: #2a2a4a;
-                border-color: #3a3a5a;
-                color: var(--color-light);
-            }
-            .checkbox-group label { background: #2a2a4a; color: var(--color-light); }
-            .checkbox-group label:has(input:checked) { background: var(--color-primary); }
-            .map-control-btn { background: #2a2a4a; color: var(--color-light); }
         }
     </style>
 </head>
@@ -481,29 +703,6 @@
                 </div>
             </div>
 
-            <div id="quick-actions">
-                <button id="safeBtn" class="quick-action-btn safe-btn">
-                    <span class="btn-icon">🟢</span>
-                    <span class="btn-label">ESTOY A SALVO</span>
-                </button>
-                <button id="helpBtn" class="quick-action-btn help-btn">
-                    <span class="btn-icon">🆘</span>
-                    <span class="btn-label">NECESITO AYUDA</span>
-                </button>
-                <button id="damageBtn" class="quick-action-btn damage-btn">
-                    <span class="btn-icon">🏚️</span>
-                    <span class="btn-label">REPORTAR DAÑO</span>
-                </button>
-                <button id="roadBtn" class="quick-action-btn road-btn">
-                    <span class="btn-icon">🚧</span>
-                    <span class="btn-label">REPORTAR VÍA</span>
-                </button>
-                <button id="resourcesBtn" class="quick-action-btn resources-btn">
-                    <span class="btn-icon">📍</span>
-                    <span class="btn-label">RECURSOS</span>
-                </button>
-            </div>
-
             <div id="stats-panel">
                 <button id="statsToggle" class="stats-toggle">📊 Estadísticas</button>
                 <div id="statsContent" class="stats-content hidden">
@@ -522,6 +721,30 @@
                 <span>Los reportes se guardarán localmente</span>
             </div>
         </main>
+
+        <!-- BARRA INFERIOR - 5 ACCIONES PRINCIPALES -->
+        <div id="quick-actions">
+            <button id="safeBtn" class="quick-action-btn safe-btn">
+                <span class="btn-icon">🟢</span>
+                <span class="btn-label">ESTOY A SALVO</span>
+            </button>
+            <button id="helpBtn" class="quick-action-btn help-btn">
+                <span class="btn-icon">🆘</span>
+                <span class="btn-label">NECESITO AYUDA</span>
+            </button>
+            <button id="damageBtn" class="quick-action-btn damage-btn">
+                <span class="btn-icon">🏚️</span>
+                <span class="btn-label">REPORTAR DAÑO</span>
+            </button>
+            <button id="roadBtn" class="quick-action-btn road-btn">
+                <span class="btn-icon">🚧</span>
+                <span class="btn-label">REPORTAR VÍA</span>
+            </button>
+            <button id="resourcesBtn" class="quick-action-btn resources-btn">
+                <span class="btn-icon">📍</span>
+                <span class="btn-label">RECURSOS</span>
+            </button>
+        </div>
 
         <div id="modal-overlay" class="hidden">
             <div id="modal-container">
@@ -553,7 +776,7 @@
         let currentUser = null, isAuthenticated = false, authReady = false;
 
         // ============================================================
-        // GEOLOCALIZACIÓN - SIN INVENTAR UBICACIÓN
+        // GEOLOCALIZACIÓN
         // ============================================================
         class GeolocationManager {
             constructor() { this.position = null; }
@@ -585,7 +808,7 @@
                 const R = 6371;
                 const dLat = this.toRad(lat2 - lat1);
                 const dLon = this.toRad(lon2 - lon1);
-                const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(this.toRad(lat1))*Math.cos(this.toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
                 return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             }
             toRad(deg) { return deg * Math.PI / 180; }
@@ -624,7 +847,7 @@
         const geolocation = new GeolocationManager();
 
         // ============================================================
-        // OFFLINE - VERSIÓN 5 (RECONSTRUCCIÓN FORZADA)
+        // OFFLINE - VERSIÓN 5
         // ============================================================
         class OfflineManager {
             constructor() {
@@ -639,7 +862,6 @@
                     const request = indexedDB.open(this.dbName, this.dbVersion);
                     request.onupgradeneeded = (e) => {
                         const db = e.target.result;
-                        // Eliminar stores antiguos y recrearlos con keyPath 'temp_id'
                         if (db.objectStoreNames.contains('reports')) db.deleteObjectStore('reports');
                         if (db.objectStoreNames.contains('pending')) db.deleteObjectStore('pending');
                         if (db.objectStoreNames.contains('sync_queue')) db.deleteObjectStore('sync_queue');
@@ -715,28 +937,28 @@
             }
 
             async markSynced(tempId) {
-    if (!this.isReady) await this.init();
-    return new Promise((resolve, reject) => {
-        const tx = this.db.transaction(['pending', 'sync_queue', 'reports'], 'readwrite');
-        tx.objectStore('pending').delete(tempId);
-        tx.objectStore('reports').delete(tempId); // <--- ELIMINA TAMBIÉN DEL STORE REPORTS
-        const index = tx.objectStore('sync_queue').index('temp_id');
-        const request = index.getAll(tempId);
-        request.onsuccess = () => {
-            for (const item of request.result) {
-                if (item.status === 'pending') {
-                    const updatedItem = { ...item, status: 'completed', completed_at: Date.now() };
-                    tx.objectStore('sync_queue').put(updatedItem);
-                }
+                if (!this.isReady) await this.init();
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(['pending', 'sync_queue', 'reports'], 'readwrite');
+                    tx.objectStore('pending').delete(tempId);
+                    tx.objectStore('reports').delete(tempId);
+                    const index = tx.objectStore('sync_queue').index('temp_id');
+                    const request = index.getAll(tempId);
+                    request.onsuccess = () => {
+                        for (const item of request.result) {
+                            if (item.status === 'pending') {
+                                const updatedItem = { ...item, status: 'completed', completed_at: Date.now() };
+                                tx.objectStore('sync_queue').put(updatedItem);
+                            }
+                        }
+                    };
+                    tx.oncomplete = () => {
+                        this.updatePendingCount();
+                        resolve(true);
+                    };
+                    tx.onerror = () => reject(tx.error);
+                });
             }
-        };
-        tx.oncomplete = () => {
-            this.updatePendingCount();
-            resolve(true);
-        };
-        tx.onerror = () => reject(tx.error);
-    });
-}
 
             async markSyncError(tempId, errorMessage) {
                 if (!this.isReady) await this.init();
@@ -787,61 +1009,52 @@
         offline.init();
 
         // ============================================================
-        // MAPA
+        // MAPA – actualizado con UI mejorada (sin cambios lógicos)
         // ============================================================
-       // ============================================================
-// MAPA
-// ============================================================
-class MapManager {
-    constructor() {
-        this.map = null;
-        this.isReady = false;
-        this.reports = [];
-        this._clusterClickHandler = null;
-        this._reportClickHandler = null;
-    }
-
-    init(containerId = 'map') {
-        if (this.map) return;
-
-        this.map = new maplibregl.Map({
-            container: containerId,
-            style: CONFIG.mapStyle,
-            center: CONFIG.mapCenter,
-            zoom: CONFIG.mapZoom,
-            maxZoom: 18,
-            minZoom: 4
-        });
-
-        this.map.addControl(
-            new maplibregl.NavigationControl({ showCompass: false }),
-            'top-right'
-        );
-
-        // ✅ AJUSTE 2: Al cargar el mapa, si ya hay reportes, los dibuja
-        this.map.on('load', () => {
-            this.isReady = true;
-            console.log('✅ Mapa listo');
-
-            if (this.reports && this.reports.length > 0) {
-                this.updateClusters(this.reports);
+        class MapManager {
+            constructor() {
+                this.map = null;
+                this.isReady = false;
+                this.reports = [];
+                this._clusterClickHandler = null;
+                this._reportClickHandler = null;
             }
-        });
 
-        return this.map;
-    }
+            init(containerId = 'map') {
+                if (this.map) return;
 
-    // ============================================================
-    // updateClusters() – versión definitiva con todos los ajustes
-    // ============================================================
-  updateClusters(reports) {
-    if (!this.map || !this.isReady) return;
+                this.map = new maplibregl.Map({
+                    container: containerId,
+                    style: CONFIG.mapStyle,
+                    center: CONFIG.mapCenter,
+                    zoom: CONFIG.mapZoom,
+                    maxZoom: 18,
+                    minZoom: 4
+                });
 
+                this.map.addControl(
+                    new maplibregl.NavigationControl({ showCompass: false }),
+                    'top-right'
+                );
+
+                this.map.on('load', () => {
+                    this.isReady = true;
+                    console.log('✅ Mapa listo');
+                    if (this.reports && this.reports.length > 0) {
+                        this.updateClusters(this.reports);
+                    }
+                });
+
+                return this.map;
+            }
+
+          updateClusters(reports) {
+    // SIEMPRE guardar los reportes primero
     this.reports = Array.isArray(reports) ? reports : [];
 
-    // ============================================================
-    // 1. CREAR GEOJSON
-    // ============================================================
+    // Si el mapa todavía no está listo, el evento "load"
+    // los dibujará automáticamente
+    if (!this.map || !this.isReady) return;
 
     const features = this.reports
         .filter(report => {
@@ -851,10 +1064,8 @@ class MapManager {
             return (
                 Number.isFinite(lat) &&
                 Number.isFinite(lon) &&
-                lat >= -90 &&
-                lat <= 90 &&
-                lon >= -180 &&
-                lon <= 180
+                lat >= -90 && lat <= 90 &&
+                lon >= -180 && lon <= 180
             );
         })
         .map(report => ({
@@ -875,282 +1086,156 @@ class MapManager {
 
     const geojson = {
         type: 'FeatureCollection',
-        features: features
+        features
     };
-
-    // ============================================================
-    // 2. SI YA EXISTE LA FUENTE → SOLO ACTUALIZARLA
-    //    ESTO ES LO IMPORTANTE PARA REALTIME
-    // ============================================================
 
     const existingSource = this.map.getSource('reports-cluster');
 
     if (existingSource) {
         existingSource.setData(geojson);
-        console.log(`📍 Mapa actualizado: ${features.length} reportes`);
         return;
     }
 
-    // ============================================================
-    // 3. SI NO HAY REPORTES, NO CREAR NADA
-    // ============================================================
+    if (features.length === 0) return;
 
-    if (features.length === 0) {
-        return;
-    }
+                this.map.addSource('reports-cluster', {
+                    type: 'geojson',
+                    data: geojson,
+                    cluster: true,
+                    clusterMaxZoom: 14,
+                    clusterRadius: 50
+                });
 
-    // ============================================================
-    // 4. CREAR SOURCE UNA SOLA VEZ
-    // ============================================================
-
-    this.map.addSource('reports-cluster', {
-        type: 'geojson',
-        data: geojson,
-        cluster: true,
-        clusterMaxZoom: 14,
-        clusterRadius: 50
-    });
-
-    // ============================================================
-    // 5. CLUSTERS
-    // ============================================================
-
-    this.map.addLayer({
-        id: 'clusters',
-        type: 'circle',
-        source: 'reports-cluster',
-        filter: ['has', 'point_count'],
-        paint: {
-            'circle-color': [
-                'step',
-                ['get', 'point_count'],
-                '#51bbd6',
-                10,
-                '#f1f075',
-                30,
-                '#f28cb1'
-            ],
-            'circle-radius': [
-                'step',
-                ['get', 'point_count'],
-                20,
-                10,
-                30,
-                30,
-                40
-            ],
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff'
-        }
-    });
-
-    // ============================================================
-    // 6. CONTADOR
-    // ============================================================
-
-    this.map.addLayer({
-        id: 'cluster-count',
-        type: 'symbol',
-        source: 'reports-cluster',
-        filter: ['has', 'point_count'],
-        layout: {
-            'text-field': ['get', 'point_count_abbreviated'],
-            'text-size': 12
-        },
-        paint: {
-            'text-color': '#ffffff'
-        }
-    });
-
-    // ============================================================
-    // 7. REPORTES INDIVIDUALES
-    // ============================================================
-
-    this.map.addLayer({
-        id: 'unclustered-point',
-        type: 'circle',
-        source: 'reports-cluster',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-            'circle-color': [
-                'match',
-                ['get', 'type'],
-                'safe', '#2ecc71',
-                'help', '#e74c3c',
-                'damage', '#f39c12',
-                'road', '#3498db',
-                'resource', '#1a3c6e',
-                '#7f8c8d'
-            ],
-            'circle-radius': 9,
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff'
-        }
-    });
-
-    // ============================================================
-    // 8. CLICK EN CLUSTERS
-    // ============================================================
-
-    if (!this._clusterClickHandler) {
-
-        this._clusterClickHandler = (e) => {
-
-            const features = this.map.queryRenderedFeatures(
-                e.point,
-                { layers: ['clusters'] }
-            );
-
-            if (!features.length) return;
-
-            const clusterId =
-                features[0].properties.cluster_id;
-
-            const source =
-                this.map.getSource('reports-cluster');
-
-            if (!source) return;
-
-            source.getClusterExpansionZoom(
-                clusterId,
-                (err, zoom) => {
-
-                    if (err) return;
-
-                    this.map.easeTo({
-                        center: features[0].geometry.coordinates,
-                        zoom: zoom
-                    });
-                }
-            );
-        };
-
-        this.map.on(
-            'click',
-            'clusters',
-            this._clusterClickHandler
-        );
-    }
-
-    // ============================================================
-    // 9. CLICK EN REPORTE INDIVIDUAL
-    // ============================================================
-
-    if (!this._reportClickHandler) {
-
-        this._reportClickHandler = (e) => {
-
-            const features =
-                this.map.queryRenderedFeatures(
-                    e.point,
-                    {
-                        layers: ['unclustered-point']
+                this.map.addLayer({
+                    id: 'clusters',
+                    type: 'circle',
+                    source: 'reports-cluster',
+                    filter: ['has', 'point_count'],
+                    paint: {
+                        'circle-color': [
+                            'step',
+                            ['get', 'point_count'],
+                            '#51bbd6',
+                            10,
+                            '#f1f075',
+                            30,
+                            '#f28cb1'
+                        ],
+                        'circle-radius': [
+                            'step',
+                            ['get', 'point_count'],
+                            20,
+                            10,
+                            30,
+                            30,
+                            40
+                        ],
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#ffffff'
                     }
-                );
+                });
 
-            if (!features.length) return;
+                this.map.addLayer({
+                    id: 'cluster-count',
+                    type: 'symbol',
+                    source: 'reports-cluster',
+                    filter: ['has', 'point_count'],
+                    layout: {
+                        'text-field': ['get', 'point_count_abbreviated'],
+                        'text-size': 12
+                    },
+                    paint: {
+                        'text-color': '#ffffff'
+                    }
+                });
 
-            const reportFeature = features[0];
+                this.map.addLayer({
+                    id: 'unclustered-point',
+                    type: 'circle',
+                    source: 'reports-cluster',
+                    filter: ['!', ['has', 'point_count']],
+                    paint: {
+                        'circle-color': [
+                            'match',
+                            ['get', 'type'],
+                            'safe', '#2ecc71',
+                            'help', '#e74c3c',
+                            'damage', '#f39c12',
+                            'road', '#3498db',
+                            'resource', '#1a3c6e',
+                            '#7f8c8d'
+                        ],
+                        'circle-radius': 9,
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#ffffff'
+                    }
+                });
 
-            const reportId =
-                reportFeature.properties.id;
+                if (!this._clusterClickHandler) {
+                    this._clusterClickHandler = (e) => {
+                        const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+                        if (!features.length) return;
+                        const clusterId = features[0].properties.cluster_id;
+                        const source = this.map.getSource('reports-cluster');
+                        if (!source) return;
+                        source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+                            if (err) return;
+                            this.map.easeTo({
+                                center: features[0].geometry.coordinates,
+                                zoom: zoom
+                            });
+                        });
+                    };
+                    this.map.on('click', 'clusters', this._clusterClickHandler);
+                }
 
-            if (!reportId) return;
+                if (!this._reportClickHandler) {
+                    this._reportClickHandler = (e) => {
+                        const features = this.map.queryRenderedFeatures(e.point, { layers: ['unclustered-point'] });
+                        if (!features.length) return;
+                        const reportFeature = features[0];
+                        const reportId = reportFeature.properties.id;
+                        if (!reportId) return;
+                        const report = this.reports.find(r => r.id === reportId || r.temp_id === reportId);
+                        if (!report) return;
+                        const lat = Number(report.latitude);
+                        const lon = Number(report.longitude);
+                        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
-            const report = this.reports.find(r =>
-                r.id === reportId ||
-                r.temp_id === reportId
-            );
-
-            if (!report) return;
-
-            const lat = Number(report.latitude);
-            const lon = Number(report.longitude);
-
-            if (
-                !Number.isFinite(lat) ||
-                !Number.isFinite(lon)
-            ) {
-                return;
+                        new maplibregl.Popup({ offset: 25 })
+                            .setLngLat([lon, lat])
+                            .setHTML(`
+                                <div style="font-size:0.8rem;padding:4px;max-width:220px;">
+                                    <strong>${report.description || report.type || 'Reporte'}</strong>
+                                    <br><span style="font-size:0.65rem;color:#666;">${report.created_at ? new Date(report.created_at).toLocaleTimeString() : ''}</span>
+                                    <br><span style="font-size:0.65rem;">✅ ${report.verification_count || 0} confirmaciones</span>
+                                    <br><button onclick="corroborateReport('${reportId}')" style="margin-top:4px;padding:4px 8px;background:#2ecc71;border:none;border-radius:4px;color:white;cursor:pointer;font-size:0.7rem;">👍 Corroborar</button>
+                                </div>
+                            `)
+                            .addTo(this.map);
+                    };
+                    this.map.on('click', 'unclustered-point', this._reportClickHandler);
+                }
             }
 
-            new maplibregl.Popup({
-                offset: 25
-            })
-                .setLngLat([lon, lat])
-                .setHTML(`
-                    <div style="
-                        font-size:0.8rem;
-                        padding:4px;
-                        max-width:220px;
-                    ">
-                        <strong>
-                            ${report.description ||
-                              report.type ||
-                              'Reporte'}
-                        </strong>
+            async goToLocation(lat, lon, zoom = 15) {
+                if (!this.map) return;
+                this.map.flyTo({ center: [lon, lat], zoom: zoom, duration: 1500 });
+            }
 
-                        <br>
-
-                        <span style="
-                            font-size:0.65rem;
-                            color:#666;
-                        ">
-                            ${
-                                report.created_at
-                                ? new Date(
-                                    report.created_at
-                                  ).toLocaleTimeString()
-                                : ''
-                            }
-                        </span>
-
-                        <br>
-
-                        <span style="
-                            font-size:0.65rem;
-                        ">
-                            ✅ ${
-                                report.verification_count || 0
-                            } confirmaciones
-                        </span>
-
-                        <br>
-
-                        <button
-                            onclick="corroborateReport('${reportId}')"
-                            style="
-                                margin-top:4px;
-                                padding:4px 8px;
-                                background:#2ecc71;
-                                border:none;
-                                border-radius:4px;
-                                color:white;
-                                cursor:pointer;
-                                font-size:0.7rem;
-                            "
-                        >
-                            👍 Corroborar
-                        </button>
-                    </div>
-                `)
-                .addTo(this.map);
-        };
-
-        this.map.on(
-            'click',
-            'unclustered-point',
-            this._reportClickHandler
-        );
-    }
-
-    console.log(
-        `📍 Mapa cargado: ${features.length} reportes`
-    );
-}
-
-}
-
+            async centerOnUser() {
+                try {
+                    const pos = await geolocation.getCurrentPosition();
+                    if (pos) {
+                        this.goToLocation(pos.latitude, pos.longitude);
+                        return pos;
+                    }
+                } catch (error) {
+                    showToast('📍 ' + error.message, 'warning');
+                }
+                return null;
+            }
+        }
 
         const mapManager = new MapManager();
 
@@ -1191,17 +1276,17 @@ class MapManager {
         }
 
         // ============================================================
-        // REPORTES
+        // REPORTES – lógica intacta, solo se mejora el HTML de los modales
         // ============================================================
-class ReportManager {
-    constructor() {
-        this.reports = [];
-        this.lastReportTime = 0;
-        this.isSyncing = false;
-        this.userId = null;
-        this.authReady = false;
-        this.realtimeChannel = null;  // <--- NUEVO
-    }
+        class ReportManager {
+            constructor() {
+                this.reports = [];
+                this.lastReportTime = 0;
+                this.isSyncing = false;
+                this.userId = null;
+                this.authReady = false;
+                this.realtimeChannel = null;
+            }
 
             async initAuth() {
                 try {
@@ -1227,9 +1312,7 @@ class ReportManager {
             }
 
             getUserId() {
-                if (!this.userId || !this.authReady) {
-                    throw new Error('Usuario no autenticado');
-                }
+                if (!this.userId || !this.authReady) throw new Error('Usuario no autenticado');
                 return this.userId;
             }
 
@@ -1274,7 +1357,6 @@ class ReportManager {
                     is_public: true
                 };
 
-                // 1. SIEMPRE guardar localmente primero
                 try {
                     await offline.saveReport(report);
                 } catch (error) {
@@ -1285,7 +1367,6 @@ class ReportManager {
                 let pendingCount = await offline.getPendingCount();
                 this.showPendingStatus(pendingCount);
 
-                // 2. Si hay conexión, intentar enviar a Supabase
                 if (navigator.onLine) {
                     try {
                         const { temp_id, _key, synced, savedAt, ...serverReport } = report;
@@ -1295,7 +1376,6 @@ class ReportManager {
                             .select();
 
                         if (error) {
-                            // Cualquier error -> guardar pendiente (más seguro para emergencia)
                             showToast('⏳ Error temporal. Reporte pendiente de envío.', 'warning');
                             showConfirmation(report, false, 'pending');
                             return report;
@@ -1327,14 +1407,8 @@ class ReportManager {
 
             async syncPendingReports() {
                 if (this.isSyncing) return;
-                if (!navigator.onLine) {
-                    await offline.updatePendingCount();
-                    return;
-                }
-                if (!this.authReady || !this.userId) {
-                    console.log('⏳ Esperando autenticación para sincronizar...');
-                    return;
-                }
+                if (!navigator.onLine) { await offline.updatePendingCount(); return; }
+                if (!this.authReady || !this.userId) { console.log('⏳ Esperando autenticación para sincronizar...'); return; }
 
                 this.isSyncing = true;
                 let synced = 0, errors = 0;
@@ -1353,7 +1427,6 @@ class ReportManager {
                         const reportData = pendingItem.data || pendingItem;
                         const tempId = pendingItem.temp_id || reportData.temp_id;
 
-                        // Verificar si ya existe en Supabase por temp_id
                         const { data: existing } = await supabaseClient
                             .from('reports')
                             .select('id')
@@ -1366,7 +1439,6 @@ class ReportManager {
                             continue;
                         }
 
-                        // Extraer solo los campos válidos para Supabase
                         const { temp_id, _key, synced, savedAt, ...serverReport } = reportData;
 
                         const { data: inserted, error } = await supabaseClient
@@ -1386,12 +1458,8 @@ class ReportManager {
                         }
                     }
 
-                    if (synced > 0) {
-                        showToast(`✅ ${synced} reporte${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''}`, 'success');
-                    }
-                    if (errors > 0) {
-                        showToast(`⚠️ ${errors} reporte${errors > 1 ? 's' : ''} con error`, 'warning');
-                    }
+                    if (synced > 0) showToast(`✅ ${synced} reporte${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''}`, 'success');
+                    if (errors > 0) showToast(`⚠️ ${errors} reporte${errors > 1 ? 's' : ''} con error`, 'warning');
 
                     await offline.updatePendingCount();
                     this.loadReports();
@@ -1402,60 +1470,47 @@ class ReportManager {
                 }
             }
 
-         async loadReports() {
-    // Declarar localReports al inicio para que esté disponible en todo el ámbito
-    let localReports = [];
-    try {
-        localReports = await offline.getAllReports();
-    } catch (e) {
-        console.warn('Error obteniendo reportes locales:', e);
-    }
+            async loadReports() {
+                let localReports = [];
+                try { localReports = await offline.getAllReports(); } catch (e) { console.warn('Error obteniendo reportes locales:', e); }
 
-    // Si no autenticado, mostrar solo los reportes locales
-    if (!this.authReady || !this.userId) {
-        console.log('⏳ No autenticado, mostrando reportes locales...');
-        this.reports = localReports;
-        mapManager.updateClusters(localReports);
-        this.updateStats();
-        return this.reports;
-    }
+                if (!this.authReady || !this.userId) {
+                    console.log('⏳ No autenticado, mostrando reportes locales...');
+                    this.reports = localReports;
+                    mapManager.updateClusters(localReports);
+                    this.updateStats();
+                    return this.reports;
+                }
 
-    // Cargar desde servidor
-    let serverReports = [];
-    try {
-        const { data, error } = await supabaseClient
-            .from('reports')
-            .select('*')
-            .eq('status', 'active')
-            .order('created_at', { ascending: false })
-            .limit(200);
+                let serverReports = [];
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('reports')
+                        .select('*')
+                        .eq('status', 'active')
+                        .order('created_at', { ascending: false })
+                        .limit(200);
 
-        if (!error && data) {
-            serverReports = data;
-        }
-    } catch (error) {
-        console.warn('Error cargando desde Supabase:', error);
-    }
+                    if (!error && data) serverReports = data;
+                } catch (error) {
+                    console.warn('Error cargando desde Supabase:', error);
+                }
 
-    // Deduplicar: evitar duplicados locales que ya están en el servidor
-    const serverIds = new Set(serverReports.map(r => r.id));
-    const serverTempIds = new Set(serverReports.map(r => r.temp_id).filter(Boolean));
+                const serverIds = new Set(serverReports.map(r => r.id));
+                const serverTempIds = new Set(serverReports.map(r => r.temp_id).filter(Boolean));
+                const allReports = [...serverReports];
 
-    const allReports = [...serverReports];
+                for (const local of localReports) {
+                    if (serverIds.has(local.id) || serverTempIds.has(local.temp_id)) continue;
+                    allReports.push(local);
+                }
 
-    for (const local of localReports) {
-        if (serverIds.has(local.id) || serverTempIds.has(local.temp_id)) {
-            continue;
-        }
-        allReports.push(local);
-    }
-
-    this.reports = allReports;
-    mapManager.updateClusters(allReports);
-    await offline.updatePendingCount();
-    this.updateStats();
-    return this.reports;
-}
+                this.reports = allReports;
+                mapManager.updateClusters(allReports);
+                await offline.updatePendingCount();
+                this.updateStats();
+                return this.reports;
+            }
 
             async corroborateReport(reportId) {
                 if (!this.authReady || !this.userId) {
@@ -1466,15 +1521,10 @@ class ReportManager {
                     const { data, error } = await supabaseClient
                         .rpc('increment_report_verification', { p_report_id: reportId });
                     if (error) {
-                        if (error.message.includes('Ya has corroborado')) {
-                            showToast('Ya corroboraste este reporte', 'warning');
-                        } else if (error.message.includes('No puedes corroborar tu propio reporte')) {
-                            showToast('No puedes corroborar tu propio reporte', 'warning');
-                        } else if (error.message.includes('Usuario no autenticado')) {
-                            showToast('Debes estar autenticado para corroborar', 'error');
-                        } else {
-                            showToast('Error al corroborar: ' + error.message, 'error');
-                        }
+                        if (error.message.includes('Ya has corroborado')) showToast('Ya corroboraste este reporte', 'warning');
+                        else if (error.message.includes('No puedes corroborar tu propio reporte')) showToast('No puedes corroborar tu propio reporte', 'warning');
+                        else if (error.message.includes('Usuario no autenticado')) showToast('Debes estar autenticado para corroborar', 'error');
+                        else showToast('Error al corroborar: ' + error.message, 'error');
                         return false;
                     }
                     showToast('✅ Reporte corroborado', 'success');
@@ -1502,153 +1552,71 @@ class ReportManager {
                 document.getElementById('statResources').textContent = stats.resources;
             }
 
+            // ============================================================
+            // REALTIME – sin cambios
+            // ============================================================
+            subscribeToRealtime() {
+                if (!this.authReady || !this.userId) {
+                    console.warn('⏳ No autenticado, no se puede suscribir a Realtime');
+                    return;
+                }
+                if (this.realtimeChannel) {
+                    console.log('ℹ️ Realtime ya suscrito');
+                    return;
+                }
 
-
-                // ============================================================
-        // NUEVO: SUSCRIPCIÓN A REALTIME
-        // ============================================================
-        subscribeToRealtime() {
-            if (!this.authReady || !this.userId) {
-                console.warn('⏳ No autenticado, no se puede suscribir a Realtime');
-                return;
-            }
-            if (this.realtimeChannel) {
-                console.log('ℹ️ Realtime ya suscrito');
-                return;
-            }
-
-            console.log('📡 Suscribiendo a Realtime...');
-            this.realtimeChannel = supabaseClient
-                .channel('reports-realtime')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'reports'
-                    },
-                    (payload) => {
+                console.log('📡 Suscribiendo a Realtime...');
+                this.realtimeChannel = supabaseClient
+                    .channel('reports-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, (payload) => {
                         this.handleRealtimeEvent(payload);
-                    }
-                )
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log('✅ Realtime conectado');
-                    } else if (status === 'CHANNEL_ERROR') {
-                        console.warn('⚠️ Error en Realtime, reintentando en 5s...');
-                        setTimeout(() => {
-                            if (this.realtimeChannel) {
-                                this.realtimeChannel.unsubscribe();
-                                this.realtimeChannel = null;
-                                this.subscribeToRealtime();
-                            }
-                        }, 5000);
-                    }
-                });
-        }
-
-        // ============================================================
-        // NUEVO: MANEJADOR DE EVENTOS REALTIME
-        // ============================================================
-       handleRealtimeEvent(payload) {
-    const { eventType, new: newRecord, old: oldRecord } = payload;
-
-    if (!this.authReady) return;
-
-    try {
-
-        // ========================================================
-        // INSERT
-        // ========================================================
-        if (eventType === 'INSERT') {
-
-            const exists = this.reports.some(r =>
-                r.id === newRecord.id ||
-                (newRecord.temp_id && r.temp_id === newRecord.temp_id)
-            );
-
-            if (!exists) {
-                this.reports.push(newRecord);
-
-                console.log(
-                    '🆕 Nuevo reporte recibido:',
-                    newRecord.id
-                );
-
-                this.updateStats();
-                mapManager.updateClusters(this.reports);
+                    })
+                    .subscribe((status) => {
+                        if (status === 'SUBSCRIBED') console.log('✅ Realtime conectado');
+                        else if (status === 'CHANNEL_ERROR') {
+                            console.warn('⚠️ Error en Realtime, reintentando en 5s...');
+                            setTimeout(() => {
+                                if (this.realtimeChannel) {
+                                    this.realtimeChannel.unsubscribe();
+                                    this.realtimeChannel = null;
+                                    this.subscribeToRealtime();
+                                }
+                            }, 5000);
+                        }
+                    });
             }
 
-            return;
-        }
+            handleRealtimeEvent(payload) {
+                const { eventType, new: newRecord, old: oldRecord } = payload;
+                if (!this.authReady) return;
 
-        // ========================================================
-        // UPDATE
-        // ========================================================
-        if (eventType === 'UPDATE') {
-
-            const index = this.reports.findIndex(r =>
-                r.id === newRecord.id ||
-                (newRecord.temp_id && r.temp_id === newRecord.temp_id)
-            );
-
-            if (index !== -1) {
-
-                this.reports[index] = {
-                    ...this.reports[index],
-                    ...newRecord
-                };
-
-            } else {
-
-                // Si no estaba localmente, lo incorporamos
-                this.reports.push(newRecord);
-
+                try {
+                    if (eventType === 'INSERT') {
+                        const exists = this.reports.some(r => r.id === newRecord.id || (newRecord.temp_id && r.temp_id === newRecord.temp_id));
+                        if (!exists) {
+                            this.reports.push(newRecord);
+                            this.updateStats();
+                            mapManager.updateClusters(this.reports);
+                        }
+                    } else if (eventType === 'UPDATE') {
+                        const index = this.reports.findIndex(r => r.id === newRecord.id || (newRecord.temp_id && r.temp_id === newRecord.temp_id));
+                        if (index !== -1) {
+                            this.reports[index] = { ...this.reports[index], ...newRecord };
+                        } else {
+                            this.reports.push(newRecord);
+                        }
+                        this.updateStats();
+                        mapManager.updateClusters(this.reports);
+                    } else if (eventType === 'DELETE') {
+                        this.reports = this.reports.filter(r => r.id !== oldRecord?.id);
+                        this.updateStats();
+                        mapManager.updateClusters(this.reports);
+                    }
+                } catch (error) {
+                    console.error('❌ Error procesando evento Realtime:', error);
+                }
             }
-
-            console.log(
-                '🔄 Reporte actualizado:',
-                newRecord.id
-            );
-
-            this.updateStats();
-            mapManager.updateClusters(this.reports);
-
-            return;
         }
-
-        // ========================================================
-        // DELETE
-        // ========================================================
-        if (eventType === 'DELETE') {
-
-            const deletedId = oldRecord?.id;
-
-            this.reports = this.reports.filter(r =>
-                r.id !== deletedId
-            );
-
-            console.log(
-                '🗑️ Reporte eliminado:',
-                deletedId
-            );
-
-            this.updateStats();
-            mapManager.updateClusters(this.reports);
-
-            return;
-        }
-
-    } catch (error) {
-
-        console.error(
-            '❌ Error procesando evento Realtime:',
-            error
-        );
-
-    }
-}
-}
 
         const reports = new ReportManager();
 
@@ -1656,29 +1624,11 @@ class ReportManager {
         // CONFIRMACIÓN VISUAL
         // ============================================================
         function showConfirmation(report, isOnline = false, status = 'pending') {
-            const code = report.id ? report.id.slice(0, 8).toUpperCase() : (report.temp_id || '---').slice(0, 8);
+            const code = report.id ? report.id.slice(0,8).toUpperCase() : (report.temp_id || '---').slice(0,8);
             const statusMap = {
-                'success': {
-                    icon: '✅',
-                    title: 'REPORTE ENVIADO',
-                    color: '#2ecc71',
-                    bg: '#e8f5e9',
-                    msg: 'Tu reporte ya está visible para la comunidad.'
-                },
-                'pending': {
-                    icon: '⏳',
-                    title: 'REPORTE PENDIENTE',
-                    color: '#f39c12',
-                    bg: '#fff3e0',
-                    msg: 'Se enviará automáticamente cuando haya conexión.'
-                },
-                'error': {
-                    icon: '❌',
-                    title: 'ERROR EN EL REPORTE',
-                    color: '#e74c3c',
-                    bg: '#ffebee',
-                    msg: 'Hay un problema con los datos. No se pudo registrar.'
-                }
+                'success': { icon: '✅', title: 'REPORTE ENVIADO', color: '#2ecc71', bg: '#e8f5e9', msg: 'Tu reporte ya está visible para la comunidad.' },
+                'pending': { icon: '⏳', title: 'REPORTE PENDIENTE', color: '#f39c12', bg: '#fff3e0', msg: 'Se enviará automáticamente cuando haya conexión.' },
+                'error': { icon: '❌', title: 'ERROR EN EL REPORTE', color: '#e74c3c', bg: '#ffebee', msg: 'Hay un problema con los datos. No se pudo registrar.' }
             };
             const s = statusMap[status] || statusMap['pending'];
             openModal(`
@@ -1704,7 +1654,7 @@ class ReportManager {
         }
 
         // ============================================================
-        // SGC - EN SEGUNDO PLANO
+        // SGC – sin cambios
         // ============================================================
         async function fetchEarthquakes() {
             try {
@@ -1712,10 +1662,7 @@ class ReportManager {
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 const events = Array.isArray(data) ? data : (data.features || []);
-                if (events.length === 0) {
-                    document.getElementById('statEarthquakes').textContent = '0';
-                    return [];
-                }
+                if (events.length === 0) { document.getElementById('statEarthquakes').textContent = '0'; return []; }
                 document.getElementById('statEarthquakes').textContent = events.length;
                 for (const eq of events) {
                     const lat = eq.latitud || eq.lat || eq.geometry?.coordinates?.[1];
@@ -1724,9 +1671,7 @@ class ReportManager {
                         const el = document.createElement('div');
                         el.innerHTML = '🌊';
                         el.style.cssText = 'font-size:20px;text-shadow:0 0 5px white;';
-                        new maplibregl.Marker({ element: el })
-                            .setLngLat([lon, lat])
-                            .addTo(mapManager.map);
+                        new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(mapManager.map);
                     }
                 }
                 return events;
@@ -1738,7 +1683,7 @@ class ReportManager {
         }
 
         // ============================================================
-        // STORAGE
+        // STORAGE – sin cambios
         // ============================================================
         async function uploadImage(file, reportId) {
             if (!reports.authReady || !reports.userId) {
@@ -1796,39 +1741,49 @@ class ReportManager {
         }
 
         // ============================================================
-        // MODALES - TODOS LOS BOTONES FUNCIONALES
+        // MODALES – CON UI PROFESIONAL Y TARJETAS GRANDES
         // ============================================================
+
+        // ===== ESTOY A SALVO =====
         function showSafeModal() {
             openModal(`
                 <div class="modal-title">🟢 ESTOY A SALVO</div>
-                <div style="text-align:center;margin-bottom:16px;"><div style="font-size:3rem;">🛡️</div><p style="color:#666;">Reporta que estás seguro</p></div>
+                <div style="text-align:center;margin-bottom:16px;"><div style="font-size:3rem;">🛡️</div><p style="color:var(--color-text);">Reporta que estás seguro</p></div>
                 <div class="modal-form-group"><label>¿Estás a salvo?</label><button class="btn-primary success" id="safeConfirmBtn">✅ SÍ, ESTOY A SALVO</button></div>
                 <div class="modal-form-group" id="safeExtra" style="display:none;">
                     <label>¿Hay otras personas contigo?</label>
-                    <div style="display:flex;gap:8px;"><button class="btn-secondary" id="safePeopleNo">NO</button><button class="btn-secondary" id="safePeopleYes">SÍ</button></div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn-secondary" id="safePeopleNo">NO</button>
+                        <button class="btn-secondary" id="safePeopleYes">SÍ</button>
+                    </div>
                 </div>
                 <div class="modal-form-group" id="safePeopleCount" style="display:none;">
                     <label>Número aproximado:</label>
-                    <div style="display:flex;align-items:center;gap:12px;justify-content:center;">
-                        <button class="map-control-btn" id="peopleMinus">−</button>
-                        <span id="peopleCount" style="font-size:1.5rem;font-weight:700;min-width:40px;text-align:center;">3</span>
-                        <button class="map-control-btn" id="peoplePlus">+</button>
+                    <div style="display:flex;align-items:center;gap:16px;justify-content:center;">
+                        <button class="map-control-btn" id="peopleMinus" style="width:48px;height:48px;">−</button>
+                        <span id="peopleCount" style="font-size:1.8rem;font-weight:700;min-width:50px;text-align:center;">3</span>
+                        <button class="map-control-btn" id="peoplePlus" style="width:48px;height:48px;">+</button>
                     </div>
                 </div>
                 <button class="btn-primary success" id="safePublishBtn" style="display:none;">📤 PUBLICAR</button>
             `);
 
             let peopleCount = 3;
-            document.getElementById('safeConfirmBtn').addEventListener('click', () => {
-                document.getElementById('safeExtra').style.display = 'block';
-                document.getElementById('safeConfirmBtn').disabled = true;
+            const confirmBtn = document.getElementById('safeConfirmBtn');
+            const extra = document.getElementById('safeExtra');
+            const countDiv = document.getElementById('safePeopleCount');
+            const publishBtn = document.getElementById('safePublishBtn');
+
+            confirmBtn.addEventListener('click', () => {
+                extra.style.display = 'block';
+                confirmBtn.disabled = true;
             });
             document.getElementById('safePeopleYes').addEventListener('click', () => {
-                document.getElementById('safePeopleCount').style.display = 'block';
-                document.getElementById('safePublishBtn').style.display = 'block';
+                countDiv.style.display = 'block';
+                publishBtn.style.display = 'block';
             });
             document.getElementById('safePeopleNo').addEventListener('click', () => {
-                document.getElementById('safePublishBtn').style.display = 'block';
+                publishBtn.style.display = 'block';
             });
             document.getElementById('peopleMinus').addEventListener('click', () => {
                 peopleCount = Math.max(1, peopleCount - 1);
@@ -1838,7 +1793,8 @@ class ReportManager {
                 peopleCount = Math.min(20, peopleCount + 1);
                 document.getElementById('peopleCount').textContent = peopleCount;
             });
-            document.getElementById('safePublishBtn').addEventListener('click', async () => {
+
+            publishBtn.addEventListener('click', async () => {
                 try {
                     const pos = await geolocation.getCurrentPosition();
                     const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
@@ -1860,22 +1816,40 @@ class ReportManager {
             });
         }
 
+        // ===== NECESITO AYUDA =====
         function showHelpModal() {
-            const needs = ['Rescate', 'Atención médica', 'Agua', 'Alimentos', 'Refugio', 'Medicamentos',
-                'Electricidad', 'Comunicación', 'Transporte', 'Ayuda para niños', 'Ayuda para adultos mayores', 'Otro'];
+            const needs = ['Rescate','Atención médica','Agua','Alimentos','Refugio','Medicamentos',
+                'Electricidad','Comunicación','Transporte','Ayuda para niños','Ayuda para adultos mayores','Otro'];
             openModal(`
                 <div class="modal-title">🆘 NECESITO AYUDA</div>
-                <div class="modal-form-group"><label>¿Qué necesitas? (puedes elegir varias)</label>
-                <div class="checkbox-group" id="helpNeeds">${needs.map(n => `<label><input type="checkbox" value="${n}"> ${n}</label>`).join('')}</div></div>
-                <div class="modal-form-group"><label>¿Hay personas heridas?</label>
-                <div style="display:flex;gap:8px;"><button class="btn-secondary" id="helpInjuredNo">NO</button><button class="btn-secondary" id="helpInjuredYes">SÍ</button></div></div>
+                <div class="modal-form-group">
+                    <label>¿Qué necesitas? (puedes elegir varias)</label>
+                    <div class="grid-options" id="helpNeeds">
+                        ${needs.map(n => `<label><input type="checkbox" value="${n}"> ${n}</label>`).join('')}
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label>¿Hay personas heridas?</label>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn-secondary" id="helpInjuredNo">NO</button>
+                        <button class="btn-secondary" id="helpInjuredYes">SÍ</button>
+                    </div>
+                </div>
                 <div class="modal-form-group" id="helpInjuredCount" style="display:none;">
                     <label>¿Cuántas?</label>
-                    <input type="number" id="helpInjuredInput" value="1" min="1" max="50" style="width:80px;margin:0 auto;display:block;text-align:center;">
+                    <input type="number" id="helpInjuredInput" value="1" min="1" max="50" style="width:100px;margin:0 auto;display:block;text-align:center;">
                 </div>
-                <div class="modal-form-group"><label>¿Estás en peligro inmediato?</label>
-                <div style="display:flex;gap:8px;"><button class="btn-secondary" id="helpDangerNo">NO</button><button class="btn-secondary danger" id="helpDangerYes">SÍ</button></div></div>
-                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="helpPhoto" accept="image/*"></div>
+                <div class="modal-form-group">
+                    <label>¿Estás en peligro inmediato?</label>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn-secondary" id="helpDangerNo">NO</button>
+                        <button class="btn-secondary danger" id="helpDangerYes">SÍ</button>
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label>Foto (opcional)</label>
+                    <input type="file" id="helpPhoto" accept="image/*" style="padding:12px;border:2px dashed rgba(255,255,255,0.15);border-radius:14px;background:transparent;width:100%;color:white;">
+                </div>
                 <button class="btn-primary danger" id="helpPublishBtn">🆘 PUBLICAR</button>
             `);
 
@@ -1901,6 +1875,7 @@ class ReportManager {
             document.getElementById('helpPhoto').addEventListener('change', (e) => {
                 if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
             });
+
             document.getElementById('helpPublishBtn').addEventListener('click', async () => {
                 try {
                     const checked = document.querySelectorAll('#helpNeeds input:checked');
@@ -1926,10 +1901,7 @@ class ReportManager {
                     if (selectedFile && report) {
                         const imageUrl = await uploadImage(selectedFile, report.id);
                         if (imageUrl) {
-                            await supabaseClient
-                                .from('reports')
-                                .update({ image_url: imageUrl })
-                                .eq('id', report.id);
+                            await supabaseClient.from('reports').update({ image_url: imageUrl }).eq('id', report.id);
                         }
                     }
                     closeModal();
@@ -1941,27 +1913,36 @@ class ReportManager {
             });
         }
 
+        // ===== REPORTAR DAÑO =====
         function showDamageModal() {
-            const types = ['Vivienda', 'Edificio', 'Escuela', 'Hospital', 'Comercio', 'Puente', 'Carretera', 'Poste', 'Red eléctrica', 'Acueducto', 'Otro'];
-            const levels = ['Sin daño visible', 'Daño leve', 'Daño importante', 'Daño grave', 'Colapso'];
+            const types = ['Vivienda','Edificio','Escuela','Hospital','Comercio','Puente','Carretera','Poste','Red eléctrica','Acueducto','Otro'];
+            const levels = ['Sin daño visible','Daño leve','Daño importante','Daño grave','Colapso'];
             openModal(`
                 <div class="modal-title">🏚️ REPORTAR DAÑO</div>
-                <div class="modal-form-group"><label>Tipo de afectación:</label>
-                <div class="checkbox-group" id="damageTypes">${types.map(t => `<label><input type="checkbox" value="${t}"> ${t}</label>`).join('')}</div></div>
-                <div class="modal-form-group"><label>Nivel aparente:</label>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">${levels.map((l,i) => `<button class="btn-secondary" data-level="${i}" style="flex:1;padding:6px;font-size:0.7rem;">${l}</button>`).join('')}</div>
-                <div style="margin-top:8px;color:#e74c3c;font-size:0.7rem;font-weight:600;">⚠️ Este reporte no es evaluación técnica estructural</div></div>
-                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="damagePhoto" accept="image/*"></div>
+                <div class="modal-form-group">
+                    <label>Tipo de afectación</label>
+                    <div class="grid-options" id="damageTypes">
+                        ${types.map(t => `<label><input type="checkbox" value="${t}"> ${t}</label>`).join('')}
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label>Nivel aparente</label>
+                    <div class="grid-options" style="grid-template-columns:1fr 1fr;">
+                        ${levels.map((l,i) => `<button class="btn-secondary" data-level="${i}" style="margin:0;padding:12px;font-size:0.9rem;">${l}</button>`).join('')}
+                    </div>
+                    <div style="margin-top:8px;color:#e74c3c;font-size:0.75rem;font-weight:600;">⚠️ Este reporte no es evaluación técnica estructural</div>
+                </div>
+                <div class="modal-form-group">
+                    <label>Foto (opcional)</label>
+                    <input type="file" id="damagePhoto" accept="image/*" style="padding:12px;border:2px dashed rgba(255,255,255,0.15);border-radius:14px;background:transparent;width:100%;color:white;">
+                </div>
                 <button class="btn-primary warning" id="damagePublishBtn">📤 PUBLICAR</button>
             `);
 
             let selectedLevel = null, selectedFile = null;
             document.querySelectorAll('[data-level]').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.querySelectorAll('[data-level]').forEach(b => {
-                        b.style.background = '';
-                        b.style.color = '';
-                    });
+                    document.querySelectorAll('[data-level]').forEach(b => { b.style.background = ''; b.style.color = ''; });
                     btn.style.background = '#f39c12';
                     btn.style.color = 'white';
                     selectedLevel = parseInt(btn.dataset.level);
@@ -1970,6 +1951,7 @@ class ReportManager {
             document.getElementById('damagePhoto').addEventListener('change', (e) => {
                 if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
             });
+
             document.getElementById('damagePublishBtn').addEventListener('click', async () => {
                 try {
                     const checked = document.querySelectorAll('#damageTypes input:checked');
@@ -1984,7 +1966,7 @@ class ReportManager {
                     const pos = await geolocation.getCurrentPosition();
                     const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
                     const types = Array.from(checked).map(cb => cb.value);
-                    const levelsList = ['sin_daño', 'daño_leve', 'daño_importante', 'daño_grave', 'colapso'];
+                    const levelsList = ['sin_daño','daño_leve','daño_importante','daño_grave','colapso'];
                     const reportData = {
                         type: 'damage',
                         latitude: pos.latitude,
@@ -1998,10 +1980,7 @@ class ReportManager {
                     if (selectedFile && report) {
                         const imageUrl = await uploadImage(selectedFile, report.id);
                         if (imageUrl) {
-                            await supabaseClient
-                                .from('reports')
-                                .update({ image_url: imageUrl })
-                                .eq('id', report.id);
+                            await supabaseClient.from('reports').update({ image_url: imageUrl }).eq('id', report.id);
                         }
                     }
                     closeModal();
@@ -2013,14 +1992,25 @@ class ReportManager {
             });
         }
 
+        // ===== REPORTAR VÍA – CON TARJETAS GRANDES =====
         function showRoadModal() {
-            const statuses = ['Vía libre', 'Tránsito parcial', 'Vía bloqueada', 'Derrumbe', 'Puente afectado', 'Inundación', 'Árbol/objeto bloqueando', 'Otro'];
+            const statuses = ['Vía libre','Tránsito parcial','Vía bloqueada','Derrumbe','Puente afectado','Inundación','Árbol/objeto bloqueando','Otro'];
             openModal(`
-                <div class="modal-title">🚧 REPORTAR VÍA</div>
-                <div class="modal-form-group"><label>Estado de la vía:</label>
-                <div class="checkbox-group" id="roadTypes">${statuses.map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`).join('')}</div></div>
-                <div class="modal-form-group"><label>Ubicación aproximada:</label><input type="text" id="roadLocation" placeholder="Ej: Km 12 vía a ..."></div>
-                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="roadPhoto" accept="image/*"></div>
+                <div class="modal-title">🚧 <span class="highlight">REPORTAR VÍA</span></div>
+                <div class="modal-form-group">
+                    <label>Estado de la vía</label>
+                    <div class="grid-options" id="roadTypes">
+                        ${statuses.map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`).join('')}
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label>Ubicación aproximada</label>
+                    <input type="text" id="roadLocation" placeholder="Ej: Km 12 vía a ..." />
+                </div>
+                <div class="modal-form-group">
+                    <label>Foto (opcional)</label>
+                    <input type="file" id="roadPhoto" accept="image/*" style="padding:12px;border:2px dashed rgba(255,255,255,0.15);border-radius:14px;background:transparent;width:100%;color:white;">
+                </div>
                 <button class="btn-primary info" id="roadPublishBtn">📤 PUBLICAR</button>
             `);
 
@@ -2028,6 +2018,7 @@ class ReportManager {
             document.getElementById('roadPhoto').addEventListener('change', (e) => {
                 if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
             });
+
             document.getElementById('roadPublishBtn').addEventListener('click', async () => {
                 try {
                     const checked = document.querySelectorAll('#roadTypes input:checked');
@@ -2051,10 +2042,7 @@ class ReportManager {
                     if (selectedFile && report) {
                         const imageUrl = await uploadImage(selectedFile, report.id);
                         if (imageUrl) {
-                            await supabaseClient
-                                .from('reports')
-                                .update({ image_url: imageUrl })
-                                .eq('id', report.id);
+                            await supabaseClient.from('reports').update({ image_url: imageUrl }).eq('id', report.id);
                         }
                     }
                     closeModal();
@@ -2066,12 +2054,15 @@ class ReportManager {
             });
         }
 
+        // ===== RECURSOS =====
         function showResourcesModal() {
             openModal(`
                 <div class="modal-title">📍 RECURSOS</div>
-                <div style="margin-bottom:12px;font-size:0.85rem;color:#666;">Recursos y centros de ayuda cercanos</div>
-                <div id="resourcesList" style="max-height:300px;overflow-y:auto;"><div style="text-align:center;padding:20px;color:#666;">Cargando recursos...</div></div>
-                <div style="margin-top:12px;padding:8px;background:#f0f0f0;border-radius:8px;font-size:0.7rem;color:#666;">ℹ️ Datos desde fuentes oficiales y comunitarias</div>
+                <div style="margin-bottom:16px;font-size:0.9rem;color:var(--color-text);">Recursos y centros de ayuda cercanos</div>
+                <div id="resourcesList" style="max-height:350px;overflow-y:auto;">
+                    <div style="text-align:center;padding:30px;color:var(--color-text);">Cargando recursos...</div>
+                </div>
+                <div style="margin-top:12px;padding:12px;background:rgba(255,255,255,0.03);border-radius:12px;font-size:0.7rem;color:var(--color-text);text-align:center;">ℹ️ Datos desde fuentes oficiales y comunitarias</div>
                 <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
             `);
 
@@ -2082,19 +2073,19 @@ class ReportManager {
                 .then(({ data, error }) => {
                     const list = document.getElementById('resourcesList');
                     if (error || !data || data.length === 0) {
-                        list.innerHTML = `<div style="text-align:center;padding:20px;color:#666;">No hay recursos registrados aún.</div>`;
+                        list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--color-text);">No hay recursos registrados aún.</div>`;
                         return;
                     }
                     list.innerHTML = data.map(r => `
-                        <div style="padding:10px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:12px;cursor:pointer;"
+                        <div style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:14px;cursor:pointer;"
                              onclick="mapManager.goToLocation(${r.latitude}, ${r.longitude}, 15); closeModal();">
-                            <span style="font-size:1.2rem;">📍</span>
+                            <span style="font-size:1.4rem;">📍</span>
                             <div style="flex:1;">
                                 <strong>${r.name}</strong>
-                                <br><span style="font-size:0.7rem;color:#666;">${r.type} ${r.municipality ? '• ' + r.municipality : ''}</span>
+                                <br><span style="font-size:0.7rem;color:var(--color-text);">${r.type} ${r.municipality ? '• ' + r.municipality : ''}</span>
                                 ${r.availability ? `<br><span style="font-size:0.65rem;color:${r.availability === 'disponible' ? '#2ecc71' : 'limitado' ? '#f39c12' : '#e74c3c'};">${r.availability}</span>` : ''}
                             </div>
-                            <span style="font-size:0.7rem;color:#666;">${r.source_type || 'oficial'}</span>
+                            <span style="font-size:0.7rem;color:var(--color-gray);">${r.source_type || 'oficial'}</span>
                         </div>
                     `).join('');
                 });
@@ -2116,15 +2107,11 @@ class ReportManager {
                 if (pos) {
                     mapManager.goToLocation(pos.latitude, pos.longitude, 12);
                 }
-            } 
-            
-            catch (e) {
-    console.warn('📍 Ubicación no disponible:', e.message);
-    showToast(
-        '📍 No se pudo obtener tu ubicación automáticamente. Puedes seleccionar tu ubicación en el mapa.',
-        'warning'
-    );
-}
+            } catch (e) {
+                console.warn('📍 Ubicación no disponible:', e.message);
+                showToast('📍 No se pudo obtener tu ubicación automáticamente. Puedes seleccionar tu ubicación en el mapa.', 'warning');
+            }
+
             setTimeout(() => fetchEarthquakes(), 2000);
 
             await reports.loadReports();
@@ -2147,20 +2134,12 @@ class ReportManager {
 
             document.getElementById('emergencyModeBtn').addEventListener('click', () => {
                 document.getElementById('app').classList.toggle('emergency-mode');
-                showToast(
-                    document.getElementById('app').classList.contains('emergency-mode') ?
-                    '🚨 MODO EMERGENCIA' : 'Modo normal',
-                    'info'
-                );
+                showToast(document.getElementById('app').classList.contains('emergency-mode') ? '🚨 MODO EMERGENCIA' : 'Modo normal', 'info');
             });
 
             document.getElementById('lowDataBtn').addEventListener('click', () => {
                 document.getElementById('app').classList.toggle('low-data-mode');
-                showToast(
-                    document.getElementById('app').classList.contains('low-data-mode') ?
-                    '📶 BAJO CONSUMO' : 'Modo normal',
-                    'info'
-                );
+                showToast(document.getElementById('app').classList.contains('low-data-mode') ? '📶 BAJO CONSUMO' : 'Modo normal', 'info');
             });
 
             window.addEventListener('online', async () => {
@@ -2168,13 +2147,9 @@ class ReportManager {
                 document.getElementById('connectionStatus').querySelector('.status-text').textContent = 'Conectado';
                 document.getElementById('offline-indicator').classList.add('hidden');
                 const pending = await offline.getPendingCount();
-                if (pending > 0) {
-                    showToast(`📡 Sincronizando ${pending} reportes pendientes...`, 'info');
-                }
+                if (pending > 0) showToast(`📡 Sincronizando ${pending} reportes pendientes...`, 'info');
                 reports.syncPendingReports();
-                if (!reports.realtimeChannel) {
-    reports.subscribeToRealtime();
-}
+                if (!reports.realtimeChannel) reports.subscribeToRealtime();
             });
 
             window.addEventListener('offline', () => {
@@ -2193,9 +2168,7 @@ class ReportManager {
             });
 
             setInterval(() => {
-                if (navigator.onLine && reports.authReady) {
-                    reports.syncPendingReports();
-                }
+                if (navigator.onLine && reports.authReady) reports.syncPendingReports();
             }, 30000);
 
             console.log('✅ Aplicación lista');
