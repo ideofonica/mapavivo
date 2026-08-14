@@ -6,6 +6,7 @@
     <title>Mapa Vivo Colombia</title>
     <meta name="description" content="Herramienta comunitaria para emergencias sísmicas en Colombia" />
     <meta name="theme-color" content="#0B2A4A" />
+    <link rel="manifest" href="./manifest.json" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css" />
     <style>
         /* ===== RESET Y VARIABLES ===== */
@@ -1009,7 +1010,7 @@
         offline.init();
 
         // ============================================================
-        // MAPA – actualizado con UI mejorada (sin cambios lógicos)
+        // MAPA – con actualización eficiente (setData) y unclustered-point
         // ============================================================
         class MapManager {
             constructor() {
@@ -1048,56 +1049,46 @@
                 return this.map;
             }
 
-          updateClusters(reports) {
-    // SIEMPRE guardar los reportes primero
-    this.reports = Array.isArray(reports) ? reports : [];
+            updateClusters(reports) {
+                if (!this.map || !this.isReady) return;
 
-    // Si el mapa todavía no está listo, el evento "load"
-    // los dibujará automáticamente
-    if (!this.map || !this.isReady) return;
+                this.reports = Array.isArray(reports) ? reports : [];
 
-    const features = this.reports
-        .filter(report => {
-            const lat = Number(report.latitude);
-            const lon = Number(report.longitude);
+                const features = this.reports
+                    .filter(report => {
+                        const lat = Number(report.latitude);
+                        const lon = Number(report.longitude);
+                        return (
+                            Number.isFinite(lat) && Number.isFinite(lon) &&
+                            lat >= -90 && lat <= 90 &&
+                            lon >= -180 && lon <= 180
+                        );
+                    })
+                    .map(report => ({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [Number(report.longitude), Number(report.latitude)]
+                        },
+                        properties: {
+                            id: report.id || report.temp_id || '',
+                            type: report.type || 'report',
+                            description: report.description || report.type || 'Reporte'
+                        }
+                    }));
 
-            return (
-                Number.isFinite(lat) &&
-                Number.isFinite(lon) &&
-                lat >= -90 && lat <= 90 &&
-                lon >= -180 && lon <= 180
-            );
-        })
-        .map(report => ({
-            type: 'Feature',
-            geometry: {
-                type: 'Point',
-                coordinates: [
-                    Number(report.longitude),
-                    Number(report.latitude)
-                ]
-            },
-            properties: {
-                id: report.id || report.temp_id || '',
-                type: report.type || 'report',
-                description: report.description || report.type || 'Reporte'
-            }
-        }));
+                const geojson = { type: 'FeatureCollection', features: features };
 
-    const geojson = {
-        type: 'FeatureCollection',
-        features
-    };
+                // Si la fuente existe, solo actualizar datos (más eficiente)
+                const existingSource = this.map.getSource('reports-cluster');
+                if (existingSource) {
+                    existingSource.setData(geojson);
+                    return;
+                }
 
-    const existingSource = this.map.getSource('reports-cluster');
+                if (features.length === 0) return;
 
-    if (existingSource) {
-        existingSource.setData(geojson);
-        return;
-    }
-
-    if (features.length === 0) return;
-
+                // Primera vez: crear source y layers
                 this.map.addSource('reports-cluster', {
                     type: 'geojson',
                     data: geojson,
@@ -1149,6 +1140,7 @@
                     }
                 });
 
+                // Capa de puntos individuales (unclustered-point)
                 this.map.addLayer({
                     id: 'unclustered-point',
                     type: 'circle',
@@ -1171,6 +1163,7 @@
                     }
                 });
 
+                // Listeners únicos
                 if (!this._clusterClickHandler) {
                     this._clusterClickHandler = (e) => {
                         const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
@@ -1276,7 +1269,7 @@
         }
 
         // ============================================================
-        // REPORTES – lógica intacta, solo se mejora el HTML de los modales
+        // REPORTES – lógica intacta (solo se mejora UI de modales)
         // ============================================================
         class ReportManager {
             constructor() {
@@ -1553,7 +1546,7 @@
             }
 
             // ============================================================
-            // REALTIME – sin cambios
+            // REALTIME – UNA SOLA IMPLEMENTACIÓN
             // ============================================================
             subscribeToRealtime() {
                 if (!this.authReady || !this.userId) {
