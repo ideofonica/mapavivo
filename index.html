@@ -1231,6 +1231,82 @@
                 document.getElementById('statRoads').textContent = stats.road;
                 document.getElementById('statResources').textContent = stats.resources;
             }
+
+                    // ============================================================
+        // NUEVO: SUSCRIPCIÓN A REALTIME
+        // ============================================================
+        subscribeToRealtime() {
+            if (!this.authReady || !this.userId) {
+                console.warn('⏳ No autenticado, no se puede suscribir a Realtime');
+                return;
+            }
+
+            if (this.realtimeChannel) {
+                console.log('ℹ️ Realtime ya suscrito');
+                return;
+            }
+
+            console.log('📡 Suscribiendo a Realtime...');
+            this.realtimeChannel = supabaseClient
+                .channel('reports-realtime')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'reports'
+                    },
+                    (payload) => {
+                        this.handleRealtimeEvent(payload);
+                    }
+                )
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('✅ Realtime conectado');
+                    } else if (status === 'CHANNEL_ERROR') {
+                        console.warn('⚠️ Error en Realtime, reintentando en 5s...');
+                        setTimeout(() => {
+                            if (this.realtimeChannel) {
+                                this.realtimeChannel.unsubscribe();
+                                this.realtimeChannel = null;
+                                this.subscribeToRealtime();
+                            }
+                        }, 5000);
+                    }
+                });
+        }
+
+        // ============================================================
+        // NUEVO: MANEJADOR DE EVENTOS REALTIME
+        // ============================================================
+        handleRealtimeEvent(payload) {
+            const { eventType, new: newRecord, old: oldRecord } = payload;
+
+            if (!this.authReady) return;
+
+            try {
+                if (eventType === 'INSERT') {
+                    if (!this.reports.some(r => r.id === newRecord.id)) {
+                        this.reports.push(newRecord);
+                        this.updateStats();
+                        mapManager.updateClusters(this.reports);
+                    }
+                } else if (eventType === 'UPDATE') {
+                    const index = this.reports.findIndex(r => r.id === newRecord.id);
+                    if (index !== -1) {
+                        this.reports[index] = { ...this.reports[index], ...newRecord };
+                        this.updateStats();
+                        mapManager.updateClusters(this.reports);
+                    }
+                } else if (eventType === 'DELETE') {
+                    this.reports = this.reports.filter(r => r.id !== oldRecord.id);
+                    this.updateStats();
+                    mapManager.updateClusters(this.reports);
+                }
+            } catch (error) {
+                console.error('Error procesando evento Realtime:', error);
+            }
+        }
         }
 
         const reports = new ReportManager();
@@ -1707,6 +1783,7 @@
             setTimeout(() => fetchEarthquakes(), 2000);
 
             await reports.loadReports();
+            reports.subscribeToRealtime();
             setTimeout(() => reports.syncPendingReports(), 3000);
 
             document.getElementById('safeBtn').addEventListener('click', showSafeModal);
@@ -1750,6 +1827,9 @@
                     showToast(`📡 Sincronizando ${pending} reportes pendientes...`, 'info');
                 }
                 reports.syncPendingReports();
+                if (!reports.realtimeChannel) {
+    reports.subscribeToRealtime();
+}
             });
 
             window.addEventListener('offline', () => {
