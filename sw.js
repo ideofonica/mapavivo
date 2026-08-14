@@ -1,8 +1,5 @@
-// sw.js - Service Worker para Mapa Vivo Colombia
-
 const CACHE_NAME = 'mapa-vivo-v2';
 const STATIC_CACHE = 'mapa-vivo-static-v2';
-
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -36,9 +33,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-
-  if (url.pathname.includes('supabase') ||
-      url.pathname.includes('api.sgc.gov.co')) {
+  if (url.pathname.includes('supabase') || url.pathname.includes('api.sgc.gov.co')) {
     event.respondWith(
       fetch(event.request).catch(() => {
         return new Response(JSON.stringify({
@@ -49,7 +44,6 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-
   if (STATIC_ASSETS.some(asset => event.request.url.includes(asset))) {
     event.respondWith(
       caches.match(event.request).then((response) => {
@@ -58,7 +52,6 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-
   event.respondWith(
     fetch(event.request).catch(() => {
       return caches.match(event.request);
