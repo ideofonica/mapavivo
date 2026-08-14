@@ -563,8 +563,8 @@ const CONFIG = {
     supabaseUrl: 'https://qytywodntuikvotimpzs.supabase.co',
     supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dHl3b2RudHVpa3ZvdGltcHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTA4MzcsImV4cCI6MjEwMjIyNjgzN30.DEroSVOkETVrzVOroYuEU1AWQnOcT_TpGE5ljyemyHI',
     mapStyle: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-    mapCenter: [-76.6600, 5.6900],  // Quibdó, Chocó
-    mapZoom: 10
+    mapCenter: [-74.0721, 4.7110],
+    mapZoom: 6
 };
 
         // ============================================================
@@ -582,53 +582,54 @@ const CONFIG = {
         // ============================================================
         // GEOLOCALIZACIÓN
         // ============================================================
-        class GeolocationManager {
-            constructor() {
-                this.position = null;
-            }
+      class GeolocationManager {
+    constructor() {
+        this.position = null;
+    }
 
-           getCurrentPosition() {
-    return new Promise((resolve) => {
-        if (!navigator.geolocation) {
-            // Si no hay GPS, usar Quibdó (Chocó) por defecto
-            console.warn('⚠️ GPS no disponible, usando Quibdó por defecto');
-            this.position = {
-                latitude: 5.6900,
-                longitude: -76.6600,
-                accuracy: 99999,
-                timestamp: Date.now()
-            };
-            showToast('📍 Usando ubicación: Quibdó, Chocó', 'info');
-            resolve(this.position);
-            return;
-        }
-        
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                this.position = {
-                    latitude: pos.coords.latitude,
-                    longitude: pos.coords.longitude,
-                    accuracy: pos.coords.accuracy,
-                    timestamp: pos.timestamp
-                };
-                resolve(this.position);
-            },
-            (error) => {
-                // Si el GPS falla, usar Quibdó
-                console.warn('⚠️ GPS falló, usando Quibdó:', error.message);
+    getCurrentPosition() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                // ⚠️ SOLO si NO hay GPS, usar Quibdó
                 this.position = {
                     latitude: 5.6900,
                     longitude: -76.6600,
                     accuracy: 99999,
                     timestamp: Date.now()
                 };
-                showToast('📍 Usando ubicación: Quibdó, Chocó', 'warning');
+                showToast('📍 GPS no disponible, usando Quibdó', 'warning');
                 resolve(this.position);
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-        );
-    });
-}
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    // ✅ USA TU UBICACIÓN REAL
+                    this.position = {
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy,
+                        timestamp: pos.timestamp
+                    };
+                    resolve(this.position);
+                },
+                (error) => {
+                    // ⚠️ SOLO si el GPS FALLA, usar Quibdó
+                    console.warn('GPS falló:', error.message);
+                    this.position = {
+                        latitude: 5.6900,
+                        longitude: -76.6600,
+                        accuracy: 99999,
+                        timestamp: Date.now()
+                    };
+                    showToast('📍 GPS falló, usando Quibdó', 'warning');
+                    resolve(this.position);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+            );
+        });
+    }
+
 
             getDistance(lat1, lon1, lat2, lon2) {
                 const R = 6371;
