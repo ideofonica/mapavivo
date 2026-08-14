@@ -9,7 +9,6 @@
     <link rel="manifest" href="./manifest.json" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css" />
     <style>
-        /* ===== ESTILOS COMPLETOS ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --color-primary: #1a3c6e;
@@ -538,9 +537,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // ============================================================
-        // CONFIGURACIÓN
-        // ============================================================
         const CONFIG = {
             supabaseUrl: 'https://qytywodntuikvotimpzs.supabase.co',
             supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dHl3b2RudHVpa3ZvdGltcHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTA4MzcsImV4cCI6MjEwMjIyNjgzN30.DEroSVOkETVrzVOroYuEU1AWQnOcT_TpGE5ljyemyHI',
@@ -551,10 +547,7 @@
         };
 
         const supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
-
-        let currentUser = null;
-        let isAuthenticated = false;
-        let authReady = false;
+        let currentUser = null, isAuthenticated = false, authReady = false;
 
         // ============================================================
         // GEOLOCALIZACIÓN
@@ -632,7 +625,7 @@
         const geolocation = new GeolocationManager();
 
         // ============================================================
-        // OFFLINE - MIGRADO A VERSIÓN 4 CON TEMP_ID
+        // OFFLINE - MIGRADO A VERSIÓN 4
         // ============================================================
         class OfflineManager {
             constructor() {
@@ -641,21 +634,16 @@
                 this.db = null;
                 this.isReady = false;
             }
-
             async init() {
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(this.dbName, this.dbVersion);
                     request.onupgradeneeded = (e) => {
                         const db = e.target.result;
-                        const oldVersion = e.oldVersion;
-                        // Si es una base antigua, eliminamos los stores antiguos y los recreamos con keyPath 'temp_id'
-                        if (oldVersion < 4) {
-                            // Si existen stores, los eliminamos (perdemos datos viejos, pero es mejor que tener inconsistencia)
+                        if (e.oldVersion < 4) {
                             if (db.objectStoreNames.contains('reports')) db.deleteObjectStore('reports');
                             if (db.objectStoreNames.contains('pending')) db.deleteObjectStore('pending');
                             if (db.objectStoreNames.contains('sync_queue')) db.deleteObjectStore('sync_queue');
                             if (db.objectStoreNames.contains('images')) db.deleteObjectStore('images');
-                            // Crear stores nuevos con keyPath 'temp_id'
                             const reportsStore = db.createObjectStore('reports', { keyPath: 'temp_id' });
                             reportsStore.createIndex('temp_id', 'temp_id', { unique: true });
                             db.createObjectStore('pending', { keyPath: 'temp_id' });
@@ -673,10 +661,8 @@
                     request.onerror = () => reject(request.error);
                 });
             }
-
             async saveReport(report) {
                 if (!this.isReady) await this.init();
-                // Asegurar temp_id
                 if (!report.temp_id) {
                     report.temp_id = `MV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
                 }
@@ -686,7 +672,6 @@
                     const reportsStore = tx.objectStore('reports');
                     const pendingStore = tx.objectStore('pending');
                     const syncQueueStore = tx.objectStore('sync_queue');
-
                     try {
                         reportsStore.put(reportData);
                         pendingStore.put({ temp_id: reportData.temp_id, data: reportData });
@@ -703,7 +688,6 @@
                         reject(new Error('No se pudo guardar localmente'));
                         return;
                     }
-
                     tx.oncomplete = () => {
                         this.updatePendingCount();
                         resolve(reportData);
@@ -714,7 +698,6 @@
                     };
                 });
             }
-
             async getPending() {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -724,12 +707,10 @@
                     request.onerror = () => reject(request.error);
                 });
             }
-
             async getPendingCount() {
                 const pending = await this.getPending();
                 return pending.length;
             }
-
             async markSynced(tempId) {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -752,7 +733,6 @@
                     tx.onerror = () => reject(tx.error);
                 });
             }
-
             async markSyncError(tempId, errorMessage) {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -778,7 +758,6 @@
                     tx.onerror = () => reject(tx.error);
                 });
             }
-
             async getAllReports() {
                 if (!this.isReady) await this.init();
                 return new Promise((resolve, reject) => {
@@ -788,7 +767,6 @@
                     request.onerror = () => reject(request.error);
                 });
             }
-
             async updatePendingCount() {
                 const count = await this.getPendingCount();
                 document.getElementById('statPending').textContent = count;
@@ -833,7 +811,6 @@
                 if (this.map.getLayer('clusters')) this.map.removeLayer('clusters');
                 if (this.map.getLayer('cluster-count')) this.map.removeLayer('cluster-count');
                 if (this.map.getSource('reports-cluster')) this.map.removeSource('reports-cluster');
-
                 const features = this.reports
                     .filter(r => r.latitude && r.longitude)
                     .map(r => ({
@@ -841,9 +818,7 @@
                         geometry: { type: 'Point', coordinates: [r.longitude, r.latitude] },
                         properties: { id: r.id || r.temp_id, type: r.type, description: r.description || r.type }
                     }));
-
                 if (features.length === 0) return;
-
                 this.map.addSource('reports-cluster', {
                     type: 'geojson',
                     data: { type: 'FeatureCollection', features: features },
@@ -851,7 +826,6 @@
                     clusterMaxZoom: 14,
                     clusterRadius: 50
                 });
-
                 this.map.addLayer({
                     id: 'clusters',
                     type: 'circle',
@@ -862,7 +836,6 @@
                         'circle-radius': ['step', ['get', 'point_count'], 20, 10, 30, 30, 40]
                     }
                 });
-
                 this.map.addLayer({
                     id: 'cluster-count',
                     type: 'symbol',
@@ -871,7 +844,6 @@
                     layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'], 'text-size': 12 },
                     paint: { 'text-color': '#ffffff' }
                 });
-
                 this.map.on('click', 'clusters', (e) => {
                     const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
                     const clusterId = features[0].properties.cluster_id;
@@ -880,7 +852,6 @@
                         this.map.easeTo({ center: features[0].geometry.coordinates, zoom: zoom });
                     });
                 });
-
                 this.map.on('click', (e) => {
                     const features = this.map.queryRenderedFeatures(e.point);
                     const reportFeature = features.find(f => f.layer.id === 'clusters' || f.properties.id);
@@ -1053,7 +1024,6 @@
                 // 2. Si hay conexión, intentar enviar a Supabase
                 if (navigator.onLine) {
                     try {
-                        // Extraer campos para Supabase (excluir temp_id y otros locales)
                         const { temp_id, _key, synced, savedAt, ...serverReport } = report;
                         const { data: inserted, error } = await supabaseClient
                             .from('reports')
@@ -1125,7 +1095,7 @@
                         const reportData = pendingItem.data || pendingItem;
                         const tempId = pendingItem.temp_id || reportData.temp_id;
 
-                        // Verificar si ya existe en Supabase por temp_id (si la columna existe)
+                        // Verificar si ya existe en Supabase por temp_id
                         const { data: existing } = await supabaseClient
                             .from('reports')
                             .select('id')
@@ -1138,7 +1108,7 @@
                             continue;
                         }
 
-                        // Extraer solo los campos válidos para Supabase (excluir temp_id y otros locales)
+                        // Extraer solo los campos válidos para Supabase
                         const { temp_id, _key, synced, savedAt, ...serverReport } = reportData;
 
                         const { data: inserted, error } = await supabaseClient
@@ -1275,7 +1245,6 @@
         // ============================================================
         function showConfirmation(report, isOnline = false, status = 'pending') {
             const code = report.id ? report.id.slice(0, 8).toUpperCase() : (report.temp_id || '---').slice(0, 8);
-
             const statusMap = {
                 'success': {
                     icon: '✅',
@@ -1299,9 +1268,7 @@
                     msg: 'Hay un problema con los datos. No se pudo registrar.'
                 }
             };
-
             const s = statusMap[status] || statusMap['pending'];
-
             openModal(`
                 <div class="modal-title">${s.icon} ${s.title}</div>
                 <div style="text-align:center;padding:16px;background:${s.bg};border-radius:12px;margin-bottom:16px;">
@@ -1417,11 +1384,305 @@
         }
 
         // ============================================================
-        // MODALES
+        // MODALES - BOTONES FUNCIONALES
         // ============================================================
-        // Aquí van showSafeModal, showHelpModal, showDamageModal, showRoadModal, showResourcesModal
-        // (Mantén tus funciones existentes, no las modifico)
-        // Para no alargar el código, asumo que ya están definidas, pero si tu archivo las tiene, se mantienen.
+        function showSafeModal() {
+            openModal(`
+                <div class="modal-title">🟢 ESTOY A SALVO</div>
+                <div style="text-align:center;margin-bottom:16px;"><div style="font-size:3rem;">🛡️</div><p style="color:#666;">Reporta que estás seguro</p></div>
+                <div class="modal-form-group"><label>¿Estás a salvo?</label><button class="btn-primary success" id="safeConfirmBtn">✅ SÍ, ESTOY A SALVO</button></div>
+                <div class="modal-form-group" id="safeExtra" style="display:none;">
+                    <label>¿Hay otras personas contigo?</label>
+                    <div style="display:flex;gap:8px;"><button class="btn-secondary" id="safePeopleNo">NO</button><button class="btn-secondary" id="safePeopleYes">SÍ</button></div>
+                </div>
+                <div class="modal-form-group" id="safePeopleCount" style="display:none;">
+                    <label>Número aproximado:</label>
+                    <div style="display:flex;align-items:center;gap:12px;justify-content:center;">
+                        <button class="map-control-btn" id="peopleMinus">−</button>
+                        <span id="peopleCount" style="font-size:1.5rem;font-weight:700;min-width:40px;text-align:center;">3</span>
+                        <button class="map-control-btn" id="peoplePlus">+</button>
+                    </div>
+                </div>
+                <button class="btn-primary success" id="safePublishBtn" style="display:none;">📤 PUBLICAR</button>
+            `);
+
+            let peopleCount = 3;
+            document.getElementById('safeConfirmBtn').addEventListener('click', () => {
+                document.getElementById('safeExtra').style.display = 'block';
+                document.getElementById('safeConfirmBtn').disabled = true;
+            });
+            document.getElementById('safePeopleYes').addEventListener('click', () => {
+                document.getElementById('safePeopleCount').style.display = 'block';
+                document.getElementById('safePublishBtn').style.display = 'block';
+            });
+            document.getElementById('safePeopleNo').addEventListener('click', () => {
+                document.getElementById('safePublishBtn').style.display = 'block';
+            });
+            document.getElementById('peopleMinus').addEventListener('click', () => {
+                peopleCount = Math.max(1, peopleCount - 1);
+                document.getElementById('peopleCount').textContent = peopleCount;
+            });
+            document.getElementById('peoplePlus').addEventListener('click', () => {
+                peopleCount = Math.min(20, peopleCount + 1);
+                document.getElementById('peopleCount').textContent = peopleCount;
+            });
+            document.getElementById('safePublishBtn').addEventListener('click', async () => {
+                try {
+                    const pos = await geolocation.getCurrentPosition();
+                    const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
+                    const report = {
+                        type: 'safe',
+                        latitude: pos.latitude,
+                        longitude: pos.longitude,
+                        municipality: location,
+                        description: `${peopleCount} personas a salvo`,
+                        people_count: peopleCount
+                    };
+                    await reports.createReport(report);
+                    closeModal();
+                    setTimeout(() => reports.syncPendingReports(), 2000);
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function showHelpModal() {
+            const needs = ['Rescate', 'Atención médica', 'Agua', 'Alimentos', 'Refugio', 'Medicamentos',
+                'Electricidad', 'Comunicación', 'Transporte', 'Ayuda para niños', 'Ayuda para adultos mayores', 'Otro'];
+            openModal(`
+                <div class="modal-title">🆘 NECESITO AYUDA</div>
+                <div class="modal-form-group"><label>¿Qué necesitas? (puedes elegir varias)</label>
+                <div class="checkbox-group" id="helpNeeds">${needs.map(n => `<label><input type="checkbox" value="${n}"> ${n}</label>`).join('')}</div></div>
+                <div class="modal-form-group"><label>¿Hay personas heridas?</label>
+                <div style="display:flex;gap:8px;"><button class="btn-secondary" id="helpInjuredNo">NO</button><button class="btn-secondary" id="helpInjuredYes">SÍ</button></div></div>
+                <div class="modal-form-group" id="helpInjuredCount" style="display:none;">
+                    <label>¿Cuántas?</label>
+                    <input type="number" id="helpInjuredInput" value="1" min="1" max="50" style="width:80px;margin:0 auto;display:block;text-align:center;">
+                </div>
+                <div class="modal-form-group"><label>¿Estás en peligro inmediato?</label>
+                <div style="display:flex;gap:8px;"><button class="btn-secondary" id="helpDangerNo">NO</button><button class="btn-secondary danger" id="helpDangerYes">SÍ</button></div></div>
+                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="helpPhoto" accept="image/*"></div>
+                <button class="btn-primary danger" id="helpPublishBtn">🆘 PUBLICAR</button>
+            `);
+
+            let hasInjured = false, inDanger = false, selectedFile = null;
+            document.getElementById('helpInjuredYes').addEventListener('click', () => {
+                hasInjured = true;
+                document.getElementById('helpInjuredCount').style.display = 'block';
+            });
+            document.getElementById('helpInjuredNo').addEventListener('click', () => {
+                hasInjured = false;
+                document.getElementById('helpInjuredCount').style.display = 'none';
+            });
+            document.getElementById('helpDangerYes').addEventListener('click', () => {
+                inDanger = true;
+                document.getElementById('helpDangerYes').style.background = '#c0392b';
+                document.getElementById('helpDangerNo').style.background = '';
+            });
+            document.getElementById('helpDangerNo').addEventListener('click', () => {
+                inDanger = false;
+                document.getElementById('helpDangerNo').style.background = '#2ecc71';
+                document.getElementById('helpDangerYes').style.background = '';
+            });
+            document.getElementById('helpPhoto').addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
+            });
+            document.getElementById('helpPublishBtn').addEventListener('click', async () => {
+                try {
+                    const checked = document.querySelectorAll('#helpNeeds input:checked');
+                    if (checked.length === 0) {
+                        showToast('Selecciona al menos una necesidad', 'warning');
+                        return;
+                    }
+                    const pos = await geolocation.getCurrentPosition();
+                    const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
+                    const needs = Array.from(checked).map(cb => cb.value);
+                    const injured = parseInt(document.getElementById('helpInjuredInput').value) || 0;
+                    const reportData = {
+                        type: 'help',
+                        latitude: pos.latitude,
+                        longitude: pos.longitude,
+                        municipality: location,
+                        needs: needs,
+                        injured_count: hasInjured ? injured : 0,
+                        in_danger: inDanger,
+                        description: `Necesita: ${needs.join(', ')}`
+                    };
+                    const report = await reports.createReport(reportData);
+                    if (selectedFile && report) {
+                        const imageUrl = await uploadImage(selectedFile, report.id);
+                        if (imageUrl) {
+                            await supabaseClient
+                                .from('reports')
+                                .update({ image_url: imageUrl })
+                                .eq('id', report.id);
+                        }
+                    }
+                    closeModal();
+                    setTimeout(() => reports.syncPendingReports(), 2000);
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function showDamageModal() {
+            const types = ['Vivienda', 'Edificio', 'Escuela', 'Hospital', 'Comercio', 'Puente', 'Carretera', 'Poste', 'Red eléctrica', 'Acueducto', 'Otro'];
+            const levels = ['Sin daño visible', 'Daño leve', 'Daño importante', 'Daño grave', 'Colapso'];
+            openModal(`
+                <div class="modal-title">🏚️ REPORTAR DAÑO</div>
+                <div class="modal-form-group"><label>Tipo de afectación:</label>
+                <div class="checkbox-group" id="damageTypes">${types.map(t => `<label><input type="checkbox" value="${t}"> ${t}</label>`).join('')}</div></div>
+                <div class="modal-form-group"><label>Nivel aparente:</label>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">${levels.map((l,i) => `<button class="btn-secondary" data-level="${i}" style="flex:1;padding:6px;font-size:0.7rem;">${l}</button>`).join('')}</div>
+                <div style="margin-top:8px;color:#e74c3c;font-size:0.7rem;font-weight:600;">⚠️ Este reporte no es evaluación técnica estructural</div></div>
+                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="damagePhoto" accept="image/*"></div>
+                <button class="btn-primary warning" id="damagePublishBtn">📤 PUBLICAR</button>
+            `);
+
+            let selectedLevel = null, selectedFile = null;
+            document.querySelectorAll('[data-level]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-level]').forEach(b => {
+                        b.style.background = '';
+                        b.style.color = '';
+                    });
+                    btn.style.background = '#f39c12';
+                    btn.style.color = 'white';
+                    selectedLevel = parseInt(btn.dataset.level);
+                });
+            });
+            document.getElementById('damagePhoto').addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
+            });
+            document.getElementById('damagePublishBtn').addEventListener('click', async () => {
+                try {
+                    const checked = document.querySelectorAll('#damageTypes input:checked');
+                    if (checked.length === 0) {
+                        showToast('Selecciona al menos un tipo', 'warning');
+                        return;
+                    }
+                    if (selectedLevel === null) {
+                        showToast('Selecciona un nivel de daño', 'warning');
+                        return;
+                    }
+                    const pos = await geolocation.getCurrentPosition();
+                    const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
+                    const types = Array.from(checked).map(cb => cb.value);
+                    const levelsList = ['sin_daño', 'daño_leve', 'daño_importante', 'daño_grave', 'colapso'];
+                    const reportData = {
+                        type: 'damage',
+                        latitude: pos.latitude,
+                        longitude: pos.longitude,
+                        municipality: location,
+                        damage_types: types,
+                        damage_level: levelsList[selectedLevel],
+                        description: `${types.join(', ')} - ${levelsList[selectedLevel]}`
+                    };
+                    const report = await reports.createReport(reportData);
+                    if (selectedFile && report) {
+                        const imageUrl = await uploadImage(selectedFile, report.id);
+                        if (imageUrl) {
+                            await supabaseClient
+                                .from('reports')
+                                .update({ image_url: imageUrl })
+                                .eq('id', report.id);
+                        }
+                    }
+                    closeModal();
+                    setTimeout(() => reports.syncPendingReports(), 2000);
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function showRoadModal() {
+            const statuses = ['Vía libre', 'Tránsito parcial', 'Vía bloqueada', 'Derrumbe', 'Puente afectado', 'Inundación', 'Árbol/objeto bloqueando', 'Otro'];
+            openModal(`
+                <div class="modal-title">🚧 REPORTAR VÍA</div>
+                <div class="modal-form-group"><label>Estado de la vía:</label>
+                <div class="checkbox-group" id="roadTypes">${statuses.map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`).join('')}</div></div>
+                <div class="modal-form-group"><label>Ubicación aproximada:</label><input type="text" id="roadLocation" placeholder="Ej: Km 12 vía a ..."></div>
+                <div class="modal-form-group"><label>Foto (opcional):</label><input type="file" id="roadPhoto" accept="image/*"></div>
+                <button class="btn-primary info" id="roadPublishBtn">📤 PUBLICAR</button>
+            `);
+
+            let selectedFile = null;
+            document.getElementById('roadPhoto').addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) selectedFile = e.target.files[0];
+            });
+            document.getElementById('roadPublishBtn').addEventListener('click', async () => {
+                try {
+                    const checked = document.querySelectorAll('#roadTypes input:checked');
+                    if (checked.length === 0) {
+                        showToast('Selecciona al menos un estado', 'warning');
+                        return;
+                    }
+                    const pos = await geolocation.getCurrentPosition();
+                    const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
+                    const roadLocation = document.getElementById('roadLocation').value;
+                    const reportData = {
+                        type: 'road',
+                        latitude: pos.latitude,
+                        longitude: pos.longitude,
+                        municipality: location,
+                        road_status: Array.from(checked).map(cb => cb.value),
+                        location_detail: roadLocation,
+                        description: `${Array.from(checked).map(cb => cb.value).join(', ')}${roadLocation ? ' en ' + roadLocation : ''}`
+                    };
+                    const report = await reports.createReport(reportData);
+                    if (selectedFile && report) {
+                        const imageUrl = await uploadImage(selectedFile, report.id);
+                        if (imageUrl) {
+                            await supabaseClient
+                                .from('reports')
+                                .update({ image_url: imageUrl })
+                                .eq('id', report.id);
+                        }
+                    }
+                    closeModal();
+                    setTimeout(() => reports.syncPendingReports(), 2000);
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function showResourcesModal() {
+            openModal(`
+                <div class="modal-title">📍 RECURSOS</div>
+                <div style="margin-bottom:12px;font-size:0.85rem;color:#666;">Recursos y centros de ayuda cercanos</div>
+                <div id="resourcesList" style="max-height:300px;overflow-y:auto;"><div style="text-align:center;padding:20px;color:#666;">Cargando recursos...</div></div>
+                <div style="margin-top:12px;padding:8px;background:#f0f0f0;border-radius:8px;font-size:0.7rem;color:#666;">ℹ️ Datos desde fuentes oficiales y comunitarias</div>
+                <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
+            `);
+
+            supabaseClient
+                .from('resources')
+                .select('*')
+                .limit(50)
+                .then(({ data, error }) => {
+                    const list = document.getElementById('resourcesList');
+                    if (error || !data || data.length === 0) {
+                        list.innerHTML = `<div style="text-align:center;padding:20px;color:#666;">No hay recursos registrados aún.</div>`;
+                        return;
+                    }
+                    list.innerHTML = data.map(r => `
+                        <div style="padding:10px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:12px;cursor:pointer;"
+                             onclick="mapManager.goToLocation(${r.latitude}, ${r.longitude}, 15); closeModal();">
+                            <span style="font-size:1.2rem;">📍</span>
+                            <div style="flex:1;">
+                                <strong>${r.name}</strong>
+                                <br><span style="font-size:0.7rem;color:#666;">${r.type} ${r.municipality ? '• ' + r.municipality : ''}</span>
+                                ${r.availability ? `<br><span style="font-size:0.65rem;color:${r.availability === 'disponible' ? '#2ecc71' : 'limitado' ? '#f39c12' : '#e74c3c'};">${r.availability}</span>` : ''}
+                            </div>
+                            <span style="font-size:0.7rem;color:#666;">${r.source_type || 'oficial'}</span>
+                        </div>
+                    `).join('');
+                });
+        }
 
         // ============================================================
         // INICIALIZACIÓN
