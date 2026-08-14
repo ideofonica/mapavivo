@@ -3487,109 +3487,125 @@
         }
 
         // --- Resources Modal V2 - CON GESTIÓN DE AYUDAS ---
-        function showResourcesModal() {
-            // Contar puntos de acopio por ciudad
-            const cities = {};
-            OFFICIAL_COLLECTION_POINTS.forEach(p => {
-                cities[p.city] = (cities[p.city] || 0) + 1;
-            });
+      function showResourcesModal() {
+    // Obtener ciudad actual del usuario
+    let currentCity = 'Bogotá'; // valor por defecto
 
-            // Estado de ayudas (simulado con datos reales)
-            const aidStats = {
-                total: OFFICIAL_COLLECTION_POINTS.length,
-                oficiales: OFFICIAL_COLLECTION_POINTS.filter(p => p.type === 'oficial').length,
-                ciudades: Object.keys(cities).length
-            };
+    // Intentar obtener ubicación para detectar ciudad
+    geolocation.getCurrentPosition()
+        .then(pos => geolocation.getLocationName(pos.latitude, pos.longitude))
+        .then(city => {
+            currentCity = city;
+            // Actualizar el selector si ya está abierto
+            const select = document.getElementById('cityFilter');
+            if (select) {
+                select.value = city;
+                filterResources(city);
+            }
+        })
+        .catch(() => {
+            // Si falla GPS, usar Bogotá por defecto (o mostrar todas)
+            console.log('No se pudo detectar ciudad, mostrando todas');
+        });
 
-            openModal(`
-                <div class="modal-title">📍 RECURSOS Y AYUDAS</div>
+    // Obtener lista de ciudades únicas desde los puntos de acopio
+    const cities = [...new Set(OFFICIAL_COLLECTION_POINTS.map(p => p.city))].sort();
 
-                <div class="aid-stats">
-                    <div class="aid-stat">
-                        <div class="number">${aidStats.total}</div>
-                        <div class="label">Puntos de acopio</div>
-                    </div>
-                    <div class="aid-stat">
-                        <div class="number">${aidStats.oficiales}</div>
-                        <div class="label">Oficiales verificados</div>
-                    </div>
-                    <div class="aid-stat">
-                        <div class="number">${aidStats.ciudades}</div>
-                        <div class="label">Ciudades</div>
-                    </div>
+    // Contar puntos por ciudad
+    const totalPoints = OFFICIAL_COLLECTION_POINTS.length;
+    const oficiales = OFFICIAL_COLLECTION_POINTS.filter(p => p.type === 'oficial').length;
+
+    // Función para filtrar y renderizar
+    function filterResources(city) {
+        const filtered = city === 'TODAS' ? OFFICIAL_COLLECTION_POINTS : OFFICIAL_COLLECTION_POINTS.filter(p => p.city === city);
+        const list = document.getElementById('resourcesList');
+        if (!list) return;
+
+        if (filtered.length === 0) {
+            list.innerHTML = `
+                <div style="text-align:center;padding:30px;color:var(--color-text);">
+                    <div style="font-size:2rem;">📍</div>
+                    <p style="font-size:0.9rem;">No hay puntos de acopio en esta ciudad</p>
                 </div>
-
-                <div class="tabs-container">
-                    <button class="tab-btn active" data-tab="tab-puntos">🏛️ Puntos de acopio</button>
-                    <button class="tab-btn" data-tab="tab-ayudas">📦 Necesidades</button>
-                </div>
-
-                <div id="tab-puntos" class="tab-content active">
-                    <div style="font-size:0.75rem;color:var(--color-text);margin-bottom:8px;">
-                        ${aidStats.total} puntos de acopio oficiales verificados
-                    </div>
-                    <div id="resourcesList" style="max-height:300px;overflow-y:auto;">
-                        ${OFFICIAL_COLLECTION_POINTS.map(p => `
-                            <div class="resource-item" onclick="showCollectionPointDetail('${p.id}')">
-                                <span class="icon">🏛️</span>
-                                <div class="info">
-                                    <div class="name">${p.name}</div>
-                                    <div class="detail">${p.city} • ${p.organization}</div>
-                                </div>
-                                <span class="badge badge-oficial">OFICIAL</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <div id="tab-ayudas" class="tab-content">
-                    <div style="font-size:0.85rem;color:var(--color-text);margin-bottom:10px;text-align:center;">
-                        📦 Lo que se necesita en los puntos de acopio
-                    </div>
-                    <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;max-height:300px;overflow-y:auto;">
-                        <div style="font-weight:700;font-size:0.8rem;margin-bottom:6px;color:#2ecc71;">✅ Alimentos no perecederos:</div>
-                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                            Arroz, aceite, pastas, enlatados, granos (fríjol, lentejas), harina, panela, leche en polvo, chocolate, avena
-                        </div>
-                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Agua e hidratación:</div>
-                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                            Agua potable embotellada, bebidas hidratantes
-                        </div>
-                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Elementos de albergue:</div>
-                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                            Colchonetas, frazadas, cobijas, mantas, almohadas, toldillos, sábanas
-                        </div>
-                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Higiene y aseo:</div>
-                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                            Jabón, champú, cepillos dentales, crema dental, toallas higiénicas, papel higiénico, pañales, toallitas húmedas
-                        </div>
-                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#2ecc71;">✅ Primeros auxilios:</div>
-                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                            Tapabocas, gasas estériles, alcohol, clorhexidina, guantes quirúrgicos, vendajes
-                        </div>
-                        <div style="font-weight:700;font-size:0.8rem;margin:8px 0 4px 0;color:#f39c12;">⚠️ NO se reciben:</div>
-                        <div style="font-size:0.75rem;color:var(--color-text);padding-left:12px;">
-                            Medicamentos, ropa usada, elementos usados, alimentos perecederos, productos vencidos
-                        </div>
-                        <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:0.65rem;color:var(--color-text);text-align:center;">
-                            ℹ️ Datos verificados desde fuentes oficiales: Cruz Roja, Alcaldías y UNGRD
-                        </div>
-                    </div>
-                </div>
-
-                <button class="btn-secondary" onclick="closeModal()" style="margin-top:10px;">Cerrar</button>
-            `);
-
-            // Tabs
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    btn.classList.add('active');
-                    document.getElementById(btn.dataset.tab).classList.add('active');
-                });
-            });
+            `;
+            return;
         }
+
+        list.innerHTML = filtered.map(p => `
+            <div class="resource-item" onclick="showCollectionPointDetail('${p.id}')">
+                <span class="icon">🏛️</span>
+                <div class="info">
+                    <div class="name">${p.name}</div>
+                    <div class="detail">${p.city} • ${p.organization}</div>
+                </div>
+                <span class="badge badge-oficial">OFICIAL</span>
+            </div>
+        `).join('');
+    }
+
+    // Construir modal con selector de ciudad
+    const modalContent = `
+        <div class="modal-title">📍 RECURSOS Y AYUDAS</div>
+
+        <div class="aid-stats">
+            <div class="aid-stat">
+                <div class="number">${totalPoints}</div>
+                <div class="label">Puntos totales</div>
+            </div>
+            <div class="aid-stat">
+                <div class="number">${oficiales}</div>
+                <div class="label">Oficiales</div>
+            </div>
+            <div class="aid-stat">
+                <div class="number">${cities.length}</div>
+                <div class="label">Ciudades</div>
+            </div>
+        </div>
+
+        <div class="modal-form-group">
+            <label>📍 Filtrar por ciudad</label>
+            <select id="cityFilter" style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);color:white;font-size:1rem;">
+                <option value="TODAS">🌎 Todas las ciudades</option>
+                ${cities.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+        </div>
+
+        <div id="resourcesList" style="max-height:300px;overflow-y:auto;">
+            <div style="text-align:center;padding:30px;color:var(--color-text);">
+                <div style="font-size:2rem;">⏳</div>
+                <p style="font-size:0.9rem;">Cargando puntos...</p>
+            </div>
+        </div>
+
+        <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;font-size:0.65rem;color:var(--color-text);text-align:center;">
+            ℹ️ Datos desde fuentes oficiales: Cruz Roja, Alcaldías y UNGRD
+        </div>
+        <button class="btn-secondary" onclick="closeModal()" style="margin-top:10px;">Cerrar</button>
+    `;
+
+    openModal(modalContent);
+
+    // Una vez montado el DOM, asignar el evento del selector
+    setTimeout(() => {
+        const select = document.getElementById('cityFilter');
+        if (select) {
+            // Si ya tenemos ciudad detectada, ponerla
+            if (currentCity && cities.includes(currentCity)) {
+                select.value = currentCity;
+            }
+            // Filtrar inicialmente con el valor actual
+            filterResources(select.value);
+
+            // Evento cambio
+            select.addEventListener('change', (e) => {
+                filterResources(e.target.value);
+            });
+        } else {
+            // Fallback: mostrar todas
+            filterResources('TODAS');
+        }
+    }, 100);
+}
 
         // ============================================================
         // ACTUALIZAR PANEL DE SITUACIÓN
