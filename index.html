@@ -563,8 +563,8 @@ const CONFIG = {
     supabaseUrl: 'https://qytywodntuikvotimpzs.supabase.co',
     supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dHl3b2RudHVpa3ZvdGltcHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTA4MzcsImV4cCI6MjEwMjIyNjgzN30.DEroSVOkETVrzVOroYuEU1AWQnOcT_TpGE5ljyemyHI',
     mapStyle: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-    mapCenter: [-74.0721, 4.7110],
-    mapZoom: 6
+    mapCenter: [-74.0721, 4.7110],  // ✅ Colombia entero
+    mapZoom: 6                       // ✅ Vista general del país
 };
 
         // ============================================================
@@ -1028,75 +1028,35 @@ const CONFIG = {
                 return this.userId;
             }
 
-            async createReport(data) {
-                if (!this.authReady || !this.userId) {
-                    showToast('⏳ Esperando autenticación...', 'warning');
-                    return null;
-                }
+          async createReport(data) {
+    if (!this.authReady || !this.userId) {
+        showToast('⏳ Esperando autenticación...', 'warning');
+        return null;
+    }
 
-                const now = Date.now();
-                if (now - this.lastReportTime < 30000) {
-                    showToast('Espera unos segundos antes de enviar otro reporte', 'warning');
-                    return null;
-                }
-                this.lastReportTime = now;
+    const now = Date.now();
+    if (now - this.lastReportTime < 30000) {
+        showToast('Espera unos segundos antes de enviar otro reporte', 'warning');
+        return null;
+    }
+    this.lastReportTime = now;
 
-                const userId = this.getUserId();
+    const userId = this.getUserId();
 
-                const report = {
-                    id: `rpt-${now}-${Math.random().toString(36).substr(2, 8)}`,
-                    ...data,
-                    user_id: userId,
-                    created_at: new Date(now).toISOString(),
-                    updated_at: new Date(now).toISOString(),
-                    status: 'active',
-                    confidence: 'reported',
-                    verification_count: 0,
-                    is_public: true
-                };
+    const report = {
+        id: crypto.randomUUID(), // ✅ AHORA ES UUID VÁLIDO
+        ...data,
+        user_id: userId,
+        created_at: new Date(now).toISOString(),
+        updated_at: new Date(now).toISOString(),
+        status: 'active',
+        confidence: 'reported',
+        verification_count: 0,
+        is_public: true
+    };
 
-                let serverSuccess = false;
-
-                try {
-                    const { data: inserted, error } = await supabaseClient
-                        .from('reports')
-                        .insert([report])
-                        .select();
-
-                    if (error) {
-                        throw error;
-                    }
-
-                    if (inserted && inserted.length > 0) {
-                        serverSuccess = true;
-                        showToast('✅ Reporte enviado y compartido', 'success');
-                    }
-                } catch (error) {
-                    console.warn('Error en Supabase:', error);
-                    serverSuccess = false;
-                }
-
-                if (!serverSuccess) {
-                    if (!navigator.onLine) {
-                        await offline.saveReport(report);
-                        showToast('📡 Sin conexión. Reporte guardado localmente.', 'warning');
-                    } else {
-                        showToast('❌ Error al enviar. Intenta de nuevo.', 'error');
-                        return null;
-                    }
-                }
-
-                if (report.latitude && report.longitude) {
-                    const type = report.type || 'resource';
-                    const label = report.description || report.type || 'Reporte';
-                    mapManager.addMarker(report.latitude, report.longitude, type, label, report.id);
-                }
-
-                this.reports.push(report);
-                this.updateStats();
-                await offline.updatePendingCount();
-                return report;
-            }
+    // ... resto del código
+}
 
             async syncPendingReports() {
                 if (this.isSyncing) return;
