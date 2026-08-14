@@ -9,7 +9,11 @@
     <link rel="manifest" href="data:application/json,{}" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.css" />
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         :root {
             --color-primary: #0B2A4A;
             --color-secondary: #123F6D;
@@ -22,12 +26,15 @@
             --color-white: #ffffff;
             --color-gray: #8A9BB5;
             --color-text: #B8C4D6;
-            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             --radius: 16px;
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
             --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         }
-        html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+        html {
+            font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
         body {
             font-family: var(--font-family);
             background: var(--color-dark);
@@ -59,9 +66,9 @@
             flex-shrink: 0;
             z-index: 100;
             min-height: 60px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             padding-top: env(safe-area-inset-top, 8px);
         }
         .header-content {
@@ -86,9 +93,14 @@
             letter-spacing: 1px;
             margin-left: 2px;
         }
-        .header-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+        .header-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-shrink: 0;
+        }
         .header-actions button {
-            background: rgba(255,255,255,0.10);
+            background: rgba(255, 255, 255, 0.10);
             border: none;
             color: white;
             padding: 6px 8px;
@@ -102,7 +114,9 @@
             justify-content: center;
             transition: background 0.2s;
         }
-        .header-actions button:active { background: rgba(255,255,255,0.20); }
+        .header-actions button:active {
+            background: rgba(255, 255, 255, 0.20);
+        }
         #connectionStatus {
             display: flex;
             align-items: center;
@@ -110,29 +124,64 @@
             font-size: clamp(0.45rem, 1vw, 0.6rem);
             padding: 4px 10px;
             border-radius: 20px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
             flex-shrink: 0;
             backdrop-filter: blur(4px);
         }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .connection-status.online .status-dot { background: var(--color-success); }
-        .connection-status.offline .status-dot { background: var(--color-danger); }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .connection-status.online .status-dot {
+            background: var(--color-success);
+        }
+        .connection-status.offline .status-dot {
+            background: var(--color-danger);
+        }
         .sync-status {
             font-size: clamp(0.4rem, 0.8vw, 0.5rem);
             padding: 2px 6px;
             border-radius: 10px;
-            background: rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.12);
             margin-left: 4px;
             white-space: nowrap;
             font-weight: 600;
         }
-        .sync-status.pending { background: var(--color-warning); color: #0B2A4A; }
-        .sync-status.synced { background: var(--color-success); color: white; }
-        .sync-status.error { background: var(--color-danger); color: white; }
-        .sync-status.offline { background: var(--color-gray); color: white; }
-        #main-content { flex: 1; position: relative; overflow: hidden; }
-        #map-container { width: 100%; height: 100%; position: relative; }
-        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        .sync-status.pending {
+            background: var(--color-warning);
+            color: #0B2A4A;
+        }
+        .sync-status.synced {
+            background: var(--color-success);
+            color: white;
+        }
+        .sync-status.error {
+            background: var(--color-danger);
+            color: white;
+        }
+        .sync-status.offline {
+            background: var(--color-gray);
+            color: white;
+        }
+        #main-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        #map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
         #map-controls {
             position: absolute;
             right: 12px;
@@ -147,10 +196,10 @@
             height: 48px;
             border: none;
             border-radius: 50%;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             color: var(--color-dark);
             font-size: 1.3rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -158,8 +207,14 @@
             transition: transform 0.1s, background 0.2s;
             touch-action: manipulation;
         }
-        .map-control-btn:active { transform: scale(0.94); background: white; }
-        .map-control-btn#myLocationBtn { background: var(--color-blue-bright); color: white; }
+        .map-control-btn:active {
+            transform: scale(0.94);
+            background: white;
+        }
+        .map-control-btn#myLocationBtn {
+            background: var(--color-blue-bright);
+            color: white;
+        }
         #quick-actions {
             position: fixed;
             bottom: 0;
@@ -172,8 +227,8 @@
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 4px;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
         }
         .quick-action-btn {
             display: flex;
@@ -183,33 +238,59 @@
             padding: 4px 2px;
             border: none;
             border-radius: 12px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             cursor: pointer;
             min-height: 56px;
             transition: transform 0.1s, background 0.2s;
             touch-action: manipulation;
             gap: 1px;
         }
-        .quick-action-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.12); }
-        .quick-action-btn .btn-icon { font-size: clamp(1.2rem, 4vw, 1.6rem); line-height: 1; }
+        .quick-action-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .quick-action-btn .btn-icon {
+            font-size: clamp(1.2rem, 4vw, 1.6rem);
+            line-height: 1;
+        }
         .quick-action-btn .btn-label {
             font-size: clamp(0.4rem, 1vw, 0.55rem);
             font-weight: 700;
             text-align: center;
-            color: rgba(255,255,255,0.85);
+            color: rgba(255, 255, 255, 0.85);
             letter-spacing: 0.2px;
             line-height: 1.2;
         }
-        .quick-action-btn.safe-btn { background: rgba(32, 201, 99, 0.2); }
-        .quick-action-btn.safe-btn .btn-label { color: #6AE8A0; }
-        .quick-action-btn.help-btn { background: rgba(229, 57, 53, 0.2); }
-        .quick-action-btn.help-btn .btn-label { color: #FF8A80; }
-        .quick-action-btn.damage-btn { background: rgba(245, 158, 11, 0.2); }
-        .quick-action-btn.damage-btn .btn-label { color: #FDE68A; }
-        .quick-action-btn.road-btn { background: rgba(25, 118, 210, 0.2); }
-        .quick-action-btn.road-btn .btn-label { color: #90CAF9; }
-        .quick-action-btn.resources-btn { background: rgba(255,255,255,0.05); }
-        .quick-action-btn.resources-btn .btn-label { color: #B0BEC5; }
+        .quick-action-btn.safe-btn {
+            background: rgba(32, 201, 99, 0.2);
+        }
+        .quick-action-btn.safe-btn .btn-label {
+            color: #6AE8A0;
+        }
+        .quick-action-btn.help-btn {
+            background: rgba(229, 57, 53, 0.2);
+        }
+        .quick-action-btn.help-btn .btn-label {
+            color: #FF8A80;
+        }
+        .quick-action-btn.damage-btn {
+            background: rgba(245, 158, 11, 0.2);
+        }
+        .quick-action-btn.damage-btn .btn-label {
+            color: #FDE68A;
+        }
+        .quick-action-btn.road-btn {
+            background: rgba(25, 118, 210, 0.2);
+        }
+        .quick-action-btn.road-btn .btn-label {
+            color: #90CAF9;
+        }
+        .quick-action-btn.resources-btn {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .quick-action-btn.resources-btn .btn-label {
+            color: #B0BEC5;
+        }
         #stats-panel {
             position: absolute;
             top: 12px;
@@ -218,10 +299,10 @@
         }
         .stats-toggle {
             background: rgba(11, 42, 74, 0.85);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 30px;
             padding: 6px 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
             cursor: pointer;
             font-size: 0.7rem;
             display: flex;
@@ -231,33 +312,41 @@
             backdrop-filter: blur(8px);
             touch-action: manipulation;
         }
-        .stats-toggle:active { background: rgba(11, 42, 74, 0.95); }
+        .stats-toggle:active {
+            background: rgba(11, 42, 74, 0.95);
+        }
         .stats-content {
             background: rgba(11, 42, 74, 0.92);
             border-radius: var(--radius);
             padding: 12px 14px;
             margin-top: 6px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             min-width: 130px;
         }
-        .stats-content.hidden { display: none; }
+        .stats-content.hidden {
+            display: none;
+        }
         .stat-item {
             display: flex;
             justify-content: space-between;
             padding: 4px 0;
             font-size: 0.7rem;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             color: var(--color-text);
         }
-        .stat-value { font-weight: 700; color: white; font-size: 0.85rem; }
+        .stat-value {
+            font-weight: 700;
+            color: white;
+            font-size: 0.85rem;
+        }
         #offline-indicator {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             color: white;
             padding: 16px 24px;
             border-radius: var(--radius);
@@ -265,7 +354,7 @@
             z-index: 50;
             font-weight: 600;
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         #offline-indicator span {
             display: block;
@@ -274,14 +363,16 @@
             margin-top: 4px;
             font-weight: 400;
         }
-        #offline-indicator.hidden { display: none; }
+        #offline-indicator.hidden {
+            display: none;
+        }
         #modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 1000;
             display: flex;
             align-items: center;
@@ -290,8 +381,17 @@
             backdrop-filter: blur(6px);
             animation: fadeIn 0.2s ease;
         }
-        #modal-overlay.hidden { display: none; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #modal-overlay.hidden {
+            display: none;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
         #modal-container {
             background: #172A44;
             border-radius: 24px;
@@ -301,16 +401,25 @@
             overflow-y: auto;
             padding: 20px 16px 24px;
             position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
             animation: slideUp 0.25s ease;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
         .modal-close {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
             border: none;
             font-size: 1.4rem;
             color: var(--color-text);
@@ -325,7 +434,9 @@
             transition: background 0.2s;
             touch-action: manipulation;
         }
-        .modal-close:active { background: rgba(255,255,255,0.15); }
+        .modal-close:active {
+            background: rgba(255, 255, 255, 0.15);
+        }
         .modal-title {
             font-size: clamp(1.3rem, 5vw, 1.8rem);
             font-weight: 800;
@@ -334,8 +445,12 @@
             text-align: center;
             letter-spacing: -0.5px;
         }
-        .modal-title .highlight { color: var(--color-blue-bright); }
-        .modal-form-group { margin-bottom: 14px; }
+        .modal-title .highlight {
+            color: var(--color-blue-bright);
+        }
+        .modal-form-group {
+            margin-bottom: 14px;
+        }
         .modal-form-group label {
             display: block;
             font-size: 0.8rem;
@@ -349,11 +464,11 @@
         .modal-form-group textarea {
             width: 100%;
             padding: 12px 14px;
-            border: 2px solid rgba(255,255,255,0.08);
+            border: 2px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
             font-size: 0.95rem;
             font-family: inherit;
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.04);
             color: white;
             transition: border-color 0.2s, background 0.2s;
             min-height: 48px;
@@ -363,11 +478,17 @@
         .modal-form-group textarea:focus {
             outline: none;
             border-color: var(--color-blue-bright);
-            background: rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.06);
         }
-        .modal-form-group textarea { min-height: 70px; resize: vertical; }
+        .modal-form-group textarea {
+            min-height: 70px;
+            resize: vertical;
+        }
         .modal-form-group input::placeholder,
-        .modal-form-group textarea::placeholder { color: var(--color-gray); opacity: 0.7; }
+        .modal-form-group textarea::placeholder {
+            color: var(--color-gray);
+            opacity: 0.7;
+        }
         .grid-options {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -378,8 +499,8 @@
             align-items: center;
             gap: 6px;
             padding: 10px 10px;
-            background: rgba(255,255,255,0.04);
-            border: 2px solid rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid rgba(255, 255, 255, 0.06);
             border-radius: 12px;
             cursor: pointer;
             font-size: 0.8rem;
@@ -389,7 +510,10 @@
             touch-action: manipulation;
             min-height: 48px;
         }
-        .grid-options label:active { transform: scale(0.97); background: rgba(255,255,255,0.08); }
+        .grid-options label:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.08);
+        }
         .grid-options label:has(input:checked) {
             border-color: var(--color-blue-bright);
             background: rgba(25, 118, 210, 0.15);
@@ -400,7 +524,7 @@
             appearance: none;
             width: 18px;
             height: 18px;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 5px;
             flex-shrink: 0;
             background: transparent;
@@ -422,7 +546,9 @@
             font-size: 12px;
             font-weight: bold;
         }
-        .grid-options input[type="radio"] { border-radius: 50%; }
+        .grid-options input[type="radio"] {
+            border-radius: 50%;
+        }
         .btn-primary {
             width: 100%;
             padding: 14px;
@@ -439,15 +565,27 @@
             letter-spacing: 0.5px;
             box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3);
         }
-        .btn-primary:active { transform: scale(0.97); opacity: 0.85; }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-primary.success { background: var(--color-success); }
-        .btn-primary.danger { background: var(--color-danger); }
-        .btn-primary.warning { background: var(--color-warning); }
+        .btn-primary:active {
+            transform: scale(0.97);
+            opacity: 0.85;
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-primary.success {
+            background: var(--color-success);
+        }
+        .btn-primary.danger {
+            background: var(--color-danger);
+        }
+        .btn-primary.warning {
+            background: var(--color-warning);
+        }
         .btn-secondary {
             width: 100%;
             padding: 14px;
-            border: 2px solid rgba(255,255,255,0.1);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             font-size: 0.95rem;
             font-weight: 600;
@@ -458,13 +596,16 @@
             touch-action: manipulation;
             min-height: 48px;
         }
-        .btn-secondary:active { background: rgba(255,255,255,0.05); transform: scale(0.97); }
+        .btn-secondary:active {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(0.97);
+        }
         #toast {
             position: fixed;
             bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             color: white;
             padding: 12px 20px;
             border-radius: 14px;
@@ -473,26 +614,45 @@
             max-width: 90%;
             text-align: center;
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             transition: all 0.3s ease;
             pointer-events: none;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         #toast.hidden {
             opacity: 0;
             transform: translateX(-50%) translateY(10px);
             pointer-events: none;
         }
-        #toast.success { border-left: 4px solid var(--color-success); }
-        #toast.error { border-left: 4px solid var(--color-danger); }
-        #toast.warning { border-left: 4px solid var(--color-warning); }
-        #toast.info { border-left: 4px solid var(--color-blue-bright); }
+        #toast.success {
+            border-left: 4px solid var(--color-success);
+        }
+        #toast.error {
+            border-left: 4px solid var(--color-danger);
+        }
+        #toast.warning {
+            border-left: 4px solid var(--color-warning);
+        }
+        #toast.info {
+            border-left: 4px solid var(--color-blue-bright);
+        }
         @media (max-width: 370px) {
-            .grid-options { grid-template-columns: 1fr; }
-            .quick-action-btn .btn-label { font-size: 0.35rem; }
-            #header h1 { font-size: 0.9rem; }
-            .header-subtitle { display: none; }
-            #connectionStatus { font-size: 0.45rem; padding: 2px 6px; }
+            .grid-options {
+                grid-template-columns: 1fr;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.35rem;
+            }
+            #header h1 {
+                font-size: 0.9rem;
+            }
+            .header-subtitle {
+                display: none;
+            }
+            #connectionStatus {
+                font-size: 0.45rem;
+                padding: 2px 6px;
+            }
         }
         @media (min-width: 768px) {
             #quick-actions {
@@ -502,25 +662,59 @@
                 border-radius: 24px 24px 0 0;
                 padding: 8px 10px max(8px, var(--safe-area-bottom));
             }
-            .quick-action-btn { min-height: 68px; }
-            .quick-action-btn .btn-icon { font-size: 1.6rem; }
-            .quick-action-btn .btn-label { font-size: 0.6rem; }
-            #modal-container { max-width: 560px; padding: 28px 24px; }
+            .quick-action-btn {
+                min-height: 68px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1.6rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.6rem;
+            }
+            #modal-container {
+                max-width: 560px;
+                padding: 28px 24px;
+            }
         }
         @media (min-width: 1024px) {
-            #quick-actions { max-width: 700px; }
-            .quick-action-btn { min-height: 76px; }
-            .quick-action-btn .btn-icon { font-size: 1.8rem; }
-            .quick-action-btn .btn-label { font-size: 0.65rem; }
+            #quick-actions {
+                max-width: 700px;
+            }
+            .quick-action-btn {
+                min-height: 76px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1.8rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.65rem;
+            }
         }
         @media (max-width: 768px) and (orientation: landscape) {
-            #quick-actions { padding: 4px 6px max(4px, var(--safe-area-bottom)); gap: 3px; }
-            .quick-action-btn { min-height: 44px; }
-            .quick-action-btn .btn-icon { font-size: 1rem; }
-            .quick-action-btn .btn-label { font-size: 0.35rem; }
-            #map-controls { bottom: 70px; }
-            .map-control-btn { width: 40px; height: 40px; font-size: 1rem; }
-            #header { min-height: 44px; }
+            #quick-actions {
+                padding: 4px 6px max(4px, var(--safe-area-bottom));
+                gap: 3px;
+            }
+            .quick-action-btn {
+                min-height: 44px;
+            }
+            .quick-action-btn .btn-icon {
+                font-size: 1rem;
+            }
+            .quick-action-btn .btn-label {
+                font-size: 0.35rem;
+            }
+            #map-controls {
+                bottom: 70px;
+            }
+            .map-control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            #header {
+                min-height: 44px;
+            }
         }
         @media (prefers-color-scheme: light) {
             :root {
@@ -529,20 +723,47 @@
                 --color-light: #e8eef6;
                 --color-text: #2C3E50;
                 --color-gray: #6A7A8A;
-                --shadow: 0 4px 20px rgba(0,0,0,0.1);
+                --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             }
-            body { background: var(--color-dark); }
-            #header { background: #0B2A4A; border-bottom: none; }
-            #quick-actions { background: rgba(255,255,255,0.95); border-top: 1px solid rgba(0,0,0,0.05); }
-            .quick-action-btn .btn-label { color: #1A2A3A; }
-            .quick-action-btn.safe-btn { background: rgba(32, 201, 99, 0.15); }
-            .quick-action-btn.help-btn { background: rgba(229, 57, 53, 0.15); }
-            .quick-action-btn.damage-btn { background: rgba(245, 158, 11, 0.15); }
-            .quick-action-btn.road-btn { background: rgba(25, 118, 210, 0.15); }
-            #modal-container { background: white; color: #1A2A3A; }
-            .modal-title { color: #0B2A4A; }
-            .modal-close { color: #6A7A8A; }
-            .modal-form-group label { color: #2C3E50; }
+            body {
+                background: var(--color-dark);
+            }
+            #header {
+                background: #0B2A4A;
+                border-bottom: none;
+            }
+            #quick-actions {
+                background: rgba(255, 255, 255, 0.95);
+                border-top: 1px solid rgba(0, 0, 0, 0.05);
+            }
+            .quick-action-btn .btn-label {
+                color: #1A2A3A;
+            }
+            .quick-action-btn.safe-btn {
+                background: rgba(32, 201, 99, 0.15);
+            }
+            .quick-action-btn.help-btn {
+                background: rgba(229, 57, 53, 0.15);
+            }
+            .quick-action-btn.damage-btn {
+                background: rgba(245, 158, 11, 0.15);
+            }
+            .quick-action-btn.road-btn {
+                background: rgba(25, 118, 210, 0.15);
+            }
+            #modal-container {
+                background: white;
+                color: #1A2A3A;
+            }
+            .modal-title {
+                color: #0B2A4A;
+            }
+            .modal-close {
+                color: #6A7A8A;
+            }
+            .modal-form-group label {
+                color: #2C3E50;
+            }
             .modal-form-group input,
             .modal-form-group select,
             .modal-form-group textarea {
@@ -550,24 +771,75 @@
                 border-color: #D0D8E0;
                 color: #1A2A3A;
             }
-            .grid-options label { background: #F0F4FA; border-color: #D0D8E0; color: #1A2A3A; }
-            .grid-options label:has(input:checked) { background: rgba(25, 118, 210, 0.08); border-color: var(--color-blue-bright); }
-            .stats-toggle { background: rgba(255,255,255,0.9); color: #0B2A4A; border-color: #D0D8E0; }
-            .stats-content { background: rgba(255,255,255,0.95); color: #1A2A3A; border-color: #D0D8E0; }
-            .stat-item { color: #2C3E50; border-bottom-color: #E0E8F0; }
-            .stat-value { color: #0B2A4A; }
-            .btn-secondary { border-color: #D0D8E0; color: #1A2A3A; }
-            #toast { background: rgba(255,255,255,0.95); color: #1A2A3A; border: 1px solid #D0D8E0; }
-            .map-control-btn { background: white; color: #1A2A3A; }
-            .map-control-btn#myLocationBtn { background: var(--color-blue-bright); color: white; }
-            .sync-status { background: rgba(0,0,0,0.06); color: #1A2A3A; }
-            .sync-status.pending { background: var(--color-warning); color: white; }
-            .sync-status.synced { background: var(--color-success); color: white; }
-            .sync-status.error { background: var(--color-danger); color: white; }
-            .sync-status.offline { background: var(--color-gray); color: white; }
+            .grid-options label {
+                background: #F0F4FA;
+                border-color: #D0D8E0;
+                color: #1A2A3A;
+            }
+            .grid-options label:has(input:checked) {
+                background: rgba(25, 118, 210, 0.08);
+                border-color: var(--color-blue-bright);
+            }
+            .stats-toggle {
+                background: rgba(255, 255, 255, 0.9);
+                color: #0B2A4A;
+                border-color: #D0D8E0;
+            }
+            .stats-content {
+                background: rgba(255, 255, 255, 0.95);
+                color: #1A2A3A;
+                border-color: #D0D8E0;
+            }
+            .stat-item {
+                color: #2C3E50;
+                border-bottom-color: #E0E8F0;
+            }
+            .stat-value {
+                color: #0B2A4A;
+            }
+            .btn-secondary {
+                border-color: #D0D8E0;
+                color: #1A2A3A;
+            }
+            #toast {
+                background: rgba(255, 255, 255, 0.95);
+                color: #1A2A3A;
+                border: 1px solid #D0D8E0;
+            }
+            .map-control-btn {
+                background: white;
+                color: #1A2A3A;
+            }
+            .map-control-btn#myLocationBtn {
+                background: var(--color-blue-bright);
+                color: white;
+            }
+            .sync-status {
+                background: rgba(0, 0, 0, 0.06);
+                color: #1A2A3A;
+            }
+            .sync-status.pending {
+                background: var(--color-warning);
+                color: white;
+            }
+            .sync-status.synced {
+                background: var(--color-success);
+                color: white;
+            }
+            .sync-status.error {
+                background: var(--color-danger);
+                color: white;
+            }
+            .sync-status.offline {
+                background: var(--color-gray);
+                color: white;
+            }
         }
         @media (prefers-reduced-motion: reduce) {
-            * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
@@ -652,8 +924,10 @@
         <div id="toast" class="hidden"></div>
     </div>
 
-    <script src="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/maplibre-gl@4.5.1/dist/maplibre-gl.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
 
     <script>
         // ============================================================
@@ -669,7 +943,9 @@
         };
 
         const supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
-        let currentUser = null, isAuthenticated = false, authReady = false;
+        let currentUser = null,
+            isAuthenticated = false,
+            authReady = false;
 
         // ============================================================
         // GEOLOCALIZACIÓN
@@ -695,8 +971,7 @@
                         (error) => {
                             console.warn('GPS falló:', error.message);
                             reject(new Error('No se pudo obtener ubicación. Selecciona manualmente.'));
-                        },
-                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+                        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
                     );
                 });
             }
@@ -704,8 +979,10 @@
                 const R = 6371;
                 const dLat = this.toRad(lat2 - lat1);
                 const dLon = this.toRad(lon2 - lon1);
-                const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(this.toRad(lat1))*Math.cos(this.toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
-                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             }
             toRad(deg) { return deg * Math.PI / 180; }
             async getLocationName(lat, lon) {
@@ -729,7 +1006,8 @@
                     { name: 'Montería', lat: 8.7493, lon: -75.8859, radius: 20 },
                     { name: 'Quibdó', lat: 5.6900, lon: -76.6600, radius: 15 }
                 ];
-                let closest = null, closestDist = Infinity;
+                let closest = null,
+                    closestDist = Infinity;
                 for (const city of cities) {
                     const dist = this.getDistance(lat, lon, city.lat, city.lon);
                     if (dist < city.radius && dist < closestDist) {
@@ -743,7 +1021,7 @@
         const geolocation = new GeolocationManager();
 
         // ============================================================
-        // OFFLINE - VERSIÓN 5
+        // OFFLINE - CON MIGRACIÓN SEGURA (sin pérdida de datos)
         // ============================================================
         class OfflineManager {
             constructor() {
@@ -758,16 +1036,88 @@
                     const request = indexedDB.open(this.dbName, this.dbVersion);
                     request.onupgradeneeded = (e) => {
                         const db = e.target.result;
-                        if (db.objectStoreNames.contains('reports')) db.deleteObjectStore('reports');
-                        if (db.objectStoreNames.contains('pending')) db.deleteObjectStore('pending');
-                        if (db.objectStoreNames.contains('sync_queue')) db.deleteObjectStore('sync_queue');
-                        if (db.objectStoreNames.contains('images')) db.deleteObjectStore('images');
-                        const reportsStore = db.createObjectStore('reports', { keyPath: 'temp_id' });
-                        reportsStore.createIndex('temp_id', 'temp_id', { unique: true });
-                        db.createObjectStore('pending', { keyPath: 'temp_id' });
-                        const syncQueueStore = db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
-                        syncQueueStore.createIndex('temp_id', 'temp_id');
-                        db.createObjectStore('images', { keyPath: 'id' });
+                        // ✅ NO eliminar stores existentes - solo crear los que faltan
+                        if (!db.objectStoreNames.contains('reports')) {
+                            const reportsStore = db.createObjectStore('reports', { keyPath: 'temp_id' });
+                            reportsStore.createIndex('temp_id', 'temp_id', { unique: true });
+                        } else {
+                            // Verificar que el keyPath sea correcto (migración si es necesario)
+                            const tx = e.target.transaction;
+                            const store = tx.objectStore('reports');
+                            if (store.keyPath !== 'temp_id') {
+                                // Si el keyPath no es temp_id, migrar
+                                const oldData = [];
+                                const getAll = store.getAll();
+                                getAll.onsuccess = () => {
+                                    oldData.push(...getAll.result);
+                                    db.deleteObjectStore('reports');
+                                    const newStore = db.createObjectStore('reports', { keyPath: 'temp_id' });
+                                    newStore.createIndex('temp_id', 'temp_id', { unique: true });
+                                    // Reinsertar datos (si tienen temp_id)
+                                    const putTx = db.transaction('reports', 'readwrite');
+                                    const putStore = putTx.objectStore('reports');
+                                    for (const item of oldData) {
+                                        if (item.temp_id) {
+                                            putStore.put(item);
+                                        }
+                                    }
+                                };
+                                getAll.onerror = () => console.warn('Error migrando datos de reports');
+                            }
+                        }
+
+                        if (!db.objectStoreNames.contains('pending')) {
+                            db.createObjectStore('pending', { keyPath: 'temp_id' });
+                        } else {
+                            const tx = e.target.transaction;
+                            const store = tx.objectStore('pending');
+                            if (store.keyPath !== 'temp_id') {
+                                // Migrar pending si es necesario
+                                const oldData = [];
+                                const getAll = store.getAll();
+                                getAll.onsuccess = () => {
+                                    oldData.push(...getAll.result);
+                                    db.deleteObjectStore('pending');
+                                    const newStore = db.createObjectStore('pending', { keyPath: 'temp_id' });
+                                    const putTx = db.transaction('pending', 'readwrite');
+                                    const putStore = putTx.objectStore('pending');
+                                    for (const item of oldData) {
+                                        if (item.temp_id) {
+                                            putStore.put(item);
+                                        }
+                                    }
+                                };
+                            }
+                        }
+
+                        if (!db.objectStoreNames.contains('sync_queue')) {
+                            const syncStore = db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
+                            syncStore.createIndex('temp_id', 'temp_id');
+                        } else {
+                            const tx = e.target.transaction;
+                            const store = tx.objectStore('sync_queue');
+                            if (!store.indexNames.contains('temp_id')) {
+                                // Migrar: recrear con índice
+                                const oldData = [];
+                                const getAll = store.getAll();
+                                getAll.onsuccess = () => {
+                                    oldData.push(...getAll.result);
+                                    db.deleteObjectStore('sync_queue');
+                                    const newStore = db.createObjectStore('sync_queue', { keyPath: 'id',
+                                        autoIncrement: true });
+                                    newStore.createIndex('temp_id', 'temp_id');
+                                    const putTx = db.transaction('sync_queue', 'readwrite');
+                                    const putStore = putTx.objectStore('sync_queue');
+                                    for (const item of oldData) {
+                                        putStore.put(item);
+                                    }
+                                };
+                            }
+                        }
+
+                        if (!db.objectStoreNames.contains('images')) {
+                            db.createObjectStore('images', { keyPath: 'id' });
+                        }
                     };
                     request.onsuccess = (e) => {
                         this.db = e.target.result;
@@ -782,7 +1132,8 @@
             async saveReport(report) {
                 if (!this.isReady) await this.init();
                 if (!report.temp_id) {
-                    report.temp_id = `MV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+                    report.temp_id =
+                        `MV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
                 }
                 const reportData = { ...report, temp_id: report.temp_id, synced: false, savedAt: Date.now() };
                 return new Promise((resolve, reject) => {
@@ -905,7 +1256,7 @@
         offline.init();
 
         // ============================================================
-        // MAPA - con setData eficiente y unclustered-point
+        // MAPA – CON unclustered-point Y LISTENER RESTRINGIDO
         // ============================================================
         class MapManager {
             constructor() {
@@ -980,11 +1331,36 @@
                 const existingSource = this.map.getSource('reports-cluster');
                 if (existingSource) {
                     existingSource.setData(geojson);
+                    // ✅ Asegurar que la capa unclustered-point exista (si no, crearla)
+                    if (!this.map.getLayer('unclustered-point')) {
+                        this.map.addLayer({
+                            id: 'unclustered-point',
+                            type: 'circle',
+                            source: 'reports-cluster',
+                            filter: ['!', ['has', 'point_count']],
+                            paint: {
+                                'circle-color': [
+                                    'match',
+                                    ['get', 'type'],
+                                    'safe', '#2ecc71',
+                                    'help', '#e74c3c',
+                                    'damage', '#f39c12',
+                                    'road', '#3498db',
+                                    'resource', '#1a3c6e',
+                                    '#7f8c8d'
+                                ],
+                                'circle-radius': 9,
+                                'circle-stroke-width': 2,
+                                'circle-stroke-color': '#ffffff'
+                            }
+                        });
+                    }
                     return;
                 }
 
                 if (features.length === 0) return;
 
+                // ✅ Crear source y layers (incluyendo unclustered-point)
                 this.map.addSource('reports-cluster', {
                     type: 'geojson',
                     data: geojson,
@@ -1036,6 +1412,7 @@
                     }
                 });
 
+                // ✅ CAPA DE PUNTOS INDIVIDUALES (unclustered-point)
                 this.map.addLayer({
                     id: 'unclustered-point',
                     type: 'circle',
@@ -1058,6 +1435,7 @@
                     }
                 });
 
+                // ✅ Listeners únicos
                 if (!this._clusterClickHandler) {
                     this._clusterClickHandler = (e) => {
                         const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
@@ -1076,9 +1454,12 @@
                     this.map.on('click', 'clusters', this._clusterClickHandler);
                 }
 
+                // ✅ LISTENER RESTRINGIDO A unclustered-point
                 if (!this._reportClickHandler) {
                     this._reportClickHandler = (e) => {
-                        const features = this.map.queryRenderedFeatures(e.point, { layers: ['unclustered-point'] });
+                        const features = this.map.queryRenderedFeatures(e.point, {
+                            layers: ['unclustered-point']
+                        });
                         if (!features.length) return;
                         const reportFeature = features[0];
                         const reportId = reportFeature.properties.id;
@@ -1092,8 +1473,9 @@
                         const vc = report.verification_count || 0;
                         let confidenceLabel = '🔵 Reportado';
                         let confidenceColor = '#51bbd6';
-                        if (vc >= 5) { confidenceLabel = '🟢 Verificado'; confidenceColor = '#2ecc71'; }
-                        else if (vc >= 3) { confidenceLabel = '🟡 Corroborado'; confidenceColor = '#f1f075'; }
+                        if (vc >= 5) { confidenceLabel = '🟢 Verificado';
+                            confidenceColor = '#2ecc71'; } else if (vc >= 3) { confidenceLabel = '🟡 Corroborado';
+                            confidenceColor = '#f1f075'; }
 
                         new maplibregl.Popup({ offset: 25 })
                             .setLngLat([lon, lat])
@@ -1179,7 +1561,7 @@
         }
 
         // ============================================================
-        // REPORTES
+        // REPORTES – CON UNA SOLA IMPLEMENTACIÓN DE REALTIME
         // ============================================================
         class ReportManager {
             constructor() {
@@ -1246,7 +1628,8 @@
                 }
                 this.lastReportTime = now;
 
-                const tempId = `${CONFIG.appPrefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+                const tempId =
+                    `${CONFIG.appPrefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
                 const report = {
                     temp_id: tempId,
@@ -1311,10 +1694,12 @@
             async syncPendingReports() {
                 if (this.isSyncing) return;
                 if (!navigator.onLine) { await offline.updatePendingCount(); return; }
-                if (!this.authReady || !this.userId) { console.log('⏳ Esperando autenticación para sincronizar...'); return; }
+                if (!this.authReady || !this.userId) { console.log('⏳ Esperando autenticación para sincronizar...');
+                    return; }
 
                 this.isSyncing = true;
-                let synced = 0, errors = 0;
+                let synced = 0,
+                    errors = 0;
 
                 try {
                     const pending = await offline.getPending();
@@ -1361,7 +1746,8 @@
                         }
                     }
 
-                    if (synced > 0) showToast(`✅ ${synced} reporte${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''}`, 'success');
+                    if (synced > 0) showToast(`✅ ${synced} reporte${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''}`,
+                        'success');
                     if (errors > 0) showToast(`⚠️ ${errors} reporte${errors > 1 ? 's' : ''} con error`, 'warning');
 
                     await offline.updatePendingCount();
@@ -1375,7 +1761,8 @@
 
             async loadReports() {
                 let localReports = [];
-                try { localReports = await offline.getAllReports(); } catch (e) { console.warn('Error obteniendo reportes locales:', e); }
+                try { localReports = await offline.getAllReports(); } catch (e) { console.warn(
+                        'Error obteniendo reportes locales:', e); }
 
                 if (!this.authReady || !this.userId) {
                     console.log('⏳ No autenticado, mostrando reportes locales...');
@@ -1424,9 +1811,12 @@
                     const { data, error } = await supabaseClient
                         .rpc('increment_report_verification', { p_report_id: reportId });
                     if (error) {
-                        if (error.message.includes('Ya has corroborado')) showToast('Ya corroboraste este reporte', 'warning');
-                        else if (error.message.includes('No puedes corroborar tu propio reporte')) showToast('No puedes corroborar tu propio reporte', 'warning');
-                        else if (error.message.includes('Usuario no autenticado')) showToast('Debes estar autenticado para corroborar', 'error');
+                        if (error.message.includes('Ya has corroborado')) showToast('Ya corroboraste este reporte',
+                        'warning');
+                        else if (error.message.includes('No puedes corroborar tu propio reporte')) showToast(
+                            'No puedes corroborar tu propio reporte', 'warning');
+                        else if (error.message.includes('Usuario no autenticado')) showToast(
+                            'Debes estar autenticado para corroborar', 'error');
                         else showToast('Error al corroborar: ' + error.message, 'error');
                         return false;
                     }
@@ -1456,7 +1846,7 @@
             }
 
             // ============================================================
-            // REALTIME – UNA SOLA IMPLEMENTACIÓN
+            // REALTIME – UNA SOLA IMPLEMENTACIÓN (la definitiva)
             // ============================================================
             subscribeToRealtime() {
                 if (!this.authReady || !this.userId) {
@@ -1495,25 +1885,33 @@
 
                 try {
                     if (eventType === 'INSERT') {
-                        const exists = this.reports.some(r => r.id === newRecord.id || (newRecord.temp_id && r.temp_id === newRecord.temp_id));
+                        const exists = this.reports.some(r => r.id === newRecord.id || (newRecord.temp_id && r
+                            .temp_id === newRecord.temp_id));
                         if (!exists) {
                             this.reports.push(newRecord);
                             this.updateStats();
-                            mapManager.updateClusters(this.reports);
+                            if (mapManager && typeof mapManager.updateClusters === 'function') {
+                                mapManager.updateClusters(this.reports);
+                            }
                         }
                     } else if (eventType === 'UPDATE') {
-                        const index = this.reports.findIndex(r => r.id === newRecord.id || (newRecord.temp_id && r.temp_id === newRecord.temp_id));
+                        const index = this.reports.findIndex(r => r.id === newRecord.id || (newRecord.temp_id && r
+                            .temp_id === newRecord.temp_id));
                         if (index !== -1) {
                             this.reports[index] = { ...this.reports[index], ...newRecord };
                         } else {
                             this.reports.push(newRecord);
                         }
                         this.updateStats();
-                        mapManager.updateClusters(this.reports);
+                        if (mapManager && typeof mapManager.updateClusters === 'function') {
+                            mapManager.updateClusters(this.reports);
+                        }
                     } else if (eventType === 'DELETE') {
                         this.reports = this.reports.filter(r => r.id !== oldRecord?.id);
                         this.updateStats();
-                        mapManager.updateClusters(this.reports);
+                        if (mapManager && typeof mapManager.updateClusters === 'function') {
+                            mapManager.updateClusters(this.reports);
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Error procesando evento Realtime:', error);
@@ -1527,11 +1925,14 @@
         // CONFIRMACIÓN VISUAL
         // ============================================================
         function showConfirmation(report, isOnline = false, status = 'pending') {
-            const code = report.id ? report.id.slice(0,8).toUpperCase() : (report.temp_id || '---').slice(0,8);
+            const code = report.id ? report.id.slice(0, 8).toUpperCase() : (report.temp_id || '---').slice(0, 8);
             const statusMap = {
-                'success': { icon: '✅', title: 'REPORTE ENVIADO', color: '#2ecc71', bg: '#e8f5e9', msg: 'Tu reporte ya está visible para la comunidad.' },
-                'pending': { icon: '⏳', title: 'REPORTE PENDIENTE', color: '#f39c12', bg: '#fff3e0', msg: 'Se enviará automáticamente cuando haya conexión.' },
-                'error': { icon: '❌', title: 'ERROR EN EL REPORTE', color: '#e74c3c', bg: '#ffebee', msg: 'Hay un problema con los datos. No se pudo registrar.' }
+                'success': { icon: '✅', title: 'REPORTE ENVIADO', color: '#2ecc71', bg: '#e8f5e9',
+                    msg: 'Tu reporte ya está visible para la comunidad.' },
+                'pending': { icon: '⏳', title: 'REPORTE PENDIENTE', color: '#f39c12', bg: '#fff3e0',
+                    msg: 'Se enviará automáticamente cuando haya conexión.' },
+                'error': { icon: '❌', title: 'ERROR EN EL REPORTE', color: '#e74c3c', bg: '#ffebee',
+                    msg: 'Hay un problema con los datos. No se pudo registrar.' }
             };
             const s = statusMap[status] || statusMap['pending'];
             openModal(`
@@ -1584,7 +1985,6 @@
             } catch (error) {
                 console.warn('⚠️ SGC no disponible:', error.message);
                 document.getElementById('statEarthquakes').textContent = '⚠️';
-                // ⚠️ NO devolver datos ficticios
                 return [];
             }
         }
@@ -1626,7 +2026,8 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        let width = img.width, height = img.height;
+                        let width = img.width,
+                            height = img.height;
                         if (width > maxWidth) {
                             height = (maxWidth / width) * height;
                             width = maxWidth;
@@ -1648,7 +2049,7 @@
         }
 
         // ============================================================
-        // MODALES – CON UI PROFESIONAL Y CORROBORACIÓN VISIBLE
+        // MODALES – CON UI PROFESIONAL
         // ============================================================
 
         // ===== ESTOY A SALVO =====
@@ -1725,8 +2126,9 @@
 
         // ===== NECESITO AYUDA =====
         function showHelpModal() {
-            const needs = ['Rescate','Atención médica','Agua','Alimentos','Refugio','Medicamentos',
-                'Electricidad','Comunicación','Transporte','Ayuda para niños','Ayuda para adultos mayores','Otro'];
+            const needs = ['Rescate', 'Atención médica', 'Agua', 'Alimentos', 'Refugio', 'Medicamentos',
+                'Electricidad', 'Comunicación', 'Transporte', 'Ayuda para niños', 'Ayuda para adultos mayores', 'Otro'
+            ];
             openModal(`
                 <div class="modal-title">🆘 NECESITO AYUDA</div>
                 <div class="modal-form-group">
@@ -1760,7 +2162,9 @@
                 <button class="btn-primary danger" id="helpPublishBtn">🆘 PUBLICAR</button>
             `);
 
-            let hasInjured = false, inDanger = false, selectedFile = null;
+            let hasInjured = false,
+                inDanger = false,
+                selectedFile = null;
             document.getElementById('helpInjuredYes').addEventListener('click', () => {
                 hasInjured = true;
                 document.getElementById('helpInjuredCount').style.display = 'block';
@@ -1822,8 +2226,10 @@
 
         // ===== REPORTAR DAÑO =====
         function showDamageModal() {
-            const types = ['Vivienda','Edificio','Escuela','Hospital','Comercio','Puente','Carretera','Poste','Red eléctrica','Acueducto','Otro'];
-            const levels = ['Sin daño visible','Daño leve','Daño importante','Daño grave','Colapso'];
+            const types = ['Vivienda', 'Edificio', 'Escuela', 'Hospital', 'Comercio', 'Puente', 'Carretera', 'Poste',
+                'Red eléctrica', 'Acueducto', 'Otro'
+            ];
+            const levels = ['Sin daño visible', 'Daño leve', 'Daño importante', 'Daño grave', 'Colapso'];
             openModal(`
                 <div class="modal-title">🏚️ REPORTAR DAÑO</div>
                 <div class="modal-form-group">
@@ -1846,10 +2252,12 @@
                 <button class="btn-primary warning" id="damagePublishBtn">📤 PUBLICAR</button>
             `);
 
-            let selectedLevel = null, selectedFile = null;
+            let selectedLevel = null,
+                selectedFile = null;
             document.querySelectorAll('[data-level]').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.querySelectorAll('[data-level]').forEach(b => { b.style.background = ''; b.style.color = ''; });
+                    document.querySelectorAll('[data-level]').forEach(b => { b.style.background = '';
+                        b.style.color = ''; });
                     btn.style.background = '#f39c12';
                     btn.style.color = 'white';
                     selectedLevel = parseInt(btn.dataset.level);
@@ -1873,7 +2281,7 @@
                     const pos = await geolocation.getCurrentPosition();
                     const location = await geolocation.getLocationName(pos.latitude, pos.longitude);
                     const types = Array.from(checked).map(cb => cb.value);
-                    const levelsList = ['sin_daño','daño_leve','daño_importante','daño_grave','colapso'];
+                    const levelsList = ['sin_daño', 'daño_leve', 'daño_importante', 'daño_grave', 'colapso'];
                     const reportData = {
                         type: 'damage',
                         latitude: pos.latitude,
@@ -1901,7 +2309,9 @@
 
         // ===== REPORTAR VÍA =====
         function showRoadModal() {
-            const statuses = ['Vía libre','Tránsito parcial','Vía bloqueada','Derrumbe','Puente afectado','Inundación','Árbol/objeto bloqueando','Otro'];
+            const statuses = ['Vía libre', 'Tránsito parcial', 'Vía bloqueada', 'Derrumbe', 'Puente afectado',
+                'Inundación', 'Árbol/objeto bloqueando', 'Otro'
+            ];
             openModal(`
                 <div class="modal-title">🚧 <span class="highlight">REPORTAR VÍA</span></div>
                 <div class="modal-form-group">
@@ -1961,7 +2371,7 @@
             });
         }
 
-        // ===== RECURSOS – VACÍO SIN DATOS FICTICIOS =====
+        // ===== RECURSOS – SIN DATOS FICTICIOS =====
         function showResourcesModal() {
             openModal(`
                 <div class="modal-title">📍 RECURSOS</div>
@@ -1980,9 +2390,6 @@
                 </div>
                 <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
             `);
-
-            // ⚠️ NO hay recursos de ejemplo – la tabla se llenará con datos reales en producción
-            // Por ahora mostramos el mensaje de que no hay recursos
         }
 
         // ============================================================
@@ -2003,7 +2410,8 @@
                 }
             } catch (e) {
                 console.warn('📍 Ubicación no disponible:', e.message);
-                showToast('📍 No se pudo obtener tu ubicación automáticamente. Puedes seleccionar tu ubicación en el mapa.', 'warning');
+                showToast('📍 No se pudo obtener tu ubicación automáticamente. Puedes seleccionar tu ubicación en el mapa.',
+                    'warning');
             }
 
             setTimeout(() => fetchEarthquakes(), 2000);
@@ -2019,8 +2427,10 @@
             document.getElementById('resourcesBtn').addEventListener('click', showResourcesModal);
 
             document.getElementById('myLocationBtn').addEventListener('click', () => mapManager.centerOnUser());
-            document.getElementById('zoomInBtn').addEventListener('click', () => { if (mapManager.map) mapManager.map.zoomIn(); });
-            document.getElementById('zoomOutBtn').addEventListener('click', () => { if (mapManager.map) mapManager.map.zoomOut(); });
+            document.getElementById('zoomInBtn').addEventListener('click', () => { if (mapManager.map) mapManager.map
+                    .zoomIn(); });
+            document.getElementById('zoomOutBtn').addEventListener('click', () => { if (mapManager.map) mapManager.map
+                    .zoomOut(); });
 
             document.getElementById('statsToggle').addEventListener('click', () => {
                 document.getElementById('statsContent').classList.toggle('hidden');
@@ -2028,12 +2438,14 @@
 
             document.getElementById('emergencyModeBtn').addEventListener('click', () => {
                 document.getElementById('app').classList.toggle('emergency-mode');
-                showToast(document.getElementById('app').classList.contains('emergency-mode') ? '🚨 MODO EMERGENCIA' : 'Modo normal', 'info');
+                showToast(document.getElementById('app').classList.contains('emergency-mode') ? '🚨 MODO EMERGENCIA' :
+                    'Modo normal', 'info');
             });
 
             document.getElementById('lowDataBtn').addEventListener('click', () => {
                 document.getElementById('app').classList.toggle('low-data-mode');
-                showToast(document.getElementById('app').classList.contains('low-data-mode') ? '📶 BAJO CONSUMO' : 'Modo normal', 'info');
+                showToast(document.getElementById('app').classList.contains('low-data-mode') ? '📶 BAJO CONSUMO' :
+                    'Modo normal', 'info');
             });
 
             window.addEventListener('online', async () => {
