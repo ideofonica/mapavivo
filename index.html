@@ -1550,41 +1550,105 @@ class ReportManager {
         // ============================================================
         // NUEVO: MANEJADOR DE EVENTOS REALTIME
         // ============================================================
-        handleRealtimeEvent(payload) {
-            const { eventType, new: newRecord, old: oldRecord } = payload;
+       handleRealtimeEvent(payload) {
+    const { eventType, new: newRecord, old: oldRecord } = payload;
 
-            if (!this.authReady) return;
+    if (!this.authReady) return;
 
-            try {
-                if (eventType === 'INSERT') {
-                    if (!this.reports.some(r => r.id === newRecord.id)) {
-                        this.reports.push(newRecord);
-                        this.updateStats();
-                        if (mapManager && typeof mapManager.updateClusters === 'function') {
-                            mapManager.updateClusters(this.reports);
-                        }
-                    }
-                } else if (eventType === 'UPDATE') {
-                    const index = this.reports.findIndex(r => r.id === newRecord.id);
-                    if (index !== -1) {
-                        this.reports[index] = { ...this.reports[index], ...newRecord };
-                        this.updateStats();
-                        if (mapManager && typeof mapManager.updateClusters === 'function') {
-                            mapManager.updateClusters(this.reports);
-                        }
-                    }
-                } else if (eventType === 'DELETE') {
-                    this.reports = this.reports.filter(r => r.id !== oldRecord.id);
-                    this.updateStats();
-                    if (mapManager && typeof mapManager.updateClusters === 'function') {
-                        mapManager.updateClusters(this.reports);
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error procesando evento Realtime:', error);
+    try {
+
+        // ========================================================
+        // INSERT
+        // ========================================================
+        if (eventType === 'INSERT') {
+
+            const exists = this.reports.some(r =>
+                r.id === newRecord.id ||
+                (newRecord.temp_id && r.temp_id === newRecord.temp_id)
+            );
+
+            if (!exists) {
+                this.reports.push(newRecord);
+
+                console.log(
+                    '🆕 Nuevo reporte recibido:',
+                    newRecord.id
+                );
+
+                this.updateStats();
+                mapManager.updateClusters(this.reports);
             }
+
+            return;
         }
+
+        // ========================================================
+        // UPDATE
+        // ========================================================
+        if (eventType === 'UPDATE') {
+
+            const index = this.reports.findIndex(r =>
+                r.id === newRecord.id ||
+                (newRecord.temp_id && r.temp_id === newRecord.temp_id)
+            );
+
+            if (index !== -1) {
+
+                this.reports[index] = {
+                    ...this.reports[index],
+                    ...newRecord
+                };
+
+            } else {
+
+                // Si no estaba localmente, lo incorporamos
+                this.reports.push(newRecord);
+
+            }
+
+            console.log(
+                '🔄 Reporte actualizado:',
+                newRecord.id
+            );
+
+            this.updateStats();
+            mapManager.updateClusters(this.reports);
+
+            return;
         }
+
+        // ========================================================
+        // DELETE
+        // ========================================================
+        if (eventType === 'DELETE') {
+
+            const deletedId = oldRecord?.id;
+
+            this.reports = this.reports.filter(r =>
+                r.id !== deletedId
+            );
+
+            console.log(
+                '🗑️ Reporte eliminado:',
+                deletedId
+            );
+
+            this.updateStats();
+            mapManager.updateClusters(this.reports);
+
+            return;
+        }
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error procesando evento Realtime:',
+            error
+        );
+
+    }
+}
+}
 
         const reports = new ReportManager();
 
@@ -2052,11 +2116,15 @@ class ReportManager {
                 if (pos) {
                     mapManager.goToLocation(pos.latitude, pos.longitude, 12);
                 }
-            } catch (e) {
-                console.log('Ubicación no disponible:', e.message);
-                // No inventamos ubicación
-            }
-
+            } 
+            
+            catch (e) {
+    console.warn('📍 Ubicación no disponible:', e.message);
+    showToast(
+        '📍 No se pudo obtener tu ubicación automáticamente. Puedes seleccionar tu ubicación en el mapa.',
+        'warning'
+    );
+}
             setTimeout(() => fetchEarthquakes(), 2000);
 
             await reports.loadReports();
